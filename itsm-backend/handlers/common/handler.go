@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -109,6 +110,36 @@ func (h *Handler) Login(c *gin.Context) {
 	common.Success(c, res)
 }
 
+// recordRefreshAudit 落一条续签审计。
+//
+// path 由调用方传 c.FullPath() 得到的**本次真实路由模板**，而不是常量：
+// /refresh-token（兼容路径）与 /auth/refresh（新路径）共用本 handler，
+// 写死其中一个会把另一条路径的调用记到错误入口上（RecordLoginAudit 的历史缺陷）。
+func (h *Handler) recordRefreshAudit(c *gin.Context, auditCtx context.Context, path string, userID, tenantID int, reason string) {
+	middleware.RecordSelfServiceAudit(auditCtx, h.svc.client, middleware.SelfServiceAuditEvent{
+		Path:       path,
+		Action:     "refresh_token",
+		StatusCode: c.Writer.Status(),
+		TenantID:   tenantID,
+		UserID:     userID,
+		Reason:     reason,
+	})
+}
+
+// refreshTokenAttribution 在续签**失败**时尽力给审计一个可归属的主体。
+//
+// 只在签名校验通过时才返回身份：伪造的 token 同样会带 userID/tenantID，
+// 无条件信任它等于让攻击者决定审计记录写到哪个租户名下。
+// 签名成立但已被吊销的情形（窃取后重放）恰恰最需要知道「这是谁的会话」，
+// 因此这里重新验一次签名——service 的校验结论只有 error，拿不到 claims。
+func (h *Handler) refreshTokenAttribution(refreshToken string) (userID, tenantID int) {
+	claims, err := middleware.ValidateRefreshToken(refreshToken, h.svc.jwtSecret)
+	if err != nil || claims == nil {
+		return 0, 0
+	}
+	return claims.UserID, claims.TenantID
+}
+
 func (h *Handler) RefreshToken(c *gin.Context) {
 	var req struct {
 		RefreshToken string `json:"refreshToken"`
@@ -121,8 +152,16 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 			req.RefreshToken = cookieToken
 		}
 	}
+
+	// 续签与注册/找回/重置同属 public 组，不在鉴权链之后，AuditMiddleware 覆盖不到。
+	// 它此前零审计：service 只在 slog 里写「refresh token replay detected」，
+	// 日志不落库，事后无法按 IP / 时间窗聚合——而重放正是 refresh token 失窃的第一现场。
+	auditCtx := middleware.WithLoginAuditRequest(c.Request.Context(), c.ClientIP(), c.Request.UserAgent())
+	path := c.FullPath()
+
 	if req.RefreshToken == "" {
 		common.ParamError(c, "参数错误: refreshToken 不能为空")
+		h.recordRefreshAudit(c, auditCtx, path, 0, 0, "缺少 refresh token")
 		return
 	}
 
@@ -130,12 +169,25 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	if err != nil {
 		h.svc.logger.Errorw("refresh token failed", "error", err)
 		common.AuthFailed(c, "登录状态已过期，请重新登录")
+		// 原因取自 service 的 error 文本（"invalid refresh token" /
+		// "refresh token has been revoked" …），它不含 token 本身；
+		// 运维据此能把「凭据被重复使用」与「脚本乱试」分开。
+		userID, tenantID := h.refreshTokenAttribution(req.RefreshToken)
+		h.recordRefreshAudit(c, auditCtx, path, userID, tenantID, err.Error())
 		return
 	}
 
 	setSessionCookies(c, res)
 
 	common.Success(c, res)
+
+	// 成功分支取 res.User 的归属：此时身份已由 service 校验并落定，
+	// 「这个会话续过几次」是靠 (tenant_id, user_id) 索引出来的。
+	userID, tenantID := 0, 0
+	if res != nil && res.User != nil {
+		userID, tenantID = res.User.ID, res.User.TenantID
+	}
+	h.recordRefreshAudit(c, auditCtx, path, userID, tenantID, "")
 }
 
 // Logout 清除浏览器凭证并吊销本次会话的两类 token。

@@ -79,6 +79,11 @@ type SelfServiceAuditEvent struct {
 // RecordSelfServiceAudit 记录一次公开自助端点动作（register / forgot-password /
 // reset-password / refresh-token）。
 //
+// 调用点是判断「哪些端点真的被审计了」的唯一依据——本注释列出的清单必须
+// 与 handlers 里的实际调用一一对应。refresh-token 曾在本注释里被声明覆盖、
+// 却在 handlers/common.RefreshToken 里没有任何调用点：注释自证清白，执行入口
+// 什么都没做，产品上空缺依旧。新增或删除端点时必须同时改这里与调用点。
+//
 // 为什么这些端点不能靠 AuditMiddleware：public 组不在鉴权链之后，
 // 中间件从 ctx 取 tenant_id/user_id 恒为 0；而更关键的是中间件按
 // shouldAuditRequest 对**所有 POST** 生效，会把飞书/钉钉/企业微信回调
