@@ -261,7 +261,11 @@ export default function CICertificationPage() {
               title='已逾期'
               value={data?.overdue ?? 0}
               loading={loading}
-              valueStyle={data && data.overdue > 0 ? { color: '#cf1322' } : undefined}
+              styles={
+                data && data.overdue > 0
+                  ? { content: { color: '#cf1322' } }
+                  : undefined
+              }
             />
           </Card>
         </Col>

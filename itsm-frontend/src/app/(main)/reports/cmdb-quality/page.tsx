@@ -148,7 +148,7 @@ const CMDBQualityReport = () => {
           className="mb-6"
           type="info"
           showIcon
-          message="尚未配置必填属性定义，完整率不可评估"
+          title="尚未配置必填属性定义，完整率不可评估"
           description="完整率的分母是「所属 CI 类型已配置必填属性的配置项」。请在 CMDB「属性定义」中为相关 CI 类型标注必填项后，本页才会给出完整率。当前显示的空值不代表数据质量差。"
         />
       )}
@@ -264,7 +264,7 @@ const CMDBQualityReport = () => {
                   className="mt-3"
                   type="warning"
                   showIcon
-                  message={`${certification.neverConfirmed} 项资产从未被任何人确认过`}
+                  title={`${certification.neverConfirmed} 项资产从未被任何人确认过`}
                   description="「从未确认」与「已过期」不是一回事：过期是确认过但太久，从未确认说明这条资产从来没人认领责任。建议到 CMDB「数据认证」页发起认证任务。"
                 />
               )}

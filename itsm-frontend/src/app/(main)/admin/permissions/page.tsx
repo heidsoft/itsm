@@ -822,7 +822,7 @@ const PermissionConfiguration = () => {
         type={aiAuthorizedCodes.length > 0 ? 'warning' : 'success'}
         showIcon
         icon={<Bot className="w-4 h-4" />}
-        message={
+        title={
           aiAuthorizedCodes.length > 0
             ? `${aiAuthorizedCodes.length} 个权限码已开放给 AI/服务主体执行`
             : '当前没有权限码开放给 AI 执行（默认安全态）'
@@ -1102,7 +1102,7 @@ const PermissionConfiguration = () => {
                 <Alert
                   type="error"
                   showIcon
-                  message="不允许的组合"
+                  title="不允许的组合"
                   description="允许 AI 执行非低风险操作时必须开启人工审批（后端将拒绝保存）。"
                 />
               )}
@@ -1113,7 +1113,7 @@ const PermissionConfiguration = () => {
                 <Alert
                   type="error"
                   showIcon
-                  message="不允许的组合"
+                  title="不允许的组合"
                   description="允许 AI 执行高/危急风险操作时必须配置双人审批（后端将拒绝保存）。"
                 />
               )}
