@@ -16,7 +16,7 @@
 id: AUDIT-003
 priority: P0
 category: release/governance
-status: confirmed
+status: resolved
 title: 缺 CHANGELOG 条目时静默降级为 git-log 发布说明，且无测试证据与制品校验
 file: .github/workflows/release.yml:185-202
 impact: 对外发布说明绕过全部文案与证据规则；公开的 zip 无 checksum（本地 scripts/release.sh:143-148 反而有）
@@ -84,3 +84,12 @@ fix: 在 docs/delivery/release-guide.md 定义模板并让 G2 守卫可配置段
 7. 同步修正 `release-guide.md:98` 与 `report-template.md:113-119` 与实际脚本不一致的描述（G7）。
 
 每个守卫都需要正向 fixture 与能变红的反向 fixture；不删除、不降级任何既有检查。
+
+
+## 本批已验证修复（基准 bde1814d）
+
+采纳并行会话在发布相关文件上的未提交工作，并补齐文案门禁：
+- `scripts/release-notes.sh`：按 tag 精确匹配 `## [X.Y.Z]`，优先取「发布说明」小节，缺失或空内容即 exit 1；旧版本回退读取完整条目。
+- `.github/workflows/release.yml`：所有 checkout 统一到解析出的 tag；发布正文固定取 `release-notes.md`，不再启用 `generate_release_notes`；summary 使用解析版本而非 `github.ref_name`；新增 `check-release-notes-quality.sh` 步骤拦截无证据宣传语。
+- 回归 `release-notes.test.js` 3 例 + `release-notes-quality.test.js` 3 例（含 8 类禁用表述反向验证）全绿。
+- 遗留：RQ-02（1.6.38–1.6.59 无 CHANGELOG 段）与 RQ-07（多 surface 版本漂移）未在本批处理。
