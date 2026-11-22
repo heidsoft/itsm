@@ -7,10 +7,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"itsm-backend/domain/role"
-	"itsm-backend/ent/enttest"
 )
 
 // 回归：服务台坐席（agent）在 DBOnly（企业级默认模式）下必须能通过
@@ -27,8 +25,7 @@ func TestRequirePermission_AgentAcceptTransfer_DBOnlySeeded(t *testing.T) {
 	InvalidateAllPermissionCaches()
 
 	ctx := context.Background()
-	client := enttest.NewClient(t)
-	defer func() { _ = client.Close() }()
+	client, _ := openSharedCacheSQLite(t, "agent_accept_rbac")
 
 	tnt := client.Tenant.Create().
 		SetName("ServicelineTenant").SetCode("stl").SetDomain("stl.test").SetStatus("active").
