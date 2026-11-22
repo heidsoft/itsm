@@ -25,7 +25,7 @@ Go 目录 `authz.Definitions()` 与 DB `permissions` 的分工是显式设计，
 id: AUDIT-020
 priority: P1
 category: authz/policy
-status: confirmed
+status: resolved
 title: 权限停用（IsActive=false）未作用于人工 RBAC 判定路径
 file: internal/authz/policy.go:131-135；middleware/rbac.go:847-873
 evidence: IsActive 注释承诺"关闭后该码对鉴权不可见"；DeletePermission 仅把信封 IsActive=false；Registry.Lookup/AuthorizePrincipal 尊重它，但只服务 AI 执行链；人工路径直接读 Permission.Resource/Action 行，从不解码信封
@@ -36,6 +36,14 @@ approval: 权限语义变更，需人工审批
 ```
 
 ```yaml
+
+已验证修复（基准 c580b179）：middleware/rbac.go 的 permissionFromEntRow 在人工判定路径解码
+permissions.description 的信封并跳过 IsActive=false；纯文本存量行保持旧语义，损坏信封 fail-closed。
+UpdatePermissionPolicy 与 DeletePermission 同步调用 InvalidateAllPermissionCachesEx 清理人工权限缓存。
+回归 middleware/permission_active_test.go 用真实 ent 库 + AuthorizeResource 锁住停用即拒绝、
+重新启用恢复、纯文本兼容、损坏信封拒绝；反向注入后断言变红。go test ./middleware/ 全包通过。
+跨副本广播仍未解决（AUDIT-022）。
+
 id: AUDIT-021
 priority: P1
 category: authz/dbonly

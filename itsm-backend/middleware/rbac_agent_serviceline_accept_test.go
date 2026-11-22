@@ -7,10 +7,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"itsm-backend/domain/role"
-	"itsm-backend/ent/enttest"
 )
 
 // 回归：服务台坐席（agent）在 DBOnly（企业级默认模式）下必须能通过
@@ -27,8 +25,9 @@ func TestRequirePermission_AgentAcceptTransfer_DBOnlySeeded(t *testing.T) {
 	InvalidateAllPermissionCaches()
 
 	ctx := context.Background()
-	client := enttest.NewClient(t)
-	defer func() { _ = client.Close() }()
+	// enttest.NewClient(t) 无参不会注册 sqlite 驱动，schema 迁移阶段 nil 解引用；
+	// 复用本包已验证的共享内存库夹具，保证测试真的跑起来。
+	client, _ := openSharedCacheSQLite(t, "agent_accept")
 
 	tnt := client.Tenant.Create().
 		SetName("ServicelineTenant").SetCode("stl").SetDomain("stl.test").SetStatus("active").

@@ -200,10 +200,9 @@ func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName
 				loadErr = err
 			} else {
 				for _, p := range permsData {
-					perms = append(perms, Permission{
-						Resource: p.Resource,
-						Action:   p.Action,
-					})
+					if perm, ok := permissionFromEntRow(p); ok {
+						perms = append(perms, perm)
+					}
 				}
 			}
 		}
@@ -217,6 +216,29 @@ func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName
 	}
 
 	return perms, loadErr
+}
+
+// permissionFromEntRow 把权限行转换为人工 RBAC 判定使用的 (resource, action)。
+//
+// 运行期策略信封里的 IsActive=false 表示管理员已停用该码。此前只有 AI 主体
+// 判定链（authz.Registry）读取该字段，人工路径直接读 Resource/Action 行，
+// 于是「停用」只挡住 AI，人类用户仍然放行——与权限管理界面承诺的语义相反。
+//
+// 兼容边界：存量纯文本描述仍按旧语义放行，避免升级后整租户权限失效；
+// 以 "{" 开头但解不开的信封按 fail-closed 处理，与 Registry 的严格解码一致。
+func permissionFromEntRow(p *ent.Permission) (Permission, bool) {
+	row := Permission{Resource: p.Resource, Action: p.Action}
+	raw := strings.TrimSpace(p.Description)
+	if !strings.HasPrefix(raw, "{") {
+		return row, true
+	}
+	_, policy, err := authz.DecodeDefinition(raw, p.Resource, p.Action)
+	if err != nil || !policy.IsActive {
+		zap.S().Warnw("权限定义已停用或无法解码，人工 RBAC 路径跳过该码",
+			"code", p.Code, "tenant_id", p.TenantID, "error", err)
+		return row, false
+	}
+	return row, true
 }
 
 // invalidatePermissionCache 使指定角色的缓存失效
@@ -298,10 +320,9 @@ func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName str
 				loadErr = err
 			} else {
 				for _, p := range permsData {
-					perms = append(perms, Permission{
-						Resource: p.Resource,
-						Action:   p.Action,
-					})
+					if perm, ok := permissionFromEntRow(p); ok {
+						perms = append(perms, perm)
+					}
 				}
 			}
 		}

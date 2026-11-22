@@ -754,6 +754,9 @@ func (s *permissionServiceImpl) UpdatePermission(ctx context.Context, id, tenant
 		return nil, fmt.Errorf("更新权限失败: %w", err)
 	}
 	authz.Shared().Invalidate(tenantID)
+	// 停用状态属于人工 RBAC 判定输入（middleware 的 role→permission 缓存），
+	// 只失效 authz.Registry 会让人类用户在 TTL 窗口内继续持有已停用的码。
+	middleware.InvalidateAllPermissionCachesEx()
 	s.logger.Infow("permission policy updated",
 		"tenant_id", tenantID, "code", existing.Code,
 		"risk", policy.RiskLevel, "principals", policy.AllowedPrincipals,
@@ -788,6 +791,8 @@ func (s *permissionServiceImpl) DeletePermission(ctx context.Context, id, tenant
 		return fmt.Errorf("停用权限失败: %w", err)
 	}
 	authz.Shared().Invalidate(tenantID)
+	// 同上：必须同步失效人工 RBAC 的缓存，否则停用只影响 AI 判定链。
+	middleware.InvalidateAllPermissionCachesEx()
 	return nil
 }
 
