@@ -2300,3 +2300,23 @@ html:not(.dark) .ant-btn-default:focus {
   max-height: 60vh;
   overflow-y: auto;
 }
+
+/* 禁用态 Select 选项必须与可用态明显不同。
+   旧规则先被亮色/暗色的 catch-all 覆盖：亮色下禁用项变成与可用项同色，
+   暗色下被强制刷成 #fff。这里用同等或更高特异性在最后统一收口。 */
+html:not(.dark) .ant-select-item-option-disabled,
+html:not(.dark) .ant-select-item-option-disabled .ant-select-item-option-content {
+  color: #94a3b8 !important;
+  cursor: not-allowed !important;
+}
+
+/* 旧规则 `.dark .ant-select-item-option-disabled`（0,2,0）在 HMR 注入顺序下
+   会排在后面，靠同特异性压不过它；这里用双类名 + html.dark（0,3,1）
+   让禁用态在任意注入顺序下都稳定胜出。 */
+html.dark .ant-select-item.ant-select-item-option-disabled,
+html.dark .ant-select-item-option-disabled .ant-select-item-option-content,
+:root.dark .ant-select-item.ant-select-item-option-disabled,
+:root.dark .ant-select-item-option-disabled .ant-select-item-option-content {
+  color: var(--color-text-disabled) !important;
+  cursor: not-allowed !important;
+}
