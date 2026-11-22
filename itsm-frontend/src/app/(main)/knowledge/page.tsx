@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Card,
   Row,
@@ -162,12 +162,18 @@ export default function KnowledgePage() {
     }
   };
 
+  // AI 搜索在途守卫：setAiSearchLoading 异步生效，连续触发间闭包仍持旧 false，
+  // 仅靠 loading state 拦不住二次进入（antd 自定义 enterButton 路径也无 loading 守卫）。
+  const aiSearchInFlightRef = useRef(false);
+
   const handleAISearch = async () => {
+    if (aiSearchInFlightRef.current) return;
     if (!aiSearchQuery.trim()) {
       message.warning(t('knowledgeBase.aiSearchPromptRequired'));
       return;
     }
 
+    aiSearchInFlightRef.current = true;
     setAiSearchLoading(true);
     setAiSearchError(null);
 
@@ -192,6 +198,7 @@ export default function KnowledgePage() {
       setAiSearchError(t('knowledgeBase.aiSearchError'));
       setShowAiSearch(true);
     } finally {
+      aiSearchInFlightRef.current = false;
       setAiSearchLoading(false);
     }
   };
@@ -372,7 +379,6 @@ export default function KnowledgePage() {
               <Button type="text" aria-label="AI 搜索" icon={<Sparkles className="w-4 h-4 text-yellow-500" />} />
             }
             style={{ width: 300 }}
-            onPressEnter={handleAISearch}
           />
           {canCreateArticle && (
             <Button

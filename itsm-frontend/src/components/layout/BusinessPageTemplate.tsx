@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Card,
   Button,
@@ -241,25 +241,30 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
   const screens = Grid.useBreakpoint();
   const [localSearchValue, setLocalSearchValue] = useState(searchValue || '');
 
-  // 防抖搜索
+  // 防抖搜索：连续输入收敛为一次 onSearch。此前 debouncedSearch 算了没用、onChange
+  // 每键直发，消费方（changes/problems/incidents 等）的 fetch effect 依赖该值时会每键一发请求。
   const debouncedSearch = useDebounce(localSearchValue, 300);
+  // 最近一次已发出的搜索词：挂载初值视为已发出（挂载不触发搜索）；回车/搜索按钮
+  // 即时发出后写入同一槽位，防抖落地时值相同即跳过，避免同一词双发。
+  const lastSentSearchRef = useRef(localSearchValue);
 
-  // 搜索变化处理
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setLocalSearchValue(value);
-      if (onSearch) {
-        onSearch(value);
-      }
-    },
-    [onSearch]
-  );
+  // 防抖值变化才向消费方发 onSearch；显式回车已发过的相同词不再重复发。
+  useEffect(() => {
+    if (!onSearch || debouncedSearch === lastSentSearchRef.current) return;
+    lastSentSearchRef.current = debouncedSearch;
+    onSearch(debouncedSearch);
+  }, [debouncedSearch, onSearch]);
 
+  // 搜索变化处理：只更新本地输入态，触发统一交给上方防抖 effect。
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalSearchValue(e.target.value);
+  }, []);
+
+  // 回车 / 搜索按钮：立即搜索当前输入（不等防抖），并占住已发词位防防抖重复触发。
   const handleSearch = useCallback(() => {
-    if (onSearch) {
-      onSearch(localSearchValue);
-    }
+    if (!onSearch) return;
+    lastSentSearchRef.current = localSearchValue;
+    onSearch(localSearchValue);
   }, [localSearchValue, onSearch]);
 
   // Tab items 转换
