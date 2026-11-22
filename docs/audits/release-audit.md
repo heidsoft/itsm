@@ -93,3 +93,7 @@ fix: 在 docs/delivery/release-guide.md 定义模板并让 G2 守卫可配置段
 - `.github/workflows/release.yml`：所有 checkout 统一到解析出的 tag；发布正文固定取 `release-notes.md`，不再启用 `generate_release_notes`；summary 使用解析版本而非 `github.ref_name`；新增 `check-release-notes-quality.sh` 步骤拦截无证据宣传语。
 - 回归 `release-notes.test.js` 3 例 + `release-notes-quality.test.js` 3 例（含 8 类禁用表述反向验证）全绿。
 - 遗留：RQ-02（1.6.38–1.6.59 无 CHANGELOG 段）与 RQ-07（多 surface 版本漂移）未在本批处理。
+
+## 版本一致性守卫（RQ-07 阶段进展）
+
+`scripts/check-version-consistency.js` 对五个版本表面（示例环境文件、后端兜底版本、GA readiness、前端 package.json、治理文档基线）做棘轮检查。当前五处差异逐项登记在 `scripts/version-drift-baseline.json` 并以 WARN 呈现；任一表面出现未登记的新版本立即 FAIL，`--strict` 可要求完全对齐。四组测试（含 5 个表面逐一反向注入）通过。本批不改动任何版本字面量——选定正式版本属于发布决策。
