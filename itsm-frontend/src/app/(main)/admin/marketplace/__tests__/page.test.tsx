@@ -180,4 +180,31 @@ describe('商品目录管理', () => {
 
     expect(await screen.findByText(/目录为空/)).toBeInTheDocument();
   });
+
+  it('加载失败显示错误态与重试，不伪装成「目录为空」，统计卡不显示 0', async () => {
+    mockedList
+      .mockRejectedValueOnce(new Error('目录服务暂不可用'))
+      .mockResolvedValue({
+        items,
+        total: items.length,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      });
+    renderPage();
+
+    // 失败文案必须可见（页面内联 + message toast 可能各一份，故用 findAll）
+    expect((await screen.findAllByText('目录服务暂不可用')).length).toBeGreaterThan(0);
+    // 失败不得画成业务空态：这是「故障」不是「没有商品」
+    expect(screen.queryByText(/目录为空/)).not.toBeInTheDocument();
+    // 失败时统计卡不得渲染成「商品总数 0」（0 不是事实，是没取到）
+    expect(screen.queryByText('商品总数')).not.toBeInTheDocument();
+
+    // antd Button 会在两个汉字间自动插空格（accessible name 为「重 试」）
+    fireEvent.click(screen.getByRole('button', { name: /重\s*试/ }));
+    expect(await screen.findByText('飞书审批增强连接器')).toBeInTheDocument();
+    // 错误分支已退出（toast 可能还在，所以断言重试按钮而不是文案消失）
+    expect(screen.queryByRole('button', { name: /重\s*试/ })).not.toBeInTheDocument();
+    expect(await screen.findByText('商品总数')).toBeInTheDocument();
+  });
 });

@@ -107,6 +107,10 @@ export default function MarketplaceCatalogAdminPage() {
   // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
   // 「商品总数 0」的假统计卡与空表格，再被真实数据覆盖。表单提交已有独立的 submitting。
   const [listLoading, setListLoading] = useState(true);
+  // 加载失败必须与「空列表」分流：失败路径会把 items 置空，若不带错误态，
+  // 页面画出来就是「目录为空」——把网络/后端故障伪装成「真的没有商品」，
+  // 运营会以为出厂商品没导入，而不是去重试或查后端。
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusFilter>('all');
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
@@ -124,6 +128,7 @@ export default function MarketplaceCatalogAdminPage() {
 
   const load = useCallback(async () => {
     setListLoading(true);
+    setLoadError(null);
     try {
       const data = await listCatalogItems({
         status: status === 'all' ? undefined : status,
@@ -134,7 +139,9 @@ export default function MarketplaceCatalogAdminPage() {
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载商品目录失败');
+      const msg = error instanceof Error ? error.message : '加载商品目录失败';
+      setLoadError(msg);
+      message.error(msg);
       setItems([]);
       setTotal(0);
     } finally {
@@ -439,8 +446,9 @@ export default function MarketplaceCatalogAdminPage() {
       }
     >
       <Space orientation='vertical' size={16} style={{ width: '100%' }}>
-        {/* 统计卡必须门控：还没拉到数据时渲染成「商品总数 0」会被误读成「目录为空」 */}
-        {!listLoading && (
+        {/* 统计卡必须门控：还没拉到数据时渲染成「商品总数 0」会被误读成「目录为空」；
+            加载失败时同理——0 不是事实，是没取到。 */}
+        {!listLoading && !loadError && (
           <Row gutter={16}>
             <Col xs={12} md={6}>
               <Card size='small'>
@@ -492,31 +500,40 @@ export default function MarketplaceCatalogAdminPage() {
           />
         </Space>
 
-        <Table<CatalogItem>
-          rowKey='id'
-          size='small'
-          loading={listLoading}
-          columns={columns}
-          dataSource={items}
-          pagination={{
-            current: page,
-            pageSize,
-            total,
-            showSizeChanger: false,
-            onChange: setPage,
-          }}
-          locale={{
-            emptyText: (
-              <Empty
-                description={
-                  total === 0
-                    ? '目录为空。可以新建商品，或确认 seeder 是否已导入出厂商品'
-                    : '没有符合筛选条件的商品'
-                }
-              />
-            ),
-          }}
-        />
+        {loadError ? (
+          <div role='alert' className='py-10 text-center'>
+            <p>{loadError}</p>
+            <Button loading={listLoading} onClick={() => void load()}>
+              重试
+            </Button>
+          </div>
+        ) : (
+          <Table<CatalogItem>
+            rowKey='id'
+            size='small'
+            loading={listLoading}
+            columns={columns}
+            dataSource={items}
+            pagination={{
+              current: page,
+              pageSize,
+              total,
+              showSizeChanger: false,
+              onChange: setPage,
+            }}
+            locale={{
+              emptyText: (
+                <Empty
+                  description={
+                    total === 0
+                      ? '目录为空。可以新建商品，或确认 seeder 是否已导入出厂商品'
+                      : '没有符合筛选条件的商品'
+                  }
+                />
+              ),
+            }}
+          />
+        )}
       </Space>
 
       <Drawer
