@@ -18,7 +18,11 @@ import (
 
 // RootCauseAnalysisService 根因分析服务
 type RootCauseAnalysisService struct {
-	client  *ent.Client
+	client *ent.Client
+	// slaSvc 与 incident_service 同构，直接持有共享层的 *TicketSLAService。
+	// 本服务就住在 internal/services（共享层），不需要像 handlers/problem 那样
+	// 再套一层窄契约——那层窄契约是为了让 handler 域不引用共享层具体类型。
+	slaSvc  *TicketSLAService
 	gateway *LLMGateway
 	logger  *zap.SugaredLogger
 }
@@ -31,6 +35,13 @@ func NewRootCauseAnalysisService(client *ent.Client) *RootCauseAnalysisService {
 // SetGateway 注入 LLM Gateway，启用后 Perform5WhysAnalysis / AnalyzeWithAI 将使用 AI
 func (s *RootCauseAnalysisService) SetGateway(gateway *LLMGateway) {
 	s.gateway = gateway
+}
+
+// SetSLAService 注入 SLA 服务，供事件转问题时按 problem 类型匹配定义并写 sla_states。
+// 用 setter 而非改构造函数签名：构造函数被 bootstrap 与 incident_service_test 共用，
+// 加参数会传染既有装配与测试，而 SetGateway/SetLogger 已是本服务的注入范式。
+func (s *RootCauseAnalysisService) SetSLAService(slaSvc *TicketSLAService) {
+	s.slaSvc = slaSvc
 }
 
 // SetLogger 注入 logger
@@ -298,7 +309,62 @@ func (s *RootCauseAnalysisService) CreateProblemFromIncident(
 		return rollback(err)
 	}
 
+	// SLA 绑定刻意放在事务提交之后，不放进事务内：
+	// sla.Store.SaveDeadlines 用的是它自己的 s.client 句柄（不是 tx 句柄），
+	// 放进事务里会绕开事务——表面上「有事务保护」，实则写库完全不受该事务
+	// 回滚约束，SQLite 下还可能因两个句柄抢同一张表而锁住。
+	// 与 handlers/problem 的既有顺序一致：repo.Create 之后才 bindSLAOnCreate。
+	//
+	// 失败容忍与 handlers/problem.bindSLAOnCreate 同构：SLA 查询失败只是
+	// 「这个问题没有 SLA」，不是转换失败——问题本身已经是已提交的业务成果，
+	// 不能因为计时器配不上而让用户看到「转问题失败」。
+	s.bindSLAOnProblem(ctx, tenantID, newProblem.ID, newProblem.Priority)
+
 	return newProblem, nil
+}
+
+// bindSLAOnProblem 转换出的问题按 problem 服务类型 + 优先级匹配 SLA 定义，
+// 计算响应/解决截止时间并写入 sla_states（aggregate_type="problem"）。
+//
+// 与 handlers/problem.bindSLAOnCreate 同语义（两者必须保持一致，否则「问题管理页
+// 新建」与「事件转问题」会给出两套事实），其中最关键的一条是：
+// 问题域刻意不套用默认 SLA。TicketSLAService.CalculateSLADeadlineFromRequest 在
+// 没有匹配定义时会返回 SLADefinitionID=0 却仍然塞上 60/480 分钟的默认截止时间；
+// 若这里只看 slaResult 非空就绑定，等于给存量问题静默绑隐藏默认值，下一轮 watcher
+// 会让它们集体违规——那是配置噪音不是治理信号。故必须显式判 SLADefinitionID == 0
+// 即视为「没配 SLA」直接返回，由 GET /problems/:id/sla 的 bound=false 如实回答。
+func (s *RootCauseAnalysisService) bindSLAOnProblem(ctx context.Context, tenantID, problemID int, priority string) {
+	if s.slaSvc == nil {
+		return
+	}
+	slaResult, err := s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, "problem", priority)
+	if err != nil {
+		s.warnw("Failed to calculate problem SLA deadline during incident conversion, continuing without SLA binding",
+			"tenant_id", tenantID, "problem_id", problemID, "error", err)
+		return
+	}
+	if slaResult == nil || slaResult.SLADefinitionID == 0 {
+		// 无匹配的 problem 类型定义（或走了默认兜底）：不绑定。
+		return
+	}
+	store := s.slaSvc.SLAStore()
+	if store == nil {
+		return
+	}
+	if err := store.SaveDeadlines(ctx, tenantID, "problem", problemID, slaResult.SLADefinitionID, slaResult.ResponseDeadline, slaResult.ResolutionDeadline); err != nil {
+		s.warnw("Failed to save problem SLA state during incident conversion, continuing",
+			"problem_id", problemID, "error", err)
+	}
+}
+
+// warnw 在 logger 未注入时静默降级：本服务在生产由 bootstrap 注入 logger，
+// 但多处单测只 NewRootCauseAnalysisService(client) 就直接调业务方法，
+// 直呼 s.logger.Warnw 会在 nil 上解引用 panic，把「没有 SLA」变成测试崩溃。
+func (s *RootCauseAnalysisService) warnw(msg string, kv ...interface{}) {
+	if s.logger == nil {
+		return
+	}
+	s.logger.Warnw(msg, kv...)
 }
 
 // AnalyzeWithAI 使用AI辅助分析根因

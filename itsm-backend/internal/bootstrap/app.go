@@ -807,6 +807,12 @@ func NewApplication() *Application {
 
 	rootCauseAnalysisService.SetGateway(llmGateway)
 	rootCauseAnalysisService.SetLogger(sugar)
+	// 事件转问题必须绑 SLA：漏这一行时 slaSvc 恒为 nil，绑定被静默跳过，
+	// 「问题管理页新建问题」有 sla_states 行而「事件详情页转问题」没有，
+	// GET /problems/:id/sla 对后者恒 bound=false —— 同一实体两套事实。
+	// 与 problemServiceDomain.SetSLAService（下文）共用同一个 ticketSLAService 实例，
+	// 保证两条创建路径走同一份定义匹配与同一份计时口径。
+	rootCauseAnalysisService.SetSLAService(ticketSLAService)
 	approvalHandler := approval.NewHandler(approvalService)
 
 	// ProblemController and ChangeController removed - using Handlers instead

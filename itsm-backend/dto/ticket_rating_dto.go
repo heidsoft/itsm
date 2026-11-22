@@ -43,10 +43,17 @@ type CategoryRatingStats struct {
 }
 
 // GetRatingStatsRequest 获取评分统计请求
+//
+// 日期字段必须带 binding：此前只有 `form` 标签，非法日期会一路传到 service，
+// 被 `time.Parse` 静默丢弃后查询退化成「全历史评分」——报表使用者以为筛了
+// 日期，看到的却是所有历史数据。绑定 `datetime=2006-01-02` 与前端日期选择器
+// 的提交格式一致；`omitempty` 保留「不传日期 = 查全部」这个正当语义。
+// 注意字段是 *string：不传时为 nil，传空串时 binding 会按 `datetime` 校验失败，
+// 因此带 `?startDate=` 的空值也会被拒（前端不应提交空串）。
 type GetRatingStatsRequest struct {
-	AssigneeID *int    `form:"assigneeId"` // 按处理人筛选
-	CategoryID *int    `form:"categoryId"` // 按分类筛选
-	StartDate  *string `form:"startDate"`  // 开始日期
-	EndDate    *string `form:"endDate"`    // 结束日期
+	AssigneeID *int    `form:"assigneeId"`                                        // 按处理人筛选
+	CategoryID *int    `form:"categoryId"`                                        // 按分类筛选
+	StartDate  *string `form:"startDate" binding:"omitempty,datetime=2006-01-02"` // 开始日期
+	EndDate    *string `form:"endDate" binding:"omitempty,datetime=2006-01-02"`   // 结束日期
 	TenantID   int     `form:"tenantId"`
 }

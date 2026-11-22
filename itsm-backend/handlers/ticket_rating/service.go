@@ -16,6 +16,11 @@ import (
 	"go.uber.org/zap"
 )
 
+// ratingDateLayout 是评分统计日期参数的唯一格式（与 DTO binding 的
+// `datetime=2006-01-02` 必须保持一致）。两处若分歧，会出现「HTTP 层放行、
+// service 层又拒掉」的诡异组合。
+const ratingDateLayout = "2006-01-02"
+
 // NotificationService 是评分域对通知能力的最小依赖（依赖倒置）。
 // 具体实现由 internal/bootstrap 注入，域包不再依赖 service/。
 type NotificationService interface {
@@ -213,19 +218,30 @@ func (s *TicketRatingService) GetRatingStats(
 	if req.CategoryID != nil {
 		query = query.Where(ticket.CategoryID(*req.CategoryID))
 	}
+	// 日期筛选：解析失败必须报错，不得静默丢弃。
+	//
+	// 旧实现是 `if err == nil { query = query.Where(...) }` —— 没有 else 分支。
+	// 传 `startDate=abc` 时该筛选条件直接消失，查询退化为「全历史评分」，
+	// 而响应里没有任何字段能暴露「筛选没生效」；使用者拿着一份标注了日期区间、
+	// 内容却是全历史的报表去做决策。DTO 层已有 binding 兜住 HTTP 入口，
+	// 这里是第二道：service 也可能被定时报表、导出任务等非 HTTP 入口直接调用。
 	if req.StartDate != nil {
-		startDate, err := time.Parse("2006-01-02", *req.StartDate)
-		if err == nil {
-			query = query.Where(ticket.RatedAtGTE(startDate))
+		startDate, err := time.Parse(ratingDateLayout, *req.StartDate)
+		if err != nil {
+			return nil, common.NewBusinessError(common.ParamErrorCode,
+				"开始日期格式错误，应为 YYYY-MM-DD", "")
 		}
+		query = query.Where(ticket.RatedAtGTE(startDate))
 	}
 	if req.EndDate != nil {
-		endDate, err := time.Parse("2006-01-02", *req.EndDate)
-		if err == nil {
-			// 结束日期应该是当天的23:59:59
-			endDate = endDate.Add(24*time.Hour - time.Second)
-			query = query.Where(ticket.RatedAtLTE(endDate))
+		endDate, err := time.Parse(ratingDateLayout, *req.EndDate)
+		if err != nil {
+			return nil, common.NewBusinessError(common.ParamErrorCode,
+				"结束日期格式错误，应为 YYYY-MM-DD", "")
 		}
+		// 结束日期应该是当天的23:59:59，否则「截至今天」会把今天的评分漏掉。
+		endDate = endDate.Add(24*time.Hour - time.Second)
+		query = query.Where(ticket.RatedAtLTE(endDate))
 	}
 
 	// 获取所有已评分的工单
