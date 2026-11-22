@@ -309,15 +309,18 @@ export default function ApprovalsCenterPage() {
     }
   }, [message, t]);
 
+  const [legacyError, setLegacyError] = useState<string | null>(null);
+
   const loadLegacy = useCallback(async () => {
     setLegacyLoading(true);
+    setLegacyError(null);
     try {
       // 查询参数统一 camelCase，与后端 DTO form tag 契约一致。
       // 三个列表接口都返回标准信封，集合只在 data.items 下。
       const [ticketsResp, changesResp, srResp] = await Promise.all([
-        httpClient.get<{ items?: RawListItem[] }>('/api/v1/tickets', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] as RawListItem[] })),
-        httpClient.get<{ items?: RawListItem[] }>('/api/v1/changes', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] as RawListItem[] })),
-        httpClient.get<{ items?: RawListItem[] }>('/api/v1/service-requests', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] as RawListItem[] })),
+        httpClient.get<{ items?: RawListItem[] }>('/api/v1/tickets', { status: 'pending', page: 1, pageSize: 20 }),
+        httpClient.get<{ items?: RawListItem[] }>('/api/v1/changes', { status: 'pending', page: 1, pageSize: 20 }),
+        httpClient.get<{ items?: RawListItem[] }>('/api/v1/service-requests', { status: 'pending', page: 1, pageSize: 20 }),
       ]);
       const items: LegacyPendingItem[] = [
         ...(ticketsResp.items ?? []).filter((it) => it.id != null).map((it) => ({
@@ -353,6 +356,7 @@ export default function ApprovalsCenterPage() {
       ];
       setLegacyItems(items);
     } catch {
+      setLegacyError(t('approvalCenter.loadLegacyFailed'));
       message.error(t('approvalCenter.loadLegacyFailed'));
     } finally {
       setLegacyLoading(false);
@@ -943,7 +947,12 @@ export default function ApprovalsCenterPage() {
                   <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-sm text-amber-700">
                     {t('approvalCenter.legacyNotice')}
                   </div>
-                  {legacyLoading ? (
+                  {legacyError ? (
+                    <div role="alert" className="py-10 text-center">
+                      <p>{legacyError}</p>
+                      <Button onClick={() => void loadLegacy()}>重试</Button>
+                    </div>
+                  ) : legacyLoading ? (
                     <LoadingSkeleton />
                   ) : (
                     <Table

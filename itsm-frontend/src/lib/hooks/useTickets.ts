@@ -62,6 +62,7 @@ export const useTickets = (): UseTicketsReturn => {
   const [filters, setFilters] = useState<Partial<TicketQueryFilters>>({});
 
   // 用 ref 持有最新值，避免 fetchTickets 因依赖变化无限重建
+  const fetchSeqRef = useRef(0);
   const filtersRef = useRef(filters);
   const paginationRef = useRef(pagination);
   // 用于触发 fetchTickets 的计数器
@@ -77,6 +78,7 @@ export const useTickets = (): UseTicketsReturn => {
 
   // fetchTickets 不再依赖 filters/pagination state，通过 ref 读取最新值
   const fetchTickets = useCallback(async (customFilters?: Partial<TicketQueryFilters>) => {
+    const seq = ++fetchSeqRef.current;
     setLoading(true);
     setError(null);
 
@@ -101,14 +103,16 @@ export const useTickets = (): UseTicketsReturn => {
         sortOrder: currentFilters.sortOrder,
       });
 
+      if (seq !== fetchSeqRef.current) return;
       setTickets(response.items ?? []);
       setPagination(prev => ({ ...prev, total: response.total ?? 0 }));
     } catch (err) {
+      if (seq !== fetchSeqRef.current) return;
       const errorMessage = err instanceof Error ? err.message : 'Failed to load tickets';
       setError(errorMessage);
       message.error(errorMessage);
     } finally {
-      setLoading(false);
+      if (seq === fetchSeqRef.current) setLoading(false);
     }
   }, []); // 空依赖，永不重建
 

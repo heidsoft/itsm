@@ -62,6 +62,7 @@ const UserManagement: React.FC = () => {
   // 列表加载与提交动作分开：mount 必定发起首次拉取，列表初值必须为 true，
   // 否则首帧会把「还没拉取」渲染成「暂无用户」；而提交按钮不应跟着列表一起转圈。
   const [listLoading, setListLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
   const [pagination, setPagination] = useState({
@@ -112,7 +113,9 @@ const UserManagement: React.FC = () => {
 
       const userStats = await UserApi.getUserStats(currentTenant?.id);
       setStats(userStats);
+      setLoadError(null);
     } catch (error) {
+      setLoadError(t('users.messages.loadFailed'));
       message.error(t('users.messages.loadFailed'));
     } finally {
       setListLoading(false);
@@ -431,7 +434,7 @@ const UserManagement: React.FC = () => {
         <Text type="secondary">{t('users.description')}</Text>
 
         {/* 统计卡片：首次拉取未完成时不渲染，否则会把「还没拉到」画成「总用户数 0」 */}
-        {!listLoading && (
+        {!listLoading && !loadError && (
         <Row gutter={16} style={{ marginTop: token.marginLG }}>
           <Col span={8}>
             <Card>
@@ -543,7 +546,12 @@ const UserManagement: React.FC = () => {
 
       {/* 用户表格 */}
       <Card>
-        {users.length === 0 && !listLoading ? (
+        {loadError ? (
+          <div role="alert" className="py-10 text-center">
+            <p>{loadError}</p>
+            <Button loading={listLoading} onClick={() => void loadUsers()}>重试</Button>
+          </div>
+        ) : users.length === 0 && !listLoading ? (
           <Empty description={t('users.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => setIsCreateModalVisible(true)}>
 {t('users.createFirst')}

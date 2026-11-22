@@ -16,8 +16,9 @@ import {
   PlayCircle,
 } from 'lucide-react';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dayjs from 'dayjs';
+import { useDebounce } from '@/lib/component-utils';
 import type { Dayjs } from 'dayjs';
 import { formatDateTime } from '@/lib/formatters';
 import {
@@ -107,6 +108,8 @@ export default function TenantManagement() {
   const [viewOnly, setViewOnly] = useState(false);
   const [form] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const loadSeqRef = useRef(0);
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   // 初始化状态按需加载并缓存：状态接口逐组件验证较重，不在列表加载时强拉，
@@ -123,13 +126,16 @@ export default function TenantManagement() {
 
   // 加载租户数据
   const loadTenants = async () => {
+    const seq = ++loadSeqRef.current;
     setListLoading(true);
     try {
       const response = await TenantAPI.getTenants({
-        search: searchTerm || undefined,
+        search: debouncedSearchTerm || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         type: typeFilter !== 'all' ? typeFilter : undefined,
       });
+
+      if (seq !== loadSeqRef.current) return;
 
       // 不再 `as Tenant[]` 强转：接口返回的就是 TenantListResponse.items，
       // 强转正是此前「类型与真实响应不一致却无人发现」的根源（缺陷 O8）。
@@ -156,16 +162,17 @@ export default function TenantManagement() {
         expired,
       });
     } catch (error) {
+      if (seq !== loadSeqRef.current) return;
       message.error(t('tenants.loadFailed'));
     } finally {
-      setListLoading(false);
+      if (seq === loadSeqRef.current) setListLoading(false);
     }
   };
 
   // 初始化加载数据
   useEffect(() => {
     loadTenants();
-  }, [searchTerm, statusFilter, typeFilter]);
+  }, [debouncedSearchTerm, statusFilter, typeFilter]);
 
   // 处理保存租户
   const handleSaveTenant = async () => {
