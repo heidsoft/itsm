@@ -1165,10 +1165,11 @@ func NewApplication() *Application {
 	// resource:action** 逐个判定 —— service 主体须由管理员在权限策略中按工具码
 	// 显式加入 service，符合「AI 主体零权限是核心防线」的既有设计。
 	mcpHandler, mcpErr := BuildMCPHandler(Dependencies{
-		ToolRegistry: toolRegistry,
-		AIService:    aiServiceDomain,
-		Marketplace:  marketplaceSvc,
-		Logger:       sugar,
+		VisibilityChecker: mcpVisibilityAdapter{client: client},
+		ToolRegistry:      toolRegistry,
+		AIService:         aiServiceDomain,
+		Marketplace:       marketplaceSvc,
+		Logger:            sugar,
 	})
 	if mcpErr != nil {
 		// 装配失败属致命配置错误：MCP 通道必须 fail-closed，

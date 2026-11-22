@@ -109,7 +109,7 @@ func writeTool(name, resource string) dto.ToolDefinition {
 
 func TestInitialize_NegotiatesProtocolAndDeclaresTools(t *testing.T) {
 	cat := &fakeCatalog{tools: []dto.ToolDefinition{readOnlyTool("get_incident_stats", "incident")}}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: &fakeExecutor{}})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: &fakeExecutor{}})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{
@@ -134,7 +134,7 @@ func TestInitialize_NegotiatesProtocolAndDeclaresTools(t *testing.T) {
 
 func TestInitialize_UnsupportedClientVersion_StillRespondsWithServerVersion(t *testing.T) {
 	cat := &fakeCatalog{}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: &fakeExecutor{}})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: &fakeExecutor{}})
 	require.NoError(t, err)
 
 	// 客户端报一个服务端不支持的版本：服务端应回自己支持的版本，
@@ -154,7 +154,7 @@ func TestInitialize_UnsupportedClientVersion_StillRespondsWithServerVersion(t *t
 
 func TestUnknownMethod_ReturnsMethodNotFound(t *testing.T) {
 	cat := &fakeCatalog{}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: &fakeExecutor{}})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: &fakeExecutor{}})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{
@@ -170,7 +170,7 @@ func TestUnknownMethod_ReturnsMethodNotFound(t *testing.T) {
 
 func TestInitializedNotification_ReturnsNoResponse(t *testing.T) {
 	cat := &fakeCatalog{}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: &fakeExecutor{}})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: &fakeExecutor{}})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{
@@ -186,7 +186,7 @@ func TestToolsList_ProjectsSchemaAndReadOnlyHint(t *testing.T) {
 		readOnlyTool("get_incident_stats", "incident"),
 		writeTool("update_ci", "cmdb"),
 	}}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: &fakeExecutor{}})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: &fakeExecutor{}})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{
@@ -227,7 +227,7 @@ func TestToolCall_DelegatesSubjectAuthorizationToExecutionChain(t *testing.T) {
 	// isError=true 的工具执行失败（而非协议错误），且不得改写错误语义。
 	exec := &fakeExecutor{err: errors.New("AI 主体 service 未获授权 incident:read")}
 	cat := &fakeCatalog{tools: []dto.ToolDefinition{readOnlyTool("get_incident_stats", "incident")}}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: exec})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: exec})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{
@@ -248,7 +248,7 @@ func TestToolCall_RoleAndPrincipalPassedThroughToExecutor(t *testing.T) {
 	// Gate 2.5 用 principal。MCP 层若改写任一值，判定就会失真。
 	exec := &fakeExecutor{result: map[string]interface{}{"ok": true}}
 	cat := &fakeCatalog{tools: []dto.ToolDefinition{readOnlyTool("get_incident_stats", "incident")}}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: exec})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: exec})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{
@@ -275,7 +275,7 @@ func TestToolsList_HidesToolsWithoutEntitlement(t *testing.T) {
 		readOnlyTool("search_knowledge", "knowledge"),
 	}}
 	ent := &fakeEntitlement{allowed: map[string]bool{"get_incident_stats": true}}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: &fakeExecutor{}, Entitlement: ent})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: &fakeExecutor{}, Entitlement: ent})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{
@@ -292,7 +292,7 @@ func TestToolCall_DeniedByEntitlement_EvenWhenToolNameKnown(t *testing.T) {
 	exec := &fakeExecutor{result: map[string]interface{}{"secret": "data"}}
 	ent := &fakeEntitlement{allowed: map[string]bool{}, reason: "未安装该组件"}
 	cat := &fakeCatalog{tools: []dto.ToolDefinition{readOnlyTool("search_knowledge", "knowledge")}}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: exec, Entitlement: ent})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: exec, Entitlement: ent})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{
@@ -311,7 +311,7 @@ func TestToolCall_DeniedByEntitlement_EvenWhenToolNameKnown(t *testing.T) {
 func TestEntitlementCheckError_FailsClosed(t *testing.T) {
 	cat := &fakeCatalog{tools: []dto.ToolDefinition{readOnlyTool("get_incident_stats", "incident")}}
 	ent := &fakeEntitlement{err: errors.New("db down")}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: &fakeExecutor{}, Entitlement: ent})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: &fakeExecutor{}, Entitlement: ent})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{
@@ -408,7 +408,7 @@ func TestToolsList_AllOutputSchemasAreObjectTyped(t *testing.T) {
 		{Name: "b", ReadOnly: true, ResultSchema: map[string]interface{}{"type": "array"}},
 		{Name: "c", ReadOnly: true, ResultSchema: map[string]interface{}{"type": "string"}},
 	}}
-	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: &fakeExecutor{}})
+	svc, err := mcp.NewService(mcp.Options{Visibility: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }), Catalog: cat, Executor: &fakeExecutor{}})
 	require.NoError(t, err)
 
 	resp := svc.Handle(context.Background(), &mcp.Request{

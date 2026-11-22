@@ -143,12 +143,15 @@ type ToolAnnotations struct {
 // InputSchema 必须是合法的 JSON Schema（type=object）。ArgsSchema 若缺失，
 // 退化为空对象 schema —— 宁可给客户端一个明确的无参契约，也不给非法 schema。
 type Tool struct {
-	Name        string         `json:"name"`
-	Title       string         `json:"title,omitempty"`
-	Description string         `json:"description,omitempty"`
-	InputSchema map[string]any `json:"inputSchema"`
-	OutputSchema map[string]any `json:"outputSchema,omitempty"`
-	Annotations *ToolAnnotations `json:"annotations,omitempty"`
+	// Resource/Action 仅供列举可见性检查，不暴露到 MCP 协议。
+	Resource     string           `json:"-"`
+	Action       string           `json:"-"`
+	Name         string           `json:"name"`
+	Title        string           `json:"title,omitempty"`
+	Description  string           `json:"description,omitempty"`
+	InputSchema  map[string]any   `json:"inputSchema"`
+	OutputSchema map[string]any   `json:"outputSchema,omitempty"`
+	Annotations  *ToolAnnotations `json:"annotations,omitempty"`
 }
 
 // ListToolsResult 是 tools/list 的 result。
@@ -175,10 +178,10 @@ type ContentItem struct {
 // 而不是 JSON-RPC error —— 规范区分「协议错误」与「工具执行错误」，
 // 前者说明请求本身不合法，后者说明请求合法但业务失败。
 type CallToolResult struct {
-	Content           []ContentItem     `json:"content"`
-	StructuredContent interface{}       `json:"structuredContent,omitempty"`
-	IsError           bool              `json:"isError,omitempty"`
-	Meta              map[string]any    `json:"_meta,omitempty"`
+	Content           []ContentItem  `json:"content"`
+	StructuredContent interface{}    `json:"structuredContent,omitempty"`
+	IsError           bool           `json:"isError,omitempty"`
+	Meta              map[string]any `json:"_meta,omitempty"`
 }
 
 // Content 构造单条 text 内容项。

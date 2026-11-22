@@ -8,7 +8,9 @@ import (
 	"go.uber.org/zap"
 
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/handlers/mcp"
+	"itsm-backend/middleware"
 	"itsm-backend/service/marketplace"
 )
 
@@ -17,6 +19,7 @@ import (
 // 用窄接口而非具体类型声明，便于端到端测试注入替身，同时让「MCP 依赖什么」
 // 这件事在类型层面可见 —— 少一个依赖就少一处装配遗漏的可能。
 type Dependencies struct {
+	VisibilityChecker mcp.VisibilityChecker
 	// ToolRegistry 提供工具面（列举）。实现方是 internal/services.ToolRegistry。
 	ToolRegistry interface {
 		ListToolsForTenant(ctx context.Context, tenantID int) []dto.ToolDefinition
@@ -50,6 +53,9 @@ func BuildMCPHandler(deps Dependencies) (*mcp.Handler, error) {
 	if deps.Marketplace == nil {
 		return nil, errors.New("mcp 装配缺 Marketplace：交付门禁无来源")
 	}
+	if deps.VisibilityChecker == nil {
+		return nil, errors.New("mcp 装配缺 VisibilityChecker：列举权限无来源")
+	}
 	logger := deps.Logger
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
@@ -64,11 +70,23 @@ func BuildMCPHandler(deps Dependencies) (*mcp.Handler, error) {
 		Entitlement: &mcp.EntitlementAdapter{
 			Checker: deps.Marketplace,
 		},
-		Logger:  logger,
-		Version: mcp.Version(),
+		Visibility: deps.VisibilityChecker,
+		Logger:     logger,
+		Version:    mcp.Version(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("mcp service 构造失败: %w", err)
 	}
 	return mcp.NewHandler(svc, logger), nil
+}
+
+// mcpVisibilityAdapter 与 AI 列举共用 middleware.HasResourcePermission，
+// 不实现另一套权限规则，也不参与 tools/call 的执行放行。
+type mcpVisibilityAdapter struct{ client *ent.Client }
+
+func (a mcpVisibilityAdapter) HasPermission(ctx context.Context, role, resource, action string, tenantID int) bool {
+	if a.client == nil {
+		return false
+	}
+	return middleware.HasResourcePermission(ctx, a.client, role, resource, action, tenantID)
 }
