@@ -48,7 +48,7 @@ func newSilentClockHandler(t *testing.T) *Handler {
 	}); err != nil {
 		t.Fatalf("provision silent-clock-stub: %v", err)
 	}
-	return NewHandler(mgr, reg, marketplace.New(), zap.NewNop().Sugar())
+	return NewHandler(mgr, reg, marketplace.New(), zap.NewNop().Sugar(), nil)
 }
 
 // 审计实测：`itsm --json connector health` 的 items[].checkedAt 渲染成

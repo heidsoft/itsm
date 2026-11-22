@@ -512,7 +512,9 @@ func NewApplication() *Application {
 		}
 	}
 	connectorMarket := marketplace.New()
-	connectorHandler := connectorHandler.NewHandler(connectorManager, connector.Default(), connectorMarket, sugar)
+	// 注入 ent client：Send/Test 需按 manifest 声明的 required_permissions 校验调用方，
+	// 判定走 middleware.HasResourcePermission 单一真源（与 skill handler 同构）。
+	connectorHandler := connectorHandler.NewHandler(connectorManager, connector.Default(), connectorMarket, sugar, client)
 	connectorHandler.SetAuditRecorder(domainCommon.NewEntRepository(client))
 	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, client, alertDevelopmentMode())
 	connectorEncryptionKey := os.Getenv("CONNECTOR_CONFIG_ENCRYPTION_KEY")

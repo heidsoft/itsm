@@ -126,7 +126,7 @@ func newRotateFixture(t *testing.T) *rotateFixture {
 		t.Fatalf("save initial: %v", err)
 	}
 
-	h := NewHandler(mgr, reg, marketplace.New(), zap.NewNop().Sugar())
+	h := NewHandler(mgr, reg, marketplace.New(), zap.NewNop().Sugar(), nil)
 	h.SetPersistentStore(store)
 	audit := &capturingAudit{}
 	h.SetAuditRecorder(audit)

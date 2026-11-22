@@ -24,6 +24,7 @@ func newStorelessHandler() *Handler {
 		connector.Default(),
 		marketplace.New(),
 		zap.NewNop().Sugar(),
+		nil,
 	)
 }
 
