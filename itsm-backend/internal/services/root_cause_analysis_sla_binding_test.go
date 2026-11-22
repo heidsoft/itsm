@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/slastate"
 	slaEngine "itsm-backend/service/sla"
@@ -213,4 +215,48 @@ func TestCreateProblemFromIncident_SLAFailureDoesNotLoseProblem(t *testing.T) {
 	linked, err := client.Problem.Query().QueryIncidents().Only(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, incidentEntity.ID, linked.ID)
+}
+
+// 用独立故障依赖模拟查询/写入失败，转换仍走真实事务且审计必须持久化。
+func TestCreateProblemFromIncident_SLABindingFailureAudit(t *testing.T) {
+	for _, stage := range []string{"query", "write", "unconfigured"} {
+		t.Run(stage, func(t *testing.T) {
+			client := enttest.Open(t, "sqlite3", testDSN())
+			defer client.Close()
+			ctx := context.Background()
+			tenant, actor, inc, _ := seedRCAConversionFixture(t, ctx, client, "audit_"+stage, stage != "unconfigured")
+			rca := newRCAWithSLA(t, client)
+			if stage != "unconfigured" {
+				broken := enttest.Open(t, "sqlite3", testDSN())
+				require.NoError(t, broken.Close())
+				if stage == "query" {
+					rca.slaSvc.client = broken
+				} else {
+					rca.slaSvc.SetSLAStore(slaEngine.NewStore(broken, slaEngine.NewEngine(nil)))
+				}
+			}
+			created, err := rca.CreateProblemFromIncident(ctx, inc.ID, actor.ID, tenant.ID, nil)
+			require.NoError(t, err)
+			require.NotZero(t, created.ID)
+			exists, err := client.Problem.Query().Exist(ctx)
+			require.NoError(t, err)
+			require.True(t, exists)
+			rows, err := client.AuditLog.Query().Where(auditlog.TenantID(tenant.ID), auditlog.Action("problem.sla_bind_failed")).All(ctx)
+			require.NoError(t, err)
+			if stage == "unconfigured" {
+				require.Empty(t, rows)
+				return
+			}
+			require.Len(t, rows, 1)
+			assert.Equal(t, actor.ID, rows[0].UserID)
+			assert.Equal(t, fmt.Sprintf("problem:%d", created.ID), rows[0].Resource)
+			require.NotNil(t, rows[0].RequestBody)
+			assert.Contains(t, *rows[0].RequestBody, `"slaBindFailed":true`)
+			expectedClass := "deadline_query_failed"
+			if stage == "write" {
+				expectedClass = "state_write_failed"
+			}
+			assert.Contains(t, *rows[0].RequestBody, expectedClass)
+		})
+	}
 }

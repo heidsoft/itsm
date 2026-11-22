@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
@@ -315,10 +316,8 @@ func (s *RootCauseAnalysisService) CreateProblemFromIncident(
 	// 回滚约束，SQLite 下还可能因两个句柄抢同一张表而锁住。
 	// 与 handlers/problem 的既有顺序一致：repo.Create 之后才 bindSLAOnCreate。
 	//
-	// 失败容忍与 handlers/problem.bindSLAOnCreate 同构：SLA 查询失败只是
-	// 「这个问题没有 SLA」，不是转换失败——问题本身已经是已提交的业务成果，
-	// 不能因为计时器配不上而让用户看到「转问题失败」。
-	s.bindSLAOnProblem(ctx, tenantID, newProblem.ID, newProblem.Priority)
+	// 问题已提交，绑定失败不能伪装成转换失败；另写审计告警区分未配置与依赖故障。
+	s.bindSLAOnProblem(ctx, tenantID, newProblem.ID, createdBy, newProblem.Priority)
 
 	return newProblem, nil
 }
@@ -333,27 +332,51 @@ func (s *RootCauseAnalysisService) CreateProblemFromIncident(
 // 若这里只看 slaResult 非空就绑定，等于给存量问题静默绑隐藏默认值，下一轮 watcher
 // 会让它们集体违规——那是配置噪音不是治理信号。故必须显式判 SLADefinitionID == 0
 // 即视为「没配 SLA」直接返回，由 GET /problems/:id/sla 的 bound=false 如实回答。
-func (s *RootCauseAnalysisService) bindSLAOnProblem(ctx context.Context, tenantID, problemID int, priority string) {
+func (s *RootCauseAnalysisService) bindSLAOnProblem(ctx context.Context, tenantID, problemID, actorID int, priority string) {
 	if s.slaSvc == nil {
 		return
 	}
 	slaResult, err := s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, "problem", priority)
 	if err != nil {
-		s.warnw("Failed to calculate problem SLA deadline during incident conversion, continuing without SLA binding",
-			"tenant_id", tenantID, "problem_id", problemID, "error", err)
+		s.recordSLABindFailure(ctx, tenantID, problemID, actorID, "deadline_query_failed")
 		return
 	}
 	if slaResult == nil || slaResult.SLADefinitionID == 0 {
-		// 无匹配的 problem 类型定义（或走了默认兜底）：不绑定。
+		// 共享计算器会把查询故障也降级成 ID=0；核验查询是否可用，避免误称“未配置”。
+		// 不重新匹配策略，正常无配置仍不绑定、不记失败。
+		if _, err := s.slaSvc.client.SLADefinition.Query().Where(
+			sladefinition.TenantID(tenantID), sladefinition.ServiceType("problem"),
+			sladefinition.IsActive(true),
+		).Exist(ctx); err != nil {
+			s.recordSLABindFailure(ctx, tenantID, problemID, actorID, "deadline_query_failed")
+		}
 		return
 	}
 	store := s.slaSvc.SLAStore()
 	if store == nil {
+		s.recordSLABindFailure(ctx, tenantID, problemID, actorID, "store_unavailable")
 		return
 	}
 	if err := store.SaveDeadlines(ctx, tenantID, "problem", problemID, slaResult.SLADefinitionID, slaResult.ResponseDeadline, slaResult.ResolutionDeadline); err != nil {
-		s.warnw("Failed to save problem SLA state during incident conversion, continuing",
-			"problem_id", problemID, "error", err)
+		s.recordSLABindFailure(ctx, tenantID, problemID, actorID, "state_write_failed")
+	}
+}
+
+// 复用结构化审计留下可检索的故障记录；只存稳定分类，避免泄漏数据库原始错误。
+func (s *RootCauseAnalysisService) recordSLABindFailure(ctx context.Context, tenantID, problemID, actorID int, errorClass string) {
+	details, _ := json.Marshal(map[string]interface{}{"slaBindFailed": true, "errorClass": errorClass, "problemId": problemID})
+	logger := s.logger
+	if logger == nil {
+		logger = zap.S()
+	}
+	logger.Errorw("problem SLA binding failed", "tenant_id", tenantID, "problem_id", problemID, "actor_id", actorID, "error_class", errorClass, "slaBindFailed", true)
+	_, err := s.client.AuditLog.Create().SetTenantID(tenantID).SetUserID(actorID).
+		SetResource(fmt.Sprintf("problem:%d", problemID)).SetAction("problem.sla_bind_failed").
+		SetPath(fmt.Sprintf("service://problems/%d/sla", problemID)).SetMethod("DOMAIN").
+		SetStatusCode(503).SetRequestBody(string(details)).Save(ctx)
+	if err != nil {
+		// 请求取消或数据库同时不可用时审计也可能失败，必须保留独立告警信号。
+		logger.Errorw("problem SLA binding audit unavailable", "tenant_id", tenantID, "problem_id", problemID, "error_class", "audit_write_failed")
 	}
 }
 

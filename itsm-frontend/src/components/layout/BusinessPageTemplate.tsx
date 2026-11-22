@@ -248,12 +248,16 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
   // 即时发出后写入同一槽位，防抖落地时值相同即跳过，避免同一词双发。
   const lastSentSearchRef = useRef(localSearchValue);
 
+  // 回调身份随父组件渲染变化，使用最新引用避免回放尚未更新的旧防抖词。
+  const onSearchRef = useRef(onSearch);
+  onSearchRef.current = onSearch;
+
   // 防抖值变化才向消费方发 onSearch；显式回车已发过的相同词不再重复发。
   useEffect(() => {
-    if (!onSearch || debouncedSearch === lastSentSearchRef.current) return;
+    if (!onSearchRef.current || debouncedSearch === lastSentSearchRef.current) return;
     lastSentSearchRef.current = debouncedSearch;
-    onSearch(debouncedSearch);
-  }, [debouncedSearch, onSearch]);
+    onSearchRef.current(debouncedSearch);
+  }, [debouncedSearch]);
 
   // 搜索变化处理：只更新本地输入态，触发统一交给上方防抖 effect。
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

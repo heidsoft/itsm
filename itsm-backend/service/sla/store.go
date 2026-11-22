@@ -292,8 +292,8 @@ func (s *Store) RecordFirstResponse(ctx context.Context, tenantID int, aggregate
 }
 
 // RecordResolution 记录解决时间。
-// 已 breached 的状态保持 breached（迟到的解决不抹除违规事实，SLA 达成率
-// 按「是否在截止前解决」计量，不是「最终是否解决」）；未违规的才转 met。
+// 与 RecordResolutionInTx 共用 resolutionStatus，按权威截止时间判定，
+// 与扫描器 BreachCheck 口径一致，迟到解决不抹除违规事实。
 func (s *Store) RecordResolution(ctx context.Context, tenantID int, aggregateType string, aggregateID int, at time.Time) error {
 	existing, err := s.client.SLAState.Query().
 		Where(
@@ -312,13 +312,66 @@ func (s *Store) RecordResolution(ctx context.Context, tenantID int, aggregateTyp
 	}
 
 	upd := existing.Update().SetResolvedAt(at)
-	if existing.Status != "breached" {
-		upd.SetStatus("met")
-	}
+	upd.SetStatus(resolutionStatus(existing, at))
 	if _, err := upd.Save(ctx); err != nil {
 		return err
 	}
 	return nil
+}
+
+// RecordResolutionInTx 在调用方事务内记录解决时间，保证「实体已 resolved」与
+// 「SLA 权威状态已收口」同生共死。
+//
+// 幂等：已 resolved 的只保留首次时间戳；并发重复调用由 ResolvedAtIsNil 条件更新
+// 收敛，affected=0 视为对方已写入。已 breached 的状态保持 breached，迟到解决
+// 不抹除违规事实。
+func (s *Store) RecordResolutionInTx(ctx context.Context, tx *ent.Tx, tenantID int, aggregateType string, aggregateID int, at time.Time) error {
+	state, err := tx.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.AggregateID(aggregateID),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			// 未绑定 SLA 的聚合根是合法状态；SLA 绑定失败不应回滚业务解决。
+			zap.S().Warnw("sla_state not found for RecordResolutionInTx",
+				"tenantID", tenantID, "aggregateType", aggregateType, "aggregateID", aggregateID)
+			return nil
+		}
+		return err
+	}
+	if !state.ResolvedAt.IsZero() {
+		return nil
+	}
+
+	upd := tx.SLAState.Update().
+		Where(
+			slastate.ID(state.ID),
+			slastate.ResolvedAtIsNil(),
+		).
+		SetResolvedAt(at)
+	upd.SetStatus(resolutionStatus(state, at))
+	_, err = upd.Save(ctx)
+	return err
+}
+
+// resolutionStatus 是两条解决路径的唯一判定源，与扫描器 BreachCheck 共用 SLAStatus。
+// 不能依赖扫描器先标记 breached，否则扫描间隙内解决会永久漏报。
+func resolutionStatus(state *ent.SLAState, at time.Time) string {
+	if state.Status == "breached" {
+		return "breached"
+	}
+	// 暂停期间不消耗 SLA 时间；用暂停时刻判定，仍保留暂停前已发生的违规。
+	effectiveAt := at
+	if state.Status == "paused" && !state.PausedAt.IsZero() && at.After(state.PausedAt) {
+		effectiveAt = state.PausedAt
+	}
+	if SLAStatus(effectiveAt, timePtrOrNil(state.ResponseDeadline), timePtrOrNil(state.ResolutionDeadline), state.FirstResponseAt, effectiveAt) == "breached" {
+		return "breached"
+	}
+	return "met"
 }
 
 // Pause 暂停 SLA 计时（独立事务便捷入口）。

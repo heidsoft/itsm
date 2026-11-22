@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/slastate"
 
 	entsql "entgo.io/ent/dialect/sql"
 
@@ -189,6 +190,12 @@ func TestStore_RecordResolution(t *testing.T) {
 		t.Fatalf("ComputeAndSave: %v", err)
 	}
 
+	// 响应必须在 11:00 截止前完成，met 才是正确预期；缺响应时按 engine.go:115
+	// 应判 breached（见 DeadlineOutcome/late_response 用例）。
+	if err := env.store.RecordFirstResponse(ctx, 1, "ticket", 400, start.Add(30*time.Minute)); err != nil {
+		t.Fatalf("RecordFirstResponse: %v", err)
+	}
+
 	resolvedAt := start.Add(120 * time.Minute)
 	err = env.store.RecordResolution(ctx, 1, "ticket", 400, resolvedAt)
 	if err != nil {
@@ -201,6 +208,91 @@ func TestStore_RecordResolution(t *testing.T) {
 	}
 	if !state.ResolvedAt.Equal(resolvedAt) {
 		t.Errorf("resolved_at: got %v, want %v", state.ResolvedAt, resolvedAt)
+	}
+}
+
+func TestStore_RecordResolutionInTx_IdempotentAndPreservesBreach(t *testing.T) {
+	env := newTestEnv(t)
+	ctx := context.Background()
+	start := time.Date(2026, 9, 27, 10, 0, 0, 0, time.UTC)
+	_, err := env.store.ComputeAndSave(ctx, CreateInput{
+		TenantID: 1, AggregateType: "ticket", AggregateID: 600,
+		SLADefinitionID: env.definitionID, ResponseTime: 60, ResolutionTime: 480, StartTime: start,
+	})
+	if err != nil {
+		t.Fatalf("ComputeAndSave: %v", err)
+	}
+
+	// 响应必须在 11:00 截止前完成，met 才是正确预期；缺响应时按 engine.go:115
+	// 应判 breached（见 DeadlineOutcome/late_response 用例）。
+	if err := env.store.RecordFirstResponse(ctx, 1, "ticket", 600, start.Add(30*time.Minute)); err != nil {
+		t.Fatalf("RecordFirstResponse: %v", err)
+	}
+
+	first := start.Add(120 * time.Minute)
+	tx, err := env.client.Tx(ctx)
+	if err != nil {
+		t.Fatalf("begin tx: %v", err)
+	}
+	if err := env.store.RecordResolutionInTx(ctx, tx, 1, "ticket", 600, first); err != nil {
+		_ = tx.Rollback()
+		t.Fatalf("RecordResolutionInTx: %v", err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatalf("commit: %v", err)
+	}
+
+	state, err := env.store.GetState(ctx, 1, "ticket", 600)
+	if err != nil || state.Status != "met" || !state.ResolvedAt.Equal(first) {
+		t.Fatalf("first resolution: state=%+v err=%v", state, err)
+	}
+
+	// 重开/重复解决不得覆盖首次解决时间戳——SLA 达标按首次解决判定。
+	second := first.Add(time.Hour)
+	tx, err = env.client.Tx(ctx)
+	if err != nil {
+		t.Fatalf("begin second tx: %v", err)
+	}
+	if err := env.store.RecordResolutionInTx(ctx, tx, 1, "ticket", 600, second); err != nil {
+		_ = tx.Rollback()
+		t.Fatalf("second RecordResolutionInTx: %v", err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatalf("second commit: %v", err)
+	}
+	state, _ = env.store.GetState(ctx, 1, "ticket", 600)
+	if !state.ResolvedAt.Equal(first) {
+		t.Errorf("resolved_at overwritten: got %v, want %v", state.ResolvedAt, first)
+	}
+
+	// 迟到的解决不抹除已记录的 breached 事实。
+	_, err = env.store.ComputeAndSave(ctx, CreateInput{
+		TenantID: 1, AggregateType: "ticket", AggregateID: 601,
+		SLADefinitionID: env.definitionID, ResponseTime: 60, ResolutionTime: 480, StartTime: start,
+	})
+	if err != nil {
+		t.Fatalf("ComputeAndSave breached: %v", err)
+	}
+	if _, err := env.client.SLAState.Update().
+		Where(slastate.TenantID(1), slastate.AggregateType("ticket"), slastate.AggregateID(601)).
+		SetStatus("breached").Save(ctx); err != nil {
+		t.Fatalf("mark breached: %v", err)
+	}
+	late := start.Add(600 * time.Minute)
+	tx, err = env.client.Tx(ctx)
+	if err != nil {
+		t.Fatalf("begin breach tx: %v", err)
+	}
+	if err := env.store.RecordResolutionInTx(ctx, tx, 1, "ticket", 601, late); err != nil {
+		_ = tx.Rollback()
+		t.Fatalf("breach RecordResolutionInTx: %v", err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatalf("breach commit: %v", err)
+	}
+	breached, _ := env.store.GetState(ctx, 1, "ticket", 601)
+	if breached.Status != "breached" || !breached.ResolvedAt.Equal(late) {
+		t.Errorf("breach state: status=%q resolvedAt=%v", breached.Status, breached.ResolvedAt)
 	}
 }
 
@@ -319,5 +411,110 @@ func TestStore_SaveDeadlines(t *testing.T) {
 	state, _ = env.store.GetState(ctx, 1, "ticket", 700)
 	if !state.ResponseDeadline.Equal(newResponseDL) {
 		t.Errorf("updated response_deadline: got %v, want %v", state.ResponseDeadline, newResponseDL)
+	}
+}
+
+// 扫描器尚未运行时，解决动作也必须独立守住截止时间不变量。
+func TestStore_RecordResolutionInTx_DeadlineOutcome(t *testing.T) {
+	for _, tc := range []struct {
+		name, status string
+		responseDone bool
+		minutes      int
+		want         string
+	}{
+		{"late_resolution", "active", true, 600, "breached"},
+		{"late_response", "active", false, 120, "breached"},
+		{"on_time", "active", false, 30, "met"},
+		{"already_breached", "breached", true, 30, "breached"},
+		{"paused", "paused", false, 600, "met"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			env := newTestEnv(t)
+			ctx := context.Background()
+			start := time.Date(2026, 9, 27, 10, 0, 0, 0, time.UTC)
+			state, err := env.store.ComputeAndSave(ctx, CreateInput{TenantID: 1, AggregateType: "ticket", AggregateID: 700, SLADefinitionID: env.definitionID, ResponseTime: 60, ResolutionTime: 480, StartTime: start})
+			if err != nil {
+				t.Fatal(err)
+			}
+			update := env.client.SLAState.UpdateOneID(state.ID).SetStatus(tc.status)
+			if tc.responseDone {
+				update.SetFirstResponseAt(start.Add(10 * time.Minute))
+			}
+			if tc.status == "paused" {
+				update.SetPausedAt(start.Add(20 * time.Minute))
+			}
+			if _, err := update.Save(ctx); err != nil {
+				t.Fatal(err)
+			}
+			tx, err := env.client.Tx(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer tx.Rollback()
+			at := start.Add(time.Duration(tc.minutes) * time.Minute)
+			if err := env.store.RecordResolutionInTx(ctx, tx, 1, "ticket", 700, at); err != nil {
+				t.Fatal(err)
+			}
+			if err := tx.Commit(); err != nil {
+				t.Fatal(err)
+			}
+			got, err := env.store.GetState(ctx, 1, "ticket", 700)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Status != tc.want || !got.ResolvedAt.Equal(at) {
+				t.Fatalf("state=%+v want status=%s", got, tc.want)
+			}
+		})
+	}
+}
+
+// 独立事务解决同样必须守住扫描器尚未运行时的截止时间不变量。
+func TestStore_RecordResolution_DeadlineOutcome(t *testing.T) {
+	for i, tc := range []struct {
+		name, status string
+		responseDone bool
+		minutes      int
+		want         string
+	}{
+		{"late_resolution", "active", true, 600, "breached"},
+		{"late_response", "active", false, 120, "breached"},
+		{"on_time", "active", true, 30, "met"},
+		{"already_breached", "breached", true, 30, "breached"},
+		{"paused", "paused", false, 600, "met"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			env := newTestEnv(t)
+			ctx := context.Background()
+			start := time.Date(2026, 9, 27, 10, 0, 0, 0, time.UTC)
+			id := 800 + i
+			state, err := env.store.ComputeAndSave(ctx, CreateInput{TenantID: 1, AggregateType: "ticket", AggregateID: id, SLADefinitionID: env.definitionID, ResponseTime: 60, ResolutionTime: 480, StartTime: start})
+			if err != nil {
+				t.Fatal(err)
+			}
+			update := env.client.SLAState.UpdateOneID(state.ID).SetStatus(tc.status)
+			if tc.status == "paused" {
+				update.SetPausedAt(start.Add(20 * time.Minute))
+			}
+			if _, err := update.Save(ctx); err != nil {
+				t.Fatal(err)
+			}
+			if tc.responseDone {
+				if err := env.store.RecordFirstResponse(ctx, 1, "ticket", id, start.Add(10*time.Minute)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			at := start.Add(time.Duration(tc.minutes) * time.Minute)
+			if err := env.store.RecordResolution(ctx, 1, "ticket", id, at); err != nil {
+				t.Fatal(err)
+			}
+			got, err := env.store.GetState(ctx, 1, "ticket", id)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Status != tc.want || !got.ResolvedAt.Equal(at) {
+				t.Fatalf("state=%+v want status=%s", got, tc.want)
+			}
+		})
 	}
 }

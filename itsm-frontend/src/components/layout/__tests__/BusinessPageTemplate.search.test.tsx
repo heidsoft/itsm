@@ -106,6 +106,30 @@ describe('BusinessPageTemplate 搜索防抖', () => {
     expect(onSearch).toHaveBeenLastCalledWith('change-2');
   });
 
+  // 父组件回调换身份不能让旧防抖值再次提交。
+  it('回车后更换回调身份不回放旧词，防抖到期新词总共只发送一次', () => {
+    const first = jest.fn();
+    const latest = jest.fn();
+    const { rerender } = render(
+      <BusinessPageTemplate title="事件管理" searchValue="旧词" searchPlaceholder="搜索工单" onSearch={first} />
+    );
+    const input = screen.getByPlaceholderText('搜索工单');
+    type(input, '新词');
+    act(() => { jest.advanceTimersByTime(100); });
+    pressEnter(input);
+    rerender(
+      <BusinessPageTemplate title="事件管理" searchValue="旧词" searchPlaceholder="搜索工单" onSearch={latest} />
+    );
+    expect(first.mock.calls).toEqual([['新词']]);
+    expect(latest).not.toHaveBeenCalled();
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(first.mock.calls).toEqual([['新词']]);
+    expect(latest).not.toHaveBeenCalled();
+    type(input, '后续词');
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(latest.mock.calls).toEqual([['后续词']]);
+  });
+
   it('未传 onSearch 时输入与回车不报错', () => {
     render(<BusinessPageTemplate title="变更管理" searchPlaceholder="搜索工单" />);
     const input = screen.getByPlaceholderText('搜索工单');

@@ -160,17 +160,27 @@ func (s *BPMNMonitoringService) calculatePerformanceMetrics(ctx context.Context,
 		metrics.AverageResponseTime = totalResponseTime.Seconds() / float64(responseTimeCount)
 	}
 
-	// 计算错误率
+	// 计算错误率：failed 与 terminated 均为失败，与 FailedInstances 口径一致。Count 失败必须返回错误。旧实现 `if err == nil` 吞错会把
+	// DB 故障算成 0% 错误率，性能报告据此得出「零错误」的错误结论。
 	totalInstances := len(instances)
 	failedInstances, err := query.Clone().
-		Where(processinstance.Status("failed")).
+		Where(processinstance.StatusIn("failed", "terminated")).
 		Count(ctx)
-	if err == nil && totalInstances > 0 {
+	if err != nil {
+		return nil, fmt.Errorf("计算错误率时查询失败实例数失败: %w", err)
+	}
+	if totalInstances > 0 {
 		metrics.ErrorRate = float64(failedInstances) / float64(totalInstances) * 100
 	}
 
-	// 计算可用性（简化计算）
-	metrics.Availability = 99.9 // 默认值，实际应该基于监控数据计算
+	// 可用性由真实失败率推导，不再写死 99.9：
+	// availability = 100 - errorRate。这里统计口径是流程实例的失败占比，
+	// 没有独立的停机/探针数据源，故以「未失败实例占比」作为可用性口径并如实命名。
+	// 无实例（total==0）时 errorRate 为 0，可用性保持 0 表示「未测量」，
+	// 而不是凭空报一个看似健康的百分数。
+	if totalInstances > 0 {
+		metrics.Availability = 100 - metrics.ErrorRate
+	}
 
 	return metrics, nil
 }
@@ -434,7 +444,10 @@ func (s *BPMNMonitoringService) GetProcessTimeline(ctx context.Context, processI
 // ProcessTimelineEntry 流程时间线条目
 type ProcessTimelineEntry = dto.ProcessTimelineEntry
 
-// GetSystemHealth 获取系统健康状态
+// GetSystemHealth 获取系统健康状态。
+// 三个 Count 任何一个查询失败都判 unhealthy/disconnected：健康检查被探针与运维
+// 当作「数据库可用」的信号，吞错会在 DB 计数故障时仍报 healthy（假健康），
+// 掩盖真实查询故障。保持 200 + unhealthy 载荷的既有契约，不改成 500。
 func (s *BPMNMonitoringService) GetSystemHealth(ctx context.Context, tenantID int) (map[string]interface{}, error) {
 	health := map[string]interface{}{
 		"status":          "healthy",
@@ -457,32 +470,45 @@ func (s *BPMNMonitoringService) GetSystemHealth(ctx context.Context, tenantID in
 		Where(processinstance.StatusIn("running", "suspended")).
 		Where(processinstance.TenantID(tenantID)).
 		Count(ctx)
-	if err == nil {
-		health["activeProcesses"] = activeProcesses
+	if err != nil {
+		return unhealthyBPMNHealth(health), nil
 	}
+	health["activeProcesses"] = activeProcesses
 
 	activeTasks, err := s.client.ProcessTask.Query().
 		Where(processtask.StatusIn("created", "assigned")).
 		Where(processtask.TenantID(tenantID)).
 		Count(ctx)
-	if err == nil {
-		health["activeTasks"] = activeTasks
+	if err != nil {
+		return unhealthyBPMNHealth(health), nil
 	}
+	health["activeTasks"] = activeTasks
 
 	errorCount, err := s.client.ProcessInstance.Query().
 		Where(processinstance.Status("terminated")).
 		Where(processinstance.TenantID(tenantID)).
 		Count(ctx)
-	if err == nil {
-		health["errorCount"] = errorCount
+	if err != nil {
+		return unhealthyBPMNHealth(health), nil
 	}
+	health["errorCount"] = errorCount
 
 	return health, nil
+}
+
+// unhealthyBPMNHealth 把健康载荷翻成 unhealthy：与连通性 Exist 失败时的既有口径
+// 完全一致（status=unhealthy / database=disconnected），只抽出避免三处重复。
+func unhealthyBPMNHealth(health map[string]interface{}) map[string]interface{} {
+	health["database"] = "disconnected"
+	health["status"] = "unhealthy"
+	return health
 }
 
 // GetPerformanceAlerts 获取性能告警。
 // 与 /performance 内嵌的 PerformanceAlert[] 共用同一字段集（type/severity/value/
 // resourceType/status），不再手拼 count map；无告警时返回 []，不是 null。
+// 查询失败必须返回 error：旧实现 `if err == nil` 吞错会把 DB 故障伪装成
+// 「无告警」的空数组，监控页据此显示「一切正常」。
 func (s *BPMNMonitoringService) GetPerformanceAlerts(ctx context.Context, tenantID int) ([]*PerformanceAlert, error) {
 	alerts := []*PerformanceAlert{}
 	now := time.Now()
@@ -493,7 +519,10 @@ func (s *BPMNMonitoringService) GetPerformanceAlerts(ctx context.Context, tenant
 		Where(processtask.TenantID(tenantID)).
 		Where(processtask.CreatedAtLTE(now.Add(-24 * time.Hour))).
 		All(ctx)
-	if err == nil && len(longRunningTasks) > 0 {
+	if err != nil {
+		return nil, fmt.Errorf("查询长时间运行任务失败: %w", err)
+	}
+	if len(longRunningTasks) > 0 {
 		alerts = append(alerts, &PerformanceAlert{
 			Type:         "performance",
 			Severity:     "warning",
@@ -511,7 +540,10 @@ func (s *BPMNMonitoringService) GetPerformanceAlerts(ctx context.Context, tenant
 		Where(processinstance.TenantID(tenantID)).
 		Where(processinstance.StartTimeGTE(now.Add(-1 * time.Hour))).
 		Count(ctx)
-	if err == nil && terminatedInstances > 0 {
+	if err != nil {
+		return nil, fmt.Errorf("查询异常终止流程实例数失败: %w", err)
+	}
+	if terminatedInstances > 0 {
 		alerts = append(alerts, &PerformanceAlert{
 			Type:         "error",
 			Severity:     "error",
@@ -938,7 +970,7 @@ func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *Proc
 			PeakConcurrency:     0,
 			ResourceUtilization: 0.0,
 			ErrorRate:           0.0,
-			Availability:        99.9,
+			Availability:        0.0, // 无实例时保持 0（未测量），不预置 99.9 假健康值
 			LatencyPercentile95: 0.0,
 			LatencyPercentile99: 0.0,
 		},
@@ -980,39 +1012,57 @@ func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *Proc
 		return metrics, nil
 	}
 
-	// 3. 统计各状态数量（Status 是 string 类型）
-	runningCount, _ := query.Clone().Where(processinstance.Status("running")).Count(ctx)
-	completedCount, _ := query.Clone().Where(processinstance.Status("completed")).Count(ctx)
-	failedCount, _ := query.Clone().Where(processinstance.Status("failed")).Count(ctx)
-	terminatedCount, _ := query.Clone().Where(processinstance.Status("terminated")).Count(ctx)
-	suspendedCount, _ := query.Clone().Where(processinstance.Status("suspended")).Count(ctx)
+	// 3. 统计各状态数量（Status 是 string 类型）。
+	// 这 5 个 Count 旧实现全部 `count, _ :=` 吞错：DB 故障时返回全 0 的状态
+	// 实例数，SuccessRate 变成 0/0，监控页显示「零运行/零失败」的假象。
+	// 任何一个 Count 失败都整单返回错误，由 handler 映射 500。
+	statusCounts := make([]int, 5)
+	for i, status := range []string{"running", "completed", "failed", "terminated", "suspended"} {
+		count, countErr := query.Clone().Where(processinstance.Status(status)).Count(ctx)
+		if countErr != nil {
+			return nil, fmt.Errorf("查询 %s 状态流程实例数失败: %w", status, countErr)
+		}
+		statusCounts[i] = count
+	}
+	runningCount, completedCount, failedCount, terminatedCount, suspendedCount :=
+		statusCounts[0], statusCounts[1], statusCounts[2], statusCounts[3], statusCounts[4]
 
 	metrics.RunningInstances = runningCount
 	metrics.CompletedInstances = completedCount
 	metrics.FailedInstances = failedCount + terminatedCount
 	metrics.SuccessRate = float64(completedCount) / float64(total) * 100
 
-	// 4. 计算平均持续时间（仅已完成的实例）
+	// 4~7. 平均时长 / 性能指标 / 任务指标 / 瓶颈分析：这些子分析内部的 DB 查询
+	// 故障此前被 `if err == nil` 吞掉，导致 metrics 带着预置骨架（错误率 0%、
+	// 空任务指标、空瓶颈分析）返回，把「查询失败」伪装成「没有数据」。
+	// 任一子分析失败都整单返回错误，由 handler 映射 500。
 	avgDuration, err := s.calculateAverageDuration(ctx, query.Clone())
-	if err == nil {
-		metrics.AverageDuration = avgDuration
+	if err != nil {
+		return nil, fmt.Errorf("计算平均持续时间失败: %w", err)
 	}
+	metrics.AverageDuration = avgDuration
 
-	// 5. 计算性能指标（吞吐量、错误率、响应时间）
 	perf, err := s.calculatePerformanceMetrics(ctx, query.Clone())
-	if err == nil && perf != nil {
+	if err != nil {
+		return nil, fmt.Errorf("计算性能指标失败: %w", err)
+	}
+	if perf != nil {
 		metrics.PerformanceMetrics = perf
 	}
 
-	// 6. 获取任务指标
 	taskMetrics, err := s.getTaskMetrics(ctx, req)
-	if err == nil && taskMetrics != nil {
+	if err != nil {
+		return nil, fmt.Errorf("计算任务指标失败: %w", err)
+	}
+	if taskMetrics != nil {
 		metrics.TaskMetrics = taskMetrics
 	}
 
-	// 7. 瓶颈分析
 	bottleneck, err := s.analyzeBottlenecks(ctx, req)
-	if err == nil && bottleneck != nil {
+	if err != nil {
+		return nil, fmt.Errorf("分析流程瓶颈失败: %w", err)
+	}
+	if bottleneck != nil {
 		metrics.BottleneckAnalysis = bottleneck
 	}
 
