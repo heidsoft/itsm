@@ -29,7 +29,7 @@
 | AUDIT-051 | 备份调度未被部署验收强制 | `confirmed` | 文档 + 部署后断言 | 低风险 |
 | AUDIT-053 | 重复索引（同 AUDIT-002） | `confirmed` | 见 P0 | 需审批 |
 | AUDIT-060 | `lint:antd` / 方向守卫 / P0 文案守卫红 | `resolved`（本批已验证，三项守卫 exit 0） | 已修 9 处旧 API 调用 + 文案守卫识别 `title`；浏览器视觉回归仍待执行 | 低风险 |
-| AUDIT-061 | 两套 Sidebar CSS Module 导致暗色规则失效 | `confirmed`+`suspected` | PR-05：统一 import + 模块一致性守卫 + 浏览器验证 | 需浏览器证据 |
+| AUDIT-040/041 | Sidebar 双模块暗色失效 + 禁用态 Select 同色 | `resolved`（浏览器实测） | 统一 CSS Module 引用；禁用态高特异性规则 + 3 例回归 | 已完成 |
 | AUDIT-062 | 禁用态 Select 选项同色 | `confirmed`+`suspected` | PR-05：层叠修复 + `select-option-states.test.ts` | 需浏览器证据 |
 | AUDIT-063~065 | 平板宽度、移动遮罩 z-index、尺寸真源三方矛盾 | `confirmed` | PR-05：统一 token/选择器 | 需浏览器证据 |
 | AUDIT-066 | LoadingSkeleton 渲染期随机高度 | `confirmed` | PR-05：确定性高度 | 低风险 |

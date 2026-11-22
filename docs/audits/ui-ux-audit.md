@@ -141,3 +141,17 @@ fix: 透传 t 并本地化
 Playwright 已配置（`playwright.config.ts:17-121`，`webServer: npm run dev`，`reuseExistingServer`），已有 `tests/e2e/roles/` 7 个角色规格和 `responsive-layout.spec.ts`（1366×768→3840×2160 + 820×1180 + 1024×768）。缺：显式暗色视觉断言、screenshot-diff 基线、390×844 与 360×640 的系统覆盖。
 
 **在声称任何视觉修复完成之前，必须提供**：桌面 1440×900/1920×1080、平板 820×1180/1024×768、手机 390×844/360×640；明暗两套主题；end-user/engineer/approver/tenant-admin/super-admin 角色；对比度与 `scrollWidth ≤ innerWidth+2` 断言；失败时 trace/截图。当前工作树无 `node_modules` 且未启动后端，故本轮不提供这些证据。
+
+## 本批浏览器验证（AUDIT-040 / AUDIT-041，状态 resolved）
+
+环境：本地 Postgres(pgvector) + Redis + 自建 backend(8091) + Next dev(3000)，系统 Chrome 无头模式，真实登录 admin，脚本在页面注入同款 Select DOM 读取 computed style。
+
+| 项目 | 修复前 | 修复后 |
+|:---|:---|:---|
+| 暗色普通菜单文字 | `rgb(75,85,99)` (#4b5563) | `rgb(162,168,177)`（主题次级文字色） |
+| 亮色禁用选项 | `rgb(30,41,59)`（与可用态相同），cursor auto | `rgb(148,163,184)`，cursor not-allowed |
+| 暗色禁用选项 | `rgb(255,255,255)`（与可用态相同），cursor auto | `rgb(75,85,99)`，cursor not-allowed |
+
+视口：1440×900、820×1180、390×844 三档，禁用态差异在三档一致；暗色菜单文本因各档首个非选中项状态不同，采样值有差异，但均不再使用旧硬编码色。截图：`/tmp/ui-before2-dark.png`、`/tmp/ui-after2-dark.png`（会话临时目录，非仓库产物）。
+
+回归：`select-option-states.test.ts` 3 例；type-check、三个静态门禁均 exit 0。
