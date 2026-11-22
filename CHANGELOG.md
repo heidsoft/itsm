@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.60] - 2026-11-22
+
+### 发布说明
+
+- 本版本为**生产加固阶段**发布，**尚未 GA**。涵盖自 v1.6.59 以来的 Agent 控制面安全收口、前端交互/竞态修复、部署配置修正与并行协议脚本入库。
+- **Agent 控制面**：已批准写工具执行前复用 Action Gateway 重判；connector `required_permissions`、skill `owners`/`tenantID` 与 `InputSchema` 在执行侧真正生效；MCP `tools/list` 叠加 RBAC 发现面过滤（fail-closed）；初始化托管记录死表获得读写消费方。所有副作用仍统一经 Action Gateway，Control Plane 读面只聚合不判定。
+- **业务稳定性**：工单/变更/事件/用户/审批/市场等页面修复「失败伪装空态」与过期响应覆盖新数据；`itsm-worker` 补齐 `AI_SERVICE_TOKEN`/`GUIDANCE_URL` 注入，修复 AI 分诊静默 401。
+- **已知问题（发布时不隐瞒）**：远端 `main` 既有 CI 红项未在本版本中修复——backend-ci 的 gofumpt 格式、repo-hygiene（`test-coverage-guard.json` 被跟踪）、Swagger 陈旧、api-contract-check、ga-gate、Security Scan；经基线提交 `bde1814df` 实跑确认为既有红，非本批引入。本地 prod 构建标签与 GitHub tag 属独立版本面，当前 prod 为 v1.6.68。
+
 ### Added
 
 - **初始化托管记录账本落地：死表 `initialization_managed_records` 有了真实读写消费方（2026-11-22）**：`008_add_initialization_ledger` 迁移里创建的 `initialization_managed_records` 长期只有 DDL、RLS 豁免登记和「表被创建」的存在性测试，全仓零读写消费方——`docs/initialization-data-classification.md` 声称 "managed fields are reconciled"，却没有代码回答「哪些稳定键由平台托管、依据哪版 manifest、上次写入值是什么」。本批做最小闭环，不新增迁移（表结构与唯一键 `(scope_type, scope_id, component, source_key)` 已就位，改已发布迁移会触发 checksum 门禁）。**① 写入与安装成功同事务**：在 `componentTransaction.Complete` 内按 `plan.Actions[].SourceKey` upsert 托管记录，写 `source_version` / `manifest_checksum` / `ownership_mode='managed'` / `last_applied_values`（取组件 Apply 的真实结果摘要，不是 plan 意图）；与 `initialization_installations.status='succeeded'` 同一 `sql.Tx`，账本写失败即整笔回滚，杜绝「安装报成功但账本空」。重放走 `ON CONFLICT DO UPDATE` 幂等更新版本/校验和，且不覆盖 `deprecated` / `local_modified_at`（运维资产不被初始化重放抹掉）；空 `Actions` 不写噪声行。**② 只读消费方**：新增 `SQLStore.ListManagedRecords(scope)`，强制 `ValidateScope`（platform 必须 id=0、tenant 必须 id>0）并带 `scope_type`+`scope_id` 谓词，无全表扫——与 `tenant_guard.go` 登记的 RLS 豁免口径一致（该表自带 scope 维度，隔离责任在每条查询谓词上）。JSON 列用 `json.RawMessage` 原样投影，字段级语义将来演进不改读契约。**③ 边界诚实**：字段级对账（`managed_fields` / `stable_key_aliases` / `local_modified_at` 变更检测 / create-update-revoke-conflict-orphan 三方合并）属 P1 结构性设计，本批不实现，相关列保持 DDL 默认；分类文档同步把 "managed fields are reconciled" 标注为目标契约而非当前行为，并指向设计文档。**④ 回归锁**：新增 `internal/initialization/managed_records_test.go` 6 例，全部用隔离 schema 的真实 Postgres + 生产迁移 DDL（非 fake 仓储）：登记字段正确 / 空 Actions 不写行 / 重放幂等且新键累加 / 跨 scope 隔离（租户 11、22、platform 互不串）/ 账本写入失败整笔回滚且安装不置 succeeded / JSON 列原样投影；另 1 例纯逻辑锁非法 scope 拒绝。**三轮反向验证全部红在断言上**：去掉 `recordManaged` 调用 → V1/V2 红在「should have 2/1 item(s), but has 0」；scope 谓词 `AND` 改 `OR` → 隔离用例红在「should have 1 item(s), but has 2」且失败信息直接列出被串进来的 tenant 11/22 两行；超长 `source_key`（256 字符触发 varchar 约束）→ 安装行不置 `succeeded`、账本零残留。**验证**：`go test ./internal/initialization/`（含既有 fence 套件）全绿、`go vet ./internal/initialization/` 通过、`gofmt` 干净。基于独立 worktree `agentcp/2026-11-22-auto`（HEAD `0e8d26950`），未触碰主树并行 WIP。
