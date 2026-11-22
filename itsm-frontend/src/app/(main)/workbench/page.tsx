@@ -288,6 +288,7 @@ export default function WorkbenchPage() {
       ]}
       loading={listLoading}
       error={!!error}
+      onRetry={handleRefresh}
       empty={items.length === 0 && !listLoading}
       emptyDescription={t('workbench.emptyDescription')}
     >

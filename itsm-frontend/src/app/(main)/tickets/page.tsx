@@ -41,6 +41,7 @@ function TicketsPageContent() {
     return restoreFilters('tickets', defaults);
   });
 
+  const [statsError, setStatsError] = useState(false);
   const [ticketStats, setTicketStats] = useState({
     total: 0,
     open: 0,
@@ -86,6 +87,7 @@ function TicketsPageContent() {
     try {
       const { ticketService } = await import('@/lib/services/ticket-service');
       const stats = await ticketService.getTicketStats();
+      setStatsError(false);
       setTicketStats({
         total: stats.total,
         open: stats.open,
@@ -93,7 +95,7 @@ function TicketsPageContent() {
         today: 0, // 暂时没有今日新增的 API
       });
     } catch (error) {
-      console.error('Failed to fetch ticket stats:', error);
+      setStatsError(true);
     }
   }, []);
 
@@ -180,6 +182,11 @@ function TicketsPageContent() {
 
   return (
     <div className='min-h-screen bg-[var(--color-background-primary)]'>
+      {statsError && (
+        <div role="alert" className="px-6 py-2">
+          工单统计加载失败 <Button onClick={() => void fetchTicketStats()}>重试</Button>
+        </div>
+      )}
       {/* 页面头部 */}
       <div className='bg-[var(--color-surface-primary)] border-b border-[var(--color-border-primary)]'>
         <div className='w-full px-6 py-4'>
@@ -212,7 +219,7 @@ function TicketsPageContent() {
               >
                 {t('tickets.advancedSearch')}
               </Button>
-              <Badge count={ticketStats.overdue} size='small'>
+              <Badge count={statsError ? undefined : ticketStats.overdue} size='small'>
                 <Button
                   icon={<Bell />}
                   onClick={() => {
@@ -244,7 +251,7 @@ function TicketsPageContent() {
               <div className='flex items-center justify-between'>
                 <div>
                   <Text type='secondary'>{t('tickets.stats.total')}</Text>
-                  <div className='text-2xl font-bold'>{ticketStats.total}</div>
+                  <div className='text-2xl font-bold'>{statsError ? '—' : ticketStats.total}</div>
                 </div>
                 <Table className='text-2xl text-blue-500' />
               </div>
@@ -253,7 +260,7 @@ function TicketsPageContent() {
               <div className='flex items-center justify-between'>
                 <div>
                   <Text type='secondary'>{t('tickets.stats.open')}</Text>
-                  <div className='text-2xl font-bold text-orange-500'>{ticketStats.open}</div>
+                  <div className='text-2xl font-bold text-orange-500'>{statsError ? '—' : ticketStats.open}</div>
                 </div>
                 <Bell className='text-2xl text-orange-500' />
               </div>
@@ -262,7 +269,7 @@ function TicketsPageContent() {
               <div className='flex items-center justify-between'>
                 <div>
                   <Text type='secondary'>{t('tickets.stats.overdue')}</Text>
-                  <div className='text-2xl font-bold text-red-500'>{ticketStats.overdue}</div>
+                  <div className='text-2xl font-bold text-red-500'>{statsError ? '—' : ticketStats.overdue}</div>
                 </div>
                 <Bell className='text-2xl text-red-500' />
               </div>
@@ -271,7 +278,7 @@ function TicketsPageContent() {
               <div className='flex items-center justify-between'>
                 <div>
                   <Text type='secondary'>{t('tickets.stats.today')}</Text>
-                  <div className='text-2xl font-bold text-green-500'>{ticketStats.today}</div>
+                  <div className='text-2xl font-bold text-green-500'>{statsError ? '—' : ticketStats.today}</div>
                 </div>
                 <Plus className='text-2xl text-green-500' />
               </div>
@@ -303,7 +310,7 @@ function TicketsPageContent() {
               label: (
                 <span className='flex items-center gap-2'>
                   <Table />
-                  {t('tickets.tabs.list')} ({ticketStats.total})
+                  {t('tickets.tabs.list')} ({statsError ? '—' : ticketStats.total})
                 </span>
               ),
             },

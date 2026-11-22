@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react';
 import { Button, Calendar as AntCalendar, App, Pagination, Select, Card, Empty, Tag, Spin, Skeleton } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -245,8 +245,14 @@ function ChangesPageContent() {
     }
   }, [activeView, searchKeyword, statusFilter, riskFilter, page, pageSize, router]);
 
+  // 列表与看板共享 setter，因此必须共享序号，避免切换视图后旧请求覆盖新视图。
+  const listSeqRef = useRef(0);
+  const statsSeqRef = useRef(0);
+  const calendarSeqRef = useRef(0);
+
   // ====== 数据获取 ======
   const fetchChanges = useCallback(async () => {
+    const seq = ++listSeqRef.current;
     setListLoading(true);
     setLoadError(false);
     try {
@@ -257,15 +263,18 @@ function ChangesPageContent() {
         riskLevel: riskFilter,
         search: searchKeyword,
       });
+      if (seq !== listSeqRef.current) return;
       setChanges(response.items);
       // total 是信封必填字段，0 是合法值，禁止用 || 回退到当前页条数。
       setTotal(response.total);
     } catch (error) {
+      // 过期请求的失败不得覆盖新请求的成功态（错误 toast 与 loadError 同理）。
+      if (seq !== listSeqRef.current) return;
       console.error('Failed to fetch changes:', error);
       message.error(t('changes.getFailed'));
       setLoadError(true);
     } finally {
-      setListLoading(false);
+      if (seq === listSeqRef.current) setListLoading(false);
     }
   }, [page, pageSize, statusFilter, riskFilter, searchKeyword, t]);
 
@@ -308,6 +317,7 @@ function ChangesPageContent() {
   };
 
   const fetchChangesForKanban = useCallback(async () => {
+    const seq = ++listSeqRef.current;
     setListLoading(true);
     setLoadError(false);
     try {
@@ -318,19 +328,23 @@ function ChangesPageContent() {
         riskLevel: riskFilter,
         search: searchKeyword,
       });
+      if (seq !== listSeqRef.current) return;
       setChanges(response.items);
     } catch (error) {
+      if (seq !== listSeqRef.current) return;
       console.error('Failed to fetch changes for kanban:', error);
       setLoadError(true);
     } finally {
-      setListLoading(false);
+      if (seq === listSeqRef.current) setListLoading(false);
     }
   }, [statusFilter, riskFilter, searchKeyword]);
 
   const fetchStats = useCallback(async () => {
+    const seq = ++statsSeqRef.current;
     setStatsLoading(true);
     try {
       const statsData = await ChangeApi.getChangeStats();
+      if (seq !== statsSeqRef.current) return;
       setStats({
         total: statsData.total || 0,
         pending: statsData.pending || 0,
@@ -338,14 +352,16 @@ function ChangesPageContent() {
         completed: statsData.completed || 0,
       });
     } catch (error) {
+      if (seq !== statsSeqRef.current) return;
       console.error('Failed to fetch change stats:', error);
       message.error(t('changes.getStatsFailed'));
     } finally {
-      setStatsLoading(false);
+      if (seq === statsSeqRef.current) setStatsLoading(false);
     }
   }, [t]);
 
   const fetchCalendarData = useCallback(async () => {
+    const seq = ++calendarSeqRef.current;
     setCalendarLoading(true);
     try {
       const response = await ChangeApi.getCalendar({
@@ -353,13 +369,16 @@ function ChangesPageContent() {
         endDate: dateRange[1].format('YYYY-MM-DD'),
         status: statusFilter,
       });
+      if (seq !== calendarSeqRef.current) return;
       setCalendarData(response.items || []);
     } catch (error) {
+      // 过期日历请求失败不得清空已就位的新日历数据。
+      if (seq !== calendarSeqRef.current) return;
       console.error('Failed to fetch change calendar:', error);
       setCalendarData([]);
       message.error(t('changes.calendarLoadFailed'));
     } finally {
-      setCalendarLoading(false);
+      if (seq === calendarSeqRef.current) setCalendarLoading(false);
     }
   }, [dateRange, statusFilter, t]);
 

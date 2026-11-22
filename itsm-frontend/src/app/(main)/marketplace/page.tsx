@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -62,54 +62,56 @@ const MarketplacePage = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [category, setCategory] = useState('all');
   const [isOfficial, setIsOfficial] = useState<string>('all');
+  const loadSeqRef = useRef(0);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchItems = async () => {
-      setLoading(true);
-      setLoadError(null);
-      try {
-        const res = await httpClient.get<{
-          items: MarketplaceItem[];
-          total: number;
-          page: number;
-          pageSize: number;
-        }>('/api/v1/marketplace/items', { page: 1, pageSize: 100 });
-        if (cancelled) return;
-        // 后端响应字段已统一为 camelCase。
-        // 仅保留对前端有用的字段并对缺失字段做兜底。
-        const normalized: MarketplaceItem[] = (res?.items || []).map((it: MarketplaceItem) => ({
-          id: it.id,
-          name: it.name,
-          title: it.title || it.name,
-          type: (it.type || 'plugin') as MarketplaceItem['type'],
-          provider: it.provider || '',
-          description: it.description || '',
-          iconUrl: it.iconUrl || '',
-          rating: typeof it.rating === 'number' ? it.rating : 0,
-          installCount: it.installCount ?? 0,
-          category: it.category || '未分类',
-          tags: Array.isArray(it.tags) ? it.tags : [],
-          isOfficial: Boolean(it.isOfficial),
-          latestVersion: it.latestVersion || '1.0.0',
-        }));
-        setItems(normalized);
-      } catch (error: unknown) {
-        if (cancelled) return;
-        console.error('Failed to fetch marketplace items:', error);
-        setLoadError(error instanceof Error ? error.message : '加载应用市场失败，请稍后重试');
-        setItems([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchItems();
-    return () => {
-      cancelled = true;
-    };
+  const fetchItems = useCallback(async () => {
+    const seq = ++loadSeqRef.current;
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const res = await httpClient.get<{
+        items: MarketplaceItem[];
+        total: number;
+        page: number;
+        pageSize: number;
+      }>('/api/v1/marketplace/items', { page: 1, pageSize: 100 });
+      if (seq !== loadSeqRef.current) return;
+      // 后端响应字段已统一为 camelCase。
+      // 仅保留对前端有用的字段并对缺失字段做兜底。
+      const normalized: MarketplaceItem[] = (res?.items || []).map((it: MarketplaceItem) => ({
+        id: it.id,
+        name: it.name,
+        title: it.title || it.name,
+        type: (it.type || 'plugin') as MarketplaceItem['type'],
+        provider: it.provider || '',
+        description: it.description || '',
+        iconUrl: it.iconUrl || '',
+        rating: typeof it.rating === 'number' ? it.rating : 0,
+        installCount: it.installCount ?? 0,
+        category: it.category || '未分类',
+        tags: Array.isArray(it.tags) ? it.tags : [],
+        isOfficial: Boolean(it.isOfficial),
+        latestVersion: it.latestVersion || '1.0.0',
+      }));
+      setItems(normalized);
+    } catch (error: unknown) {
+      if (seq !== loadSeqRef.current) return;
+      console.error('Failed to fetch marketplace items:', error);
+      setLoadError(error instanceof Error ? error.message : '加载应用市场失败，请稍后重试');
+      setItems([]);
+    } finally {
+      if (seq === loadSeqRef.current) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchItems();
+    return () => {
+      // 卸载后不再回写，重试也复用同一个受代际保护的请求函数。
+      loadSeqRef.current++;
+    };
+  }, [fetchItems]);
 
   // 过滤数据
   const filteredItems = items.filter(item => {
@@ -147,6 +149,15 @@ const MarketplacePage = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div role="alert" className="p-10 text-center">
+        <p>{loadError}</p>
+        <Button onClick={() => void fetchItems()}>重试</Button>
       </div>
     );
   }

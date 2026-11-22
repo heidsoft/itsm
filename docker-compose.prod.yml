@@ -410,6 +410,12 @@ services:
       - LLM_MODEL=${LLM_MODEL:-gpt-4}
       - LLM_API_KEY=${LLM_API_KEY:-}
       - LLM_ENDPOINT=${LLM_ENDPOINT:-}
+      # Guidance sidecar 地址（与 backend 同值）：worker 执行 AI 分诊命令时
+      # 走 itsm-ai-service 的受限 /triage；不注入会回落 localhost:8091，容器内不可达。
+      - GUIDANCE_URL=${GUIDANCE_URL:-http://itsm-ai-service:8000}
+      # A4 服务间令牌（与 backend/itsm-ai-service 同值）：sidecar fail-closed，
+      # worker 缺此变量时 AI 分诊命令全部 401。
+      - AI_SERVICE_TOKEN=${AI_SERVICE_TOKEN:?AI_SERVICE_TOKEN must be set in prod (sidecar is fail-closed without it)}
       - no_proxy=localhost,127.0.0.1
       - NO_PROXY=localhost,127.0.0.1
     depends_on:

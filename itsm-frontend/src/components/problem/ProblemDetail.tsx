@@ -4,7 +4,7 @@
  * 问题详情组件
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Tag, Button, Space, Skeleton, message, Typography, Tabs, Modal, Form, Input, Empty } from 'antd';
 import { ArrowLeft, Search, Pencil, FlaskConical, ShieldAlert } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
@@ -43,18 +43,31 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [creatingKnownError, setCreatingKnownError] = useState(false);
   const [knownErrorForm] = Form.useForm();
 
+  const seqRef = useRef(0);
+
+  // 先切换代际并清空旧对象，后续拉取 effect 才能使用新 id 的代际。
+  useEffect(() => {
+    seqRef.current++;
+    setData(null);
+    setLoadError(false);
+    return () => { seqRef.current++; };
+  }, [id]);
+
   const loadData = async () => {
     if (!id) return;
+    const seq = seqRef.current;
     setLoading(true);
     setLoadError(false);
     try {
       const problem = await ProblemApi.getProblem(Number(id));
+      if (seq !== seqRef.current) return;
       setData(problem);
     } catch (error) {
+      if (seq !== seqRef.current) return;
       setLoadError(true);
       message.error(t('problemDetail.loadDetailFailed'));
     } finally {
-      setLoading(false);
+      if (seq === seqRef.current) setLoading(false);
     }
   };
 

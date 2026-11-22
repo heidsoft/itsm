@@ -122,6 +122,20 @@ const ChangeDetail: React.FC = () => {
   // 用 ref 做同步重入拦截，同一时刻只允许一个写请求在飞。
   const inFlightRef = useRef(false);
 
+  const seqRef = useRef(0);
+
+  // 先切换代际并清空旧对象，后续拉取 effect 才能使用新 id 的代际。
+  useEffect(() => {
+    seqRef.current++;
+    setChange(null);
+    setLoadError(false);
+    setApprovalChain([]);
+    setRiskAssessment(null);
+    setRollbackPlan(null);
+    setAssessmentLoading(false);
+    return () => { seqRef.current++; };
+  }, [id]);
+
   useEffect(() => {
     if (id) {
       loadDetail();
@@ -415,39 +429,45 @@ const ChangeDetail: React.FC = () => {
   };
 
   const loadDetail = async () => {
+    const seq = seqRef.current;
     setLoading(true);
     setLoadError(false);
     try {
       const data = await ChangeApi.getChange(Number(id!));
+      if (seq !== seqRef.current) return;
       setChange(data as Change);
 
       // Try to load approval summary
       try {
         const summary = await ChangeApi.getApprovalSummary(Number(id));
+        if (seq !== seqRef.current) return;
         const chain = (summary as { chain?: ApprovalChainItem[] })?.chain ?? [];
         setApprovalChain(chain);
       } catch (e) {
         // console.warn('Failed to load approval summary', e);
       }
     } catch (error) {
+      if (seq !== seqRef.current) return;
       setLoadError(true);
       message.error(serverErrorMessage(error, t('changeDetail.loadDetailFailed')));
     } finally {
-      setLoading(false);
+      if (seq === seqRef.current) setLoading(false);
     }
   };
 
   // 加载风险评估数据
   const loadRiskAssessment = async () => {
     if (!id) return;
+    const seq = seqRef.current;
     setAssessmentLoading(true);
     try {
       const data = await ChangeApi.getRiskAssessment(Number(id));
+      if (seq !== seqRef.current) return;
       setRiskAssessment(data);
     } catch (error) {
       console.error('Failed to load risk assessment:', error);
     } finally {
-      setAssessmentLoading(false);
+      if (seq === seqRef.current) setAssessmentLoading(false);
     }
   };
 

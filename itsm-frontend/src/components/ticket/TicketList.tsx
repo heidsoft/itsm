@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dayjs } from 'dayjs';
-import { App, Card, Divider, Table } from 'antd';
+import { App, Button, Card, Divider, Result, Table } from 'antd';
 import type { FilterValue, TablePaginationConfig, SorterResult, TableCurrentDataSource } from 'antd/es/table/interface';
 import type { TableProps } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -71,6 +71,7 @@ const TicketList: React.FC<TicketListProps> = ({
   const {
     tickets,
     loading,
+    error,
     pagination,
     filters,
     fetchTickets,
@@ -386,33 +387,41 @@ const TicketList: React.FC<TicketListProps> = ({
           <kbd className='mx-1 rounded border bg-gray-50 px-1.5'>k</kbd> 导航，
           <kbd className='mx-1 rounded border bg-gray-50 px-1.5'>o</kbd> 打开
         </div>
-        <Table<Ticket>
-          columns={columns}
-          dataSource={tickets}
-          rowKey='id'
-          rowSelection={embedded ? undefined : rowSelection}
-          loading={loading}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-            pageSizeOptions: ['10', '20', '50', '100'],
-          }}
-          onChange={handleTableChange}
-          scroll={{ x: 1200 }}
-          size='middle'
-          onRow={(_, index) => ({
-            onMouseEnter: () => setHoveredIndex(index ?? null),
-            onMouseLeave: () => setHoveredIndex(null),
-          })}
-          rowClassName={(_, index) =>
-            index === activeRowIndex || index === hoveredIndex ? 'bg-blue-50/60' : ''
-          }
-          getPopupContainer={node => node.parentElement || document.body}
-        />
+        {error && !loading ? (
+          <Result
+            status='error'
+            title='工单列表加载失败'
+            extra={<Button onClick={handleRefresh}>重新加载</Button>}
+          />
+        ) : (
+          <Table<Ticket>
+            columns={columns}
+            dataSource={tickets}
+            rowKey='id'
+            rowSelection={embedded ? undefined : rowSelection}
+            loading={loading}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+              pageSizeOptions: ['10', '20', '50', '100'],
+            }}
+            onChange={handleTableChange}
+            scroll={{ x: 1200 }}
+            size='middle'
+            onRow={(_, index) => ({
+              onMouseEnter: () => setHoveredIndex(index ?? null),
+              onMouseLeave: () => setHoveredIndex(null),
+            })}
+            rowClassName={(_, index) =>
+              index === activeRowIndex || index === hoveredIndex ? 'bg-blue-50/60' : ''
+            }
+            getPopupContainer={node => node.parentElement || document.body}
+          />
+        )}
       </Card>
 
       <TicketDeleteModal
