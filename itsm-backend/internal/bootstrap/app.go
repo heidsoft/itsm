@@ -892,6 +892,7 @@ func NewApplication() *Application {
 	inboundDedup := connector.NewInboundDeduper(client, 5*time.Minute)
 	feishuHTTPHandler := feishuHandler.NewHandler(connectorManager, feishuSyncService, marketplaceSvc, sugar)
 	feishuHTTPHandler.SetInboundDedup(inboundDedup)
+	feishuHTTPHandler.SetAuditRecorder(domainCommon.NewEntRepository(client))
 	dingtalkHTTPHandler := dingtalkHandler.NewHandler(connectorManager, inboundDedup, sugar)
 	dingtalkHTTPHandler.SetAuditRecorder(domainCommon.NewEntRepository(client))
 	wecomHTTPHandler := wecomHandler.NewHandler(connectorManager, inboundDedup, sugar)

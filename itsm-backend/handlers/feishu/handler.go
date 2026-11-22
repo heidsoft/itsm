@@ -15,6 +15,7 @@ import (
 	"itsm-backend/connector"
 	feishuConn "itsm-backend/connector/builtin/feishu"
 	"itsm-backend/dto"
+	connectorDomain "itsm-backend/handlers/connector"
 	marketplaceService "itsm-backend/service/marketplace"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,7 @@ import (
 )
 
 type Handler struct {
+	auditRec         connectorDomain.AuditRecorder
 	connectorManager *connector.Manager
 	syncService      *FeishuSyncService
 	marketplace      *marketplaceService.Service
@@ -59,6 +61,18 @@ func NewHandler(
 		oauthStates:      make(map[string]oauthStateEntry),
 	}
 }
+
+// SetAuditRecorder 注入持久审计，避免安全拒绝只留在不可聚合的日志中。
+func (h *Handler) SetAuditRecorder(rec connectorDomain.AuditRecorder) { h.auditRec = rec }
+
+// HasAuditRecorder 报告是否已装配审计写入器。
+//
+// 存在的唯一理由是让「生产装配是否接上」变成可断言的行为，而不是靠
+// 源码文本锁。auditRec 是私有字段，bootstrap 侧拿不到；若不暴露这个只读探针，
+// 装配守卫就只能用 `os.ReadFile("app.go") + strings.Contains` —— 那是
+// **字符串存在性检查**：把装配那一行注释掉、但目标字符串仍在时，它照样绿
+// （已实测）。只读、零副作用，不改变任何生产行为。
+func (h *Handler) HasAuditRecorder() bool { return h.auditRec != nil }
 
 // SetInboundDedup 注入持久化入站去重器（替代旧的 in-memory nonce map）。
 // nil 时退回 in-memory 实现，保留兼容。
@@ -144,6 +158,10 @@ func (h *Handler) OAuthCallback(ctx *gin.Context) {
 	state := ctx.Query("state")
 	if !h.consumeOAuthState(state, fc.CallbackInstanceID(), tenantID) {
 		h.logger.Warnw("Rejected Feishu OAuth callback with invalid state", "tenant_id", tenantID)
+		// 不保存 code/state 或完整 URL：拒绝原因足够聚合 CSRF 信号，凭据不应永久落库。
+		connectorDomain.RecordInboundFailure(ctx.Request.Context(), h.auditRec, tenantID,
+			"feishu.oauth.state_rejected", fmt.Sprintf("/feishu/oauth/callback/%d", tenantID),
+			"invalid_oauth_state", nil, h.logger)
 		common.Fail(ctx, common.ForbiddenCode, "授权状态无效或已过期，请重新发起授权")
 		return
 	}
@@ -229,6 +247,10 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 	err := fc.VerifySignature(headers, rawData)
 	if err != nil {
 		h.logger.Errorw("Invalid Feishu webhook signature", "err", err)
+		// 统一入口内部脱敏 headers；固定原因避免 provider 错误夹带凭据进入审计。
+		connectorDomain.RecordInboundFailure(ctx.Request.Context(), h.auditRec, tenantID,
+			"feishu.webhook.verify_signature", fmt.Sprintf("/feishu/webhook/%d", tenantID),
+			"invalid_signature", headers, h.logger)
 		common.Fail(ctx, common.ForbiddenCode, "Invalid signature")
 		return
 	}

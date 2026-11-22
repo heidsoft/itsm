@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"itsm-backend/common"
@@ -31,7 +32,7 @@ const (
 	pathResetPassword  = "/api/v1/auth/reset-password"
 )
 
-// recordSelfServiceAudit 落一条自助动作审计，状态码取**写完响应后**的真实值。
+// recordSelfServiceAuditUnattributed 落一条自助动作审计，状态码取**写完响应后**的真实值。
 //
 // 为什么在 handler 而不是 service 里调用：只有 handler 知道这一笔 HTTP 请求
 // 最终返回 200 还是 400/401/503，而「失败的注册尝试」正是撞库与批量注册
@@ -39,11 +40,11 @@ const (
 //
 // 因此本函数必须在所有 return 分支之后调用——包括参数绑定失败的分支：
 // 那是批量脚本最容易命中的路径，恰恰最需要留痕。
-func (h *Handler) recordSelfServiceAudit(c *gin.Context, auditCtx context.Context, path, action, subject, reason string) {
-	h.recordSelfServiceAuditWithTenant(c, auditCtx, path, action, subject, reason, 0)
+func (h *Handler) recordSelfServiceAuditUnattributed(c *gin.Context, auditCtx context.Context, path, action, subject, reason string) {
+	h.recordSelfServiceAuditWithTenant(c, auditCtx, path, action, subject, reason, 0, 0)
 }
 
-func (h *Handler) recordSelfServiceAuditWithTenant(c *gin.Context, auditCtx context.Context, path, action, subject, reason string, tenantID int) {
+func (h *Handler) recordSelfServiceAuditWithTenant(c *gin.Context, auditCtx context.Context, path, action, subject, reason string, tenantID, userID int) {
 	middleware.RecordSelfServiceAudit(auditCtx, h.service.client, middleware.SelfServiceAuditEvent{
 		Path:       path,
 		Action:     action,
@@ -53,7 +54,7 @@ func (h *Handler) recordSelfServiceAuditWithTenant(c *gin.Context, auditCtx cont
 		// 两种情况都刻意不填「默认租户」：那会让某个客户租户的审计视图
 		// 看到不属于它的记录。
 		TenantID: tenantID,
-		UserID:   0,
+		UserID:   userID,
 		Subject:  subject,
 		Reason:   reason,
 	})
@@ -82,7 +83,7 @@ func (h *Handler) Register(c *gin.Context) {
 	auditCtx := middleware.WithLoginAuditRequest(c.Request.Context(), c.ClientIP(), c.Request.UserAgent())
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "参数错误")
-		h.recordSelfServiceAudit(c, auditCtx, pathRegister, "register", "", "参数错误")
+		h.recordSelfServiceAuditUnattributed(c, auditCtx, pathRegister, "register", "", "参数错误")
 		return
 	}
 	response, err := h.service.Register(c.Request.Context(), &req)
@@ -92,14 +93,14 @@ func (h *Handler) Register(c *gin.Context) {
 		common.RespondError(c, err, "注册失败")
 		// 审计只记用户名，不记邮箱与密码：用户名是「谁想注册」的标识，
 		// 邮箱与密码属于凭据面，一旦落库无法回收。
-		h.recordSelfServiceAudit(c, auditCtx, pathRegister, "register", req.Username, err.Error())
+		h.recordSelfServiceAuditUnattributed(c, auditCtx, pathRegister, "register", req.Username, err.Error())
 		return
 	}
 	common.Success(c, response)
 	// 成功分支的租户归属取自 service 解析出的真实租户（自助注册只允许在
 	// 「恰好一个活跃租户」时成功），而不是像失败分支那样留 0——
 	// 注册成功是一条需要归属到具体租户才能查的合规记录。
-	h.recordSelfServiceAuditWithTenant(c, auditCtx, pathRegister, "register", req.Username, "", response.TenantID)
+	h.recordSelfServiceAuditWithTenant(c, auditCtx, pathRegister, "register", req.Username, "", response.TenantID, response.ID)
 }
 
 // @Summary 申请密码重置
@@ -117,7 +118,7 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 	auditCtx := middleware.WithLoginAuditRequest(c.Request.Context(), c.ClientIP(), c.Request.UserAgent())
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "参数错误")
-		h.recordSelfServiceAudit(c, auditCtx, pathForgotPassword, "forgot_password", "", "参数错误")
+		h.recordSelfServiceAuditUnattributed(c, auditCtx, pathForgotPassword, "forgot_password", "", "参数错误")
 		return
 	}
 	response, err := h.service.ForgotPassword(c.Request.Context(), &req)
@@ -125,14 +126,17 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 		// service 明确用 5003 表达「邮件服务未配置」；压成 2001 会让用户以为是
 		// 自己的邮箱有问题并反复重试。
 		common.RespondError(c, err, "密码找回请求失败")
-		h.recordSelfServiceAudit(c, auditCtx, pathForgotPassword, "forgot_password", "", err.Error())
+		h.recordSelfServiceAuditUnattributed(c, auditCtx, pathForgotPassword, "forgot_password", "", err.Error())
 		return
 	}
 	common.Success(c, response)
-	// 成功分支**刻意不记邮箱**：本端点对「邮箱已注册/未注册」返回同一个通用
-	// 响应以防账号枚举，审计正文若存邮箱就等于把这份防护挪进了另一张表——
-	// 有 audit:read 权限的人仍可批量比对「谁真的收到了重置邮件」。
-	h.recordSelfServiceAudit(c, auditCtx, pathForgotPassword, "forgot_password", "", "")
+	// 用户 ID 是非凭据的稳定内部标识，可落 append-only 表；邮箱与令牌不落库。
+	// 不存在的用户没有可信归属，不能把请求邮箱伪装成 subject。
+	subject := ""
+	if response.UserID != 0 {
+		subject = strconv.Itoa(response.UserID)
+	}
+	h.recordSelfServiceAuditWithTenant(c, auditCtx, pathForgotPassword, "forgot_password", subject, "", response.TenantID, response.UserID)
 }
 
 // @Summary 重置密码
@@ -150,20 +154,19 @@ func (h *Handler) ResetPassword(c *gin.Context) {
 	auditCtx := middleware.WithLoginAuditRequest(c.Request.Context(), c.ClientIP(), c.Request.UserAgent())
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "参数错误")
-		h.recordSelfServiceAudit(c, auditCtx, pathResetPassword, "reset_password", "", "参数错误")
+		h.recordSelfServiceAuditUnattributed(c, auditCtx, pathResetPassword, "reset_password", "", "参数错误")
 		return
 	}
 	response, err := h.service.ResetPassword(c.Request.Context(), &req)
 	if err != nil {
 		common.AuthFailedWithErr(c, err, "认证失败")
-		h.recordSelfServiceAudit(c, auditCtx, pathResetPassword, "reset_password", "", err.Error())
+		h.recordSelfServiceAuditUnattributed(c, auditCtx, pathResetPassword, "reset_password", "", err.Error())
 		return
 	}
 	common.Success(c, response)
-	// 成功分支只记「有人完成了重置」，不记邮箱、不记令牌：
-	// 重置令牌是一次性消费凭据，写进 append-only 审计表等于永久留了一份
-	// 曾经可用的凭据副本；邮箱则会让审计读面变成账号枚举的第二条通道。
-	h.recordSelfServiceAudit(c, auditCtx, pathResetPassword, "reset_password", "", "")
+	// 用户 ID 来自已验证令牌绑定用户，不是公开请求自报；它不是密码或令牌，
+	// 因而可作为 append-only 表中的稳定 subject，不永久保存可消费凭据。
+	h.recordSelfServiceAuditWithTenant(c, auditCtx, pathResetPassword, "reset_password", strconv.Itoa(response.UserID), "", response.TenantID, response.UserID)
 }
 
 // @Summary 校验重置令牌

@@ -200,6 +200,8 @@ func (s *Service) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordReq
 		return nil, common.NewBusinessError(common.ServiceUnavailableCode,
 			"密码重置邮件发送失败，请稍后重试或联系管理员", "")
 	}
+	// 只有用户存在且邮件已发出才回传归属，通用成功仍保持零归属。
+	genericOK.TenantID, genericOK.UserID = userEntity.TenantID, userEntity.ID
 	return genericOK, nil
 }
 
@@ -224,7 +226,9 @@ func (s *Service) ResetPassword(ctx context.Context, req *dto.PasswordResetReque
 	if err != nil {
 		return nil, fmt.Errorf("令牌无效或已使用")
 	}
-	if _, err = tx.User.UpdateOneID(tokenEntity.UserID).SetPasswordHash(string(hashedPassword)).Save(ctx); err != nil {
+	// 复用已验证令牌所绑定用户的更新结果，避免 handler 再查库造成归属漂移。
+	userEntity, err := tx.User.UpdateOneID(tokenEntity.UserID).SetPasswordHash(string(hashedPassword)).Save(ctx)
+	if err != nil {
 		return nil, fmt.Errorf("更新密码失败")
 	}
 	if err = tx.Commit(); err != nil {
@@ -236,7 +240,7 @@ func (s *Service) ResetPassword(ctx context.Context, req *dto.PasswordResetReque
 		s.logger.Errorw("failed to invalidate tokens after password reset",
 			"user_id", tokenEntity.UserID, "error", err)
 	}
-	return &dto.PasswordResetResponse{Message: "密码重置成功，请使用新密码登录"}, nil
+	return &dto.PasswordResetResponse{Message: "密码重置成功，请使用新密码登录", TenantID: userEntity.TenantID, UserID: userEntity.ID}, nil
 }
 
 func (s *Service) ValidateResetToken(ctx context.Context, req *dto.ValidateResetTokenRequest) (*dto.ValidateResetTokenResponse, error) {

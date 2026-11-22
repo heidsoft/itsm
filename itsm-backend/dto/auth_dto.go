@@ -129,6 +129,9 @@ type ForgotPasswordRequest struct {
 // ForgotPasswordResponse 忘记密码响应
 type ForgotPasswordResponse struct {
 	Message string `json:"message"`
+	// 归属只供内部审计使用：公开响应泄露用户或租户 ID 会破坏防枚举。
+	TenantID int `json:"-"`
+	UserID   int `json:"-"`
 }
 
 // PasswordResetRequest 密码重置请求（用于忘记密码流程）
@@ -142,6 +145,9 @@ type PasswordResetRequest struct {
 // PasswordResetResponse 密码重置响应
 type PasswordResetResponse struct {
 	Message string `json:"message"`
+	// 归属只供内部审计使用：公开响应泄露用户或租户 ID 会破坏防枚举。
+	TenantID int `json:"-"`
+	UserID   int `json:"-"`
 }
 
 // ValidateResetTokenRequest 验证重置令牌请求
