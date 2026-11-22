@@ -29,7 +29,7 @@ kubectl apply -f 20-backend.yaml 21-worker.yaml 30-frontend.yaml 40-ingress.yaml
 1. 修改镜像标签（backend/frontend）为新版本。
 2. 重新应用 `22-migrate-job.yaml`（或新建带版本后缀的 Job）完成迁移。
 3. 滚动更新：`kubectl -n itsm rollout restart deployment/itsm-backend deployment/itsm-worker deployment/itsm-frontend`。
-4. 破坏性变更与回滚见仓库根目录 [UPGRADE.md](../UPGRADE.md)。
+4. 破坏性变更与回滚见仓库根目录 [UPGRADE.md](../../UPGRADE.md)。
 
 ## 未覆盖（按需自补）
 
