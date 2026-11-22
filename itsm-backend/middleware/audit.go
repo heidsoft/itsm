@@ -27,6 +27,17 @@ func WithLoginAuditRequest(ctx context.Context, ip, userAgent string) context.Co
 	return context.WithValue(ctx, loginAuditRequestKey{}, LoginAuditRequest{IP: ip, UserAgent: userAgent})
 }
 
+// detachedAuditContext 只搬运已有 request ID，避免客户端取消抹掉审计，
+// 同时保留失败归因。本仓链路由 requestIDCtxKey 注入，未发现独立 trace/span 注入；
+// 不复制身份或未知值，防止把请求生命周期和额外权限带入独立写入。
+func detachedAuditContext(ctx context.Context) context.Context {
+	base := context.Background()
+	if rid, ok := RequestIDFromContext(ctx); ok {
+		base = WithRequestID(base, rid)
+	}
+	return base
+}
+
 // RecordLoginAudit writes only explicitly allow-listed authentication metadata.
 // Passwords and issued/reset tokens are never accepted by this API.
 func RecordLoginAudit(ctx context.Context, client *ent.Client, userID, tenantID int, username, action, failureReason string) {
@@ -35,16 +46,17 @@ func RecordLoginAudit(ctx context.Context, client *ent.Client, userID, tenantID 
 	}
 	req, _ := ctx.Value(loginAuditRequestKey{}).(LoginAuditRequest)
 	payload, _ := json.Marshal(map[string]string{"username": username, "userAgent": req.UserAgent, "failureReason": failureReason})
-	auditCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	auditCtx, cancel := context.WithTimeout(detachedAuditContext(ctx), 2*time.Second)
 	defer cancel()
-	err := client.AuditLog.Create().SetCreatedAt(time.Now()).SetTenantID(tenantID).SetUserID(userID).
+	rid, _ := RequestIDFromContext(auditCtx)
+	err := client.AuditLog.Create().SetRequestID(rid).SetCreatedAt(time.Now()).SetTenantID(tenantID).SetUserID(userID).
 		SetIP(req.IP).SetResource("auth").SetAction(action).SetPath("/api/v1/auth/login").
 		SetMethod("POST").SetStatusCode(map[bool]int{true: 200, false: 401}[action == "LOGIN_SUCCESS"]).
 		SetRequestBody(string(payload)).Exec(auditCtx)
 	if err != nil {
 		auditWriteFailures.Add(1)
 		if globalLogger != nil {
-			globalLogger.Errorw("failed to save login audit", "error", err, "action", action, "tenant_id", tenantID, "user_id", userID)
+			globalLogger.Errorw("failed to save login audit", "request_id", rid, "error", err, "action", action, "tenant_id", tenantID, "user_id", userID)
 		}
 	}
 }
@@ -106,16 +118,17 @@ func RecordSelfServiceAudit(ctx context.Context, client *ent.Client, ev SelfServ
 		// 是自助端点最需要的上下文。
 		"userAgent": req.UserAgent,
 	})
-	auditCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	auditCtx, cancel := context.WithTimeout(detachedAuditContext(ctx), 2*time.Second)
 	defer cancel()
-	err := client.AuditLog.Create().SetCreatedAt(time.Now()).SetTenantID(ev.TenantID).SetUserID(ev.UserID).
+	rid, _ := RequestIDFromContext(auditCtx)
+	err := client.AuditLog.Create().SetRequestID(rid).SetCreatedAt(time.Now()).SetTenantID(ev.TenantID).SetUserID(ev.UserID).
 		SetIP(req.IP).SetResource("auth").SetAction(ev.Action).SetPath(ev.Path).
 		SetMethod("POST").SetStatusCode(ev.StatusCode).
 		SetRequestBody(string(payload)).Exec(auditCtx)
 	if err != nil {
 		auditWriteFailures.Add(1)
 		if globalLogger != nil {
-			globalLogger.Errorw("failed to save self-service audit",
+			globalLogger.Errorw("failed to save self-service audit", "request_id", rid,
 				"error", err, "action", ev.Action, "path", ev.Path,
 				"tenant_id", ev.TenantID, "user_id", ev.UserID)
 		}

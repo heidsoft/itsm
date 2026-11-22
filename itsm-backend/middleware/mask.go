@@ -127,7 +127,13 @@ func MaskSensitiveFields(body string) string {
 		if len(sub) != 3 {
 			return match
 		}
-		if !IsSensitiveFieldKey(sub[1]) {
+		// 合法 JSON 转义与字面键名语义相同；非法键仍沿用原串判定，避免短路漏脱敏。
+		key := sub[1]
+		var decoded string
+		if err := json.Unmarshal([]byte(`"`+key+`"`), &decoded); err == nil {
+			key = decoded
+		}
+		if !IsSensitiveFieldKey(key) {
 			return match
 		}
 		// 值统一替换成字符串 "***"，保留原键名，便于审计里看出「哪个字段被脱敏」。

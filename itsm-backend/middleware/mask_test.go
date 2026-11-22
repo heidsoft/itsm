@@ -149,3 +149,34 @@ func TestIsSensitiveFieldKey(t *testing.T) {
 		require.False(t, IsSensitiveFieldKey(key), "%s 不应判定为敏感", key)
 	}
 }
+
+func TestMaskSensitiveFields_DecodesJSONKeys(t *testing.T) {
+	cases := map[string]string{
+		"lowercase":     `{"pass\u0077ord":"secret-value"}`,
+		"uppercase":     `{"pass\u0057ord":"secret-value"}`,
+		"nested":        `{"profile":{"pass\u0077ord":"secret-value"}}`,
+		"array":         `[{"pass\u0077ord":"secret-value"}]`,
+		"escaped_quote": `{"prefix\"pass\u0077ord":"secret-value"}`,
+	}
+	for name, body := range cases {
+		t.Run(name, func(t *testing.T) {
+			masked := MaskSensitiveFields(body)
+			require.NotContains(t, masked, "secret-value", "合法转义不能绕过敏感键判定")
+			require.True(t, json.Valid([]byte(masked)))
+			require.Equal(t, masked, MaskSensitiveFields(masked))
+		})
+	}
+}
+
+func TestMaskSensitiveFields_InvalidKeyEscapeFallsBack(t *testing.T) {
+	// 非法 JSON 仍可能含可识别的敏感后缀，解码失败不能短路脱敏。
+	require.Equal(t, `{"\qpassword":"***"}`, MaskSensitiveFields(`{"\qpassword":"secret-value"}`))
+	// 原始串也没有敏感后缀时仍无法识别；非法转义不是有效业务键名，保留此边界。
+	body := `{"pass\qword":"secret-value"}`
+	require.Equal(t, body, MaskSensitiveFields(body))
+}
+
+func TestIsSensitiveFieldKey_UsesHumanWrittenKey(t *testing.T) {
+	require.True(t, IsSensitiveFieldKey("passWord"))
+	require.False(t, IsSensitiveFieldKey(`pass\u0077ord`))
+}
