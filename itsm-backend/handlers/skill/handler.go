@@ -622,9 +622,6 @@ func (h *Handler) Invoke(c *gin.Context) {
 		return
 	}
 	userID := c.GetInt("user_id")
-	input["tenantId"] = tenantID
-	input["userId"] = userID
-	input["role"] = c.GetString("role")
 
 	// 归属门禁（第一道）：任何后续判定之前先确定执行对象的租户视角。
 	// 注册表进程级共享，租户 A 注册的自定义技能对租户 B 必须表现为「不存在」。
@@ -642,6 +639,26 @@ func (h *Handler) Invoke(c *gin.Context) {
 		failInvoke(c, code, entryErr)
 		return
 	}
+
+	// InputSchema 执行前校验（第三道）：manifest 声明的 required/type/enum
+	// 此前只在发现面暴露、从不消费。必须在身份字段注入**之前**校验原始入参——
+	// 否则注入的 tenantId/userId/role 会污染调用方入参，让 additionalProperties
+	// 之类的约束误判，也让「调用方少传了必填字段」被注入字段掩盖。
+	// 校验失败按 validation 分类落失败底账并返回 400，不执行技能。
+	if schemaErr := validateSkillInput(entry.Manifest.InputSchema, input); schemaErr != nil {
+		h.logger.Infow("skill invoke rejected by inputSchema",
+			"skill", code, "tenant_id", tenantID, "error", schemaErr.Error())
+		h.recordInvokeAudit(c.Request.Context(), tenantID, userID, code, entry.Version, false, 0,
+			classifyInvokeError(schemaErr))
+		failInvoke(c, code, schemaErr)
+		return
+	}
+
+	// 身份字段注入放在 InputSchema 校验之后：只覆盖认证上下文来源的值，
+	// 且不会被 schema 校验误当作调用方入参。
+	input["tenantId"] = tenantID
+	input["userId"] = userID
+	input["role"] = c.GetString("role")
 
 	// 市场交付门禁：由商品目录交付的技能，租户必须先装上。
 	// 判定本身出错（DB/查询失败）按拒绝处理——「查不动就放行」会让安装记录
