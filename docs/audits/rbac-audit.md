@@ -47,7 +47,7 @@ UpdatePermissionPolicy 与 DeletePermission 同步调用 InvalidateAllPermission
 id: AUDIT-021
 priority: P1
 category: authz/dbonly
-status: confirmed (代码路径) / suspected (可达性)
+status: resolved
 title: DBOnly 下 L3 URL 推断回退到编译期角色默认值
 file: middleware/smart_permission.go:355-386,407-423；middleware/rbac.go:148-150
 evidence: checkURLInference 在 getPermissionFromPath 返回 nil 时调用 hasResourcePermissionFromRole→RoleDefaultPermissions，无 Mode==DBOnly 门禁；L4 有该门禁；route_precheck_alignment_test.go:40 明确跳过未映射路径，故没有全局守卫强制所有路由进 map
@@ -57,6 +57,12 @@ approval: 权限判定变更，需人工审批
 ```
 
 ```yaml
+
+已验证修复：checkURLInference 的 URL 推断分支改调 checkRolePermissionFromDB（委托
+AuthorizeResource），DBOnly 三态语义由 loadPermissionsByMode 统一处理；未配置租户仍可用默认兜底。
+回归 middleware/smart_permission_dbonly_l3_test.go 用真实 ent 库覆盖撤销/恢复/未配置兜底/停用不可复活；
+反向注入旧实现后断言变红。go test ./middleware/ 全包通过。
+
 id: AUDIT-022
 priority: P1
 category: authz/cache

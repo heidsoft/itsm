@@ -8,6 +8,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+
+	"itsm-backend/internal/authz"
 )
 
 // =============================================================================
@@ -21,7 +23,12 @@ import (
 // 未配置 Redis（单副本）时自动降级为仅本进程失效，行为与既有完全一致。
 // =============================================================================
 
-const permissionCacheInvalidateChannel = "itsm:permission-cache:invalidate"
+const (
+	permissionCacheInvalidateChannel = "itsm:permission-cache:invalidate"
+	// 策略/ACL 缓存失效的独立频道：与角色权限缓存的载荷格式不同，
+	// 老实例不认识该频道，不会误把租户号当角色名解析。
+	authzCacheInvalidateChannel = "itsm:authz-cache:invalidate"
+)
 
 var (
 	permissionBroadcastOnce sync.Once
@@ -37,6 +44,7 @@ func ConfigurePermissionCacheBroadcast(client *redis.Client) {
 	permissionBroadcastOnce.Do(func() {
 		permissionBroadcaster = client
 		go subscribePermissionInvalidation(client)
+		go subscribeAuthzCacheInvalidation(client)
 	})
 }
 
@@ -92,4 +100,56 @@ func parseInvalidateMessage(payload string) (string, int, bool) {
 		tenantID = tenantID*10 + int(c-'0')
 	}
 	return roleName, tenantID, true
+}
+
+// InvalidateAuthzCaches 使某租户的策略目录（authz.Registry）与动态 ACL 缓存失效，
+// 并向其它副本广播。权限策略写入后必须调用它，而不是只调 authz.Shared().Invalidate：
+// 后者只清本进程，多副本下另一实例仍会按旧策略判定最长 5 分钟。
+func InvalidateAuthzCaches(tenantID int) {
+	authz.Shared().Invalidate(tenantID)
+	InvalidateTenantACLCache(tenantID)
+	broadcastAuthzCacheInvalidation(tenantID)
+}
+
+func broadcastAuthzCacheInvalidation(tenantID int) {
+	if permissionBroadcaster == nil {
+		return
+	}
+	msg := fmt.Sprintf("%d", tenantID)
+	if err := permissionBroadcaster.Publish(context.Background(),
+		authzCacheInvalidateChannel, msg).Err(); err != nil {
+		zap.S().Warnw("策略缓存失效广播发布失败（其它实例将等TTL过期）",
+			"tenant_id", tenantID, "error", err)
+	}
+}
+
+func subscribeAuthzCacheInvalidation(client *redis.Client) {
+	sub := client.Subscribe(context.Background(), authzCacheInvalidateChannel)
+	defer sub.Close()
+
+	for msg := range sub.Channel() {
+		tenantID, ok := parseAuthzInvalidateMessage(msg.Payload)
+		if !ok {
+			continue
+		}
+		authz.Shared().Invalidate(tenantID)
+		InvalidateTenantACLCache(tenantID)
+		zap.S().Debugw("收到策略缓存失效广播，已清除本进程缓存", "tenant_id", tenantID)
+	}
+}
+
+// parseAuthzInvalidateMessage 只接受纯数字租户号；拒绝空串和非数字载荷，
+// 避免一条脏消息清掉整个进程的缓存。
+func parseAuthzInvalidateMessage(payload string) (int, bool) {
+	if payload == "" {
+		return 0, false
+	}
+	tenantID := 0
+	for _, c := range payload {
+		if c < '0' || c > '9' {
+			return 0, false
+		}
+		tenantID = tenantID*10 + int(c-'0')
+	}
+	return tenantID, true
 }
