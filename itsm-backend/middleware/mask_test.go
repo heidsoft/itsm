@@ -27,10 +27,10 @@ func TestMaskSensitiveFields_MasksPasswordCamelCase(t *testing.T) {
 
 func TestMaskSensitiveFields_MasksAllNamingVariants(t *testing.T) {
 	cases := map[string]string{
-		"snake_case": `{"new_password":"x1"}`,
-		"kebab-case": `{"new-password":"x1"}`,
-		"camelCase":  `{"newPassword":"x1"}`,
-		"PascalCase": `{"NewPassword":"x1"}`,
+		"snake_case":  `{"new_password":"x1"}`,
+		"kebab-case":  `{"new-password":"x1"}`,
+		"camelCase":   `{"newPassword":"x1"}`,
+		"PascalCase":  `{"NewPassword":"x1"}`,
 		"upper snake": `{"NEW_PASSWORD":"x1"}`,
 	}
 	for name, body := range cases {
@@ -42,21 +42,21 @@ func TestMaskSensitiveFields_MasksAllNamingVariants(t *testing.T) {
 
 func TestMaskSensitiveFields_MasksCredentialKeys(t *testing.T) {
 	values := map[string]string{
-		"accessToken":    "tok-a",
-		"refresh_token":  "tok-r",
-		"csrfToken":      "csrf-v",
-		"idToken":        "id-v",
-		"clientSecret":   "sec-v",
-		"app_secret":     "sec-a",
-		"x-api-key":      "key-v",
-		"apiKey":         "key-a",
-		"privateKey":     "pk-v",
-		"authorization":  "Bearer abc",
-		"session_token":  "sess-v",
-		"bot_token":      "bot-v",
-		"db_password":    "db-v",
-		"encrypt_key":    "enc-v",
-		"feishu_token":   "fs-v",
+		"accessToken":   "tok-a",
+		"refresh_token": "tok-r",
+		"csrfToken":     "csrf-v",
+		"idToken":       "id-v",
+		"clientSecret":  "sec-v",
+		"app_secret":    "sec-a",
+		"x-api-key":     "key-v",
+		"apiKey":        "key-a",
+		"privateKey":    "pk-v",
+		"authorization": "Bearer abc",
+		"session_token": "sess-v",
+		"bot_token":     "bot-v",
+		"db_password":   "db-v",
+		"encrypt_key":   "enc-v",
+		"feishu_token":  "fs-v",
 	}
 	for key, value := range values {
 		t.Run(key, func(t *testing.T) {
@@ -115,12 +115,35 @@ func TestMaskSensitiveFields_NonJSONPassesThrough(t *testing.T) {
 	require.Equal(t, "", MaskSensitiveFields(""))
 }
 
+func TestMaskSensitiveFields_MasksPasswordConfirm(t *testing.T) {
+	// PasswordResetRequest（dto/auth_dto.go:130-135）的真实请求体形状。
+	// 归一化后 passwordConfirm → "passwordconfirm"：既不以 password 结尾
+	// （它以 confirm 结尾），也不在精确名单里，于是明文副本原样落进审计正文。
+	// 这是「同一份明文的第二个副本」——password 被脱敏而 confirm 没有，
+	// 脱敏等于完全失效。
+	body := `{"token":"abc123","email":"a@b.com","password":"PlainPass2026!","passwordConfirm":"PlainPass2026!"}`
+
+	masked := MaskSensitiveFields(body)
+
+	require.NotContains(t, masked, "PlainPass2026!", "两次输入的密码是同一份明文，漏一个等于全漏")
+	require.Contains(t, masked, `"password":"***"`)
+	require.Contains(t, masked, `"passwordConfirm":"***"`)
+	require.True(t, json.Valid([]byte(masked)), "脱敏后必须仍是合法 JSON：%s", masked)
+	// token / email 同属该请求体，也必须脱敏（既有规则已覆盖，此处一并锁定）。
+	require.NotContains(t, masked, "abc123")
+	require.NotContains(t, masked, "a@b.com")
+}
+
 func TestIsSensitiveFieldKey(t *testing.T) {
-	sensitive := []string{"password", "newPassword", "old_password", "passwd", "pwd", "accessToken", "jwt", "clientSecret", "x-api-key", "cookie", "Set-Cookie", "cvv", "idNumber"}
+	sensitive := []string{"password", "newPassword", "old_password", "passwd", "pwd", "accessToken", "jwt", "clientSecret", "x-api-key", "cookie", "Set-Cookie", "cvv", "idNumber", "passwordConfirm", "confirmPassword", "PasswordConfirmation"}
 	for _, key := range sensitive {
 		require.True(t, IsSensitiveFieldKey(key), "%s 应判定为敏感", key)
 	}
 
+	// 反向：带 password 字样但语义是「展示/状态描述」的字段不得脱敏，
+	// 否则审计正文里最有用的排查线索会被一起抹掉。
+	// passwordUpdatedAtHint 曾在本批被 contains("password") 误伤（既有用例打红才暴露），
+	// 故保留它作为这条边界的哨兵。
 	safe := []string{"title", "status", "priority", "tokenType", "passwordUpdatedAtHint", "tenantId", "userId", "description"}
 	for _, key := range safe {
 		require.False(t, IsSensitiveFieldKey(key), "%s 不应判定为敏感", key)

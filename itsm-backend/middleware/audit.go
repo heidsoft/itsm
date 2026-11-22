@@ -49,6 +49,74 @@ func RecordLoginAudit(ctx context.Context, client *ent.Client, userID, tenantID 
 	}
 }
 
+// SelfServiceAuditEvent 是一次公开自助动作的**已筛选**审计事实。
+//
+// 刻意不给调用方「传整个请求体」的机会：reset-password 与 forgot-password 的
+// 正文里是消费型凭据（重置令牌一次性有效、用完即废）和用户输入的密码。
+// 一旦允许透传，任何一次字段重命名或新增敏感字段都会静默扩大落库面，
+// 而审计表一旦写入就无法回收——它是 append-only 的合规证据。
+// 因此取值范围由结构体本身限定，调用方只能填这几个允许出现的事实。
+type SelfServiceAuditEvent struct {
+	// Path 是这次动作的真实路由，必须与 router 注册的完全一致。
+	// 历史 RecordLoginAudit 把 path 硬编码成 /api/v1/auth/login，导致
+	// SSO 回调也记成登录路径；逐端点审计不允许再用同一个常量蒙混。
+	Path   string
+	Action string
+	// StatusCode 是端点真实返回的 HTTP 状态。失败的注册/重置同样要留痕：
+	// 撞库与账号枚举正是从大量失败请求里看出来的。
+	StatusCode int
+	// TenantID 允许为 0：public 端点多数在租户解析之前失败，此时无归属。
+	// 刻意不说谎填一个「默认租户」——那会让客户租户的审计视图看到不属于它的记录。
+	TenantID int
+	UserID   int
+	// Subject 是这次动作的可识别对象（注册用户名 / 目标邮箱 / 登录用户名）。
+	// 由调用方决定填哪个；不填则留空，绝不为了「填满字段」而塞入敏感原值。
+	Subject string
+	// Reason 是业务拒绝原因（"用户名已被注册"/"邮件服务未配置"等）。
+	Reason string
+}
+
+// RecordSelfServiceAudit 记录一次公开自助端点动作（register / forgot-password /
+// reset-password / refresh-token）。
+//
+// 为什么这些端点不能靠 AuditMiddleware：public 组不在鉴权链之后，
+// 中间件从 ctx 取 tenant_id/user_id 恒为 0；而更关键的是中间件按
+// shouldAuditRequest 对**所有 POST** 生效，会把飞书/钉钉/企业微信回调
+// 一起卷进审计表，并把 /auth/login 记成第二条（与 RecordLoginAudit 重复，
+// 使「登录失败次数」翻倍）。故必须是逐端点的 allow-list 调用。
+//
+// 写入失败只计数不重试：审计表 append-only 且无幂等键，结果不明时重试
+// 会留下重复行，比丢一行更难对账（与中间件同一立场）。
+func RecordSelfServiceAudit(ctx context.Context, client *ent.Client, ev SelfServiceAuditEvent) {
+	if client == nil {
+		return
+	}
+	// IP / UserAgent 来自 handler 显式注入的 ctx（WithLoginAuditRequest），
+	// 不在这里反查 gin.Context：本函数也可能被非 HTTP 入口调用。
+	req, _ := ctx.Value(loginAuditRequestKey{}).(LoginAuditRequest)
+	payload, _ := json.Marshal(map[string]string{
+		"subject": ev.Subject,
+		"reason":  ev.Reason,
+		// userAgent 不是凭据，但能区分「同一 IP 的脚本批量注册」与「真人操作」，
+		// 是自助端点最需要的上下文。
+		"userAgent": req.UserAgent,
+	})
+	auditCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	err := client.AuditLog.Create().SetCreatedAt(time.Now()).SetTenantID(ev.TenantID).SetUserID(ev.UserID).
+		SetIP(req.IP).SetResource("auth").SetAction(ev.Action).SetPath(ev.Path).
+		SetMethod("POST").SetStatusCode(ev.StatusCode).
+		SetRequestBody(string(payload)).Exec(auditCtx)
+	if err != nil {
+		auditWriteFailures.Add(1)
+		if globalLogger != nil {
+			globalLogger.Errorw("failed to save self-service audit",
+				"error", err, "action", ev.Action, "path", ev.Path,
+				"tenant_id", ev.TenantID, "user_id", ev.UserID)
+		}
+	}
+}
+
 // auditWriteFailures 累计审计落库失败次数（L4）。
 //
 // 审计写入与业务不同事务，且失败时业务已返回成功；旧实现只在日志里留一行

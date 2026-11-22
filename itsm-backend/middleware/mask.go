@@ -39,6 +39,17 @@ var sensitiveKeyContains = []string{
 	"encryptkey", "signingkey", "hmackey", "appkey", "accesskey", "secretkey",
 }
 
+// sensitiveKeyConfirms 是「密码类键名 + 确认后缀」的组合。
+//
+// passwordConfirm / confirmPassword / passwordConfirmation 归一化后都以
+// confirm 结尾，不以 password 结尾——后缀规则接不住，它们会成为 password
+// 的第二份明文副本（一个脱敏、一个原样留存，脱敏整体等于失效）。
+//
+// 刻意**不**简单地 contains("password")：那会把 passwordUpdatedAtHint 这类
+// 「描述密码状态的展示字段」也判为敏感，把审计正文里最有用的线索抹掉。
+// 判据是「确认语义」而非「出现过 password 字样」。
+var sensitiveKeyConfirms = []string{"passwordconfirm", "confirmpassword", "passwordconfirmation"}
+
 // sensitiveKeyExact 是无分隔符、也不带常见后缀的短键名与个人隐私字段。
 //
 // 联系方式与地址类沿用了历史白名单的口径（审计日志里不保留），避免本次
@@ -92,6 +103,11 @@ func IsSensitiveFieldKey(key string) bool {
 	}
 	for _, fragment := range sensitiveKeyContains {
 		if strings.Contains(normalized, fragment) {
+			return true
+		}
+	}
+	for _, confirm := range sensitiveKeyConfirms {
+		if strings.Contains(normalized, confirm) {
 			return true
 		}
 	}

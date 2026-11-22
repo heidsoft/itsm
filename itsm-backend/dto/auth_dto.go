@@ -113,6 +113,11 @@ type RegisterResponse struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Message  string `json:"message"`
+	// TenantID 只供审计归属使用，**不进 API 响应**。
+	// 用 json:"-" 而不是 omitempty：自助注册只允许「恰好一个活跃租户」时成功，
+	// 客户端本就知道自己在哪个租户下；把它放进响应等于向匿名调用方
+	// 广播内部租户 ID，而公开端点不该泄露任何内部标识。
+	TenantID int `json:"-"`
 }
 
 // ForgotPasswordRequest 忘记密码请求

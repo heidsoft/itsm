@@ -151,7 +151,7 @@ func (s *Service) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.
 	if err != nil {
 		return nil, fmt.Errorf("创建用户失败")
 	}
-	return &dto.RegisterResponse{ID: userEntity.ID, Username: userEntity.Username, Email: userEntity.Email, Message: "注册成功"}, nil
+	return &dto.RegisterResponse{ID: userEntity.ID, Username: userEntity.Username, Email: userEntity.Email, Message: "注册成功", TenantID: tenantID}, nil
 }
 
 func (s *Service) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) (*dto.ForgotPasswordResponse, error) {
