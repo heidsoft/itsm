@@ -75,5 +75,8 @@ InputSchema 校验的是**调用方入参形状**，与 Gate 2（角色 RBAC）�
 - 未做：`additionalProperties` / `minLength` / `pattern` / `minimum` 等完整 JSON Schema
   关键字；如将来有技能真正依赖这些，应引入成熟库并把本文件降级为兼容层，而不是
   在最小实现上层层加码。
-- 未做：`OutputSchema` 执行后校验（属另一缺口，且输出 schema 的失败语义与输入不同）。
+- 未做：`OutputSchema` 执行后校验。经 2026-11-22 评估**本阶段刻意不做**——
+  副作用已发生，不能复用 fail-closed 拒绝语义，且当前无「契约漂移」告警消费方，
+  强行实现只会制造新的死信号。完整依据见
+  `docs/engineering/skill-output-schema-validation-assessment.md`。
 - 零 schema 变更、零迁移、零新增权限码。
