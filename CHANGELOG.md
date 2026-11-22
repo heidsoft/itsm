@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **停用权限后人工用户不再继续持有该权限（2026-11-22）**：管理员把权限标记为停用时，此前只有 AI 主体判定链读取该状态，人工 RBAC 仍直接按权限行放行，界面上「已停用」与实际授权不一致。现在人工判定路径同样解码策略信封并跳过已停用的码；存量纯文本描述保持原有行为，损坏的信封按拒绝处理。策略更新和停用会同时清理人工权限缓存，避免最长 5 分钟的缓存窗口继续放行。新增真实数据库回归，覆盖停用即拒绝、重新启用即恢复、存量文本兼容与损坏信封拒绝。跨副本缓存同步仍由后续专项处理。另修复一处刚合入的回归测试：它使用无参 `enttest.NewClient(t)` 而没有注册 sqlite 驱动，执行时直接 panic，导致中间件包测试无法运行；现改用包内已验证的共享内存库夹具，整个中间件包恢复通过。
 - **空卷首装的重复索引告警已清除（2026-11-21）**：`20261119` 迁移与 Ent Schema 在配置项表上各建了两对同列索引，首装门禁因此一直报错。现已把这两对纳入启动期的索引收敛清单，保留 Ent 声明的索引，删除迁移写死的重复索引；不改写已发布迁移，不动表结构和业务数据。已有安装在下一次初始化时幂等清理，保留索引缺失时会拒绝删除并报错。新增真实数据库回归，覆盖重复删除、幂等与缺失保留索引三种情况。
 - **服务台坐席接受/转派路由闸门回归锁（2026-11-21 第三轮）**：新增 `middleware/rbac_agent_serviceline_accept_test.go`——用真实 DB（enttest）准备 agent 角色 + 播种标准权限 + `role_permissions`，通过真实 `RequirePermission("ticket","assign")` 中间件链路断言 agent 可命中（`/tickets/workflow/accept` 与 `/tickets/:id/assign`）。审计：DBOnly 模式下 agent 在角色行存在时命中确认为 true（三态语义：`configured` 直接用 DB 集合，无角色行且租户有角色 → `configured` 空集=显式撤销 fail-closed）。
 - **服务台接单推进：活跃待办归属服务台（2026-11-21 第三轮修复）**：`TicketWorkflowService.AcceptTicket` 接受事务内把流程实例变量 `requester_id` 写为接受人（服务台）。此前推进出来的活跃待办（工单处理）落在发起人（员工）名下——引擎认领语义 `resolveTaskAssignment` 回退顺序是 `requester_id/triggered_by/assignee_id`，不写这份变量就永远命中发起人，与 `ticket.assignee_id`（接受人）不一致。ticket 域的「发起人」字段不变——只改进程实例变量（待办认领维度）。**回归锁**：新增 `internal/services/ticket_workflow_accept_owner_test.go`（请求人≠接受人，断言接受后未完成活跃待办的 `Assignee` == 接受人 ID），红在修复前（旧行为下落在发起人）。

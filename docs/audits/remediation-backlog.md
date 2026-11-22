@@ -20,7 +20,8 @@
 | AUDIT-011 | 服务请求两菜单用 `ticket:read` | `confirmed` | PR-02：基线码改 `service_request:read` | 低风险（仅显示） |
 | AUDIT-012 | `/workflow/audit` 用 `audit:read` | `confirmed` | PR-02：基线码改 `bpmn:read` | 低风险（仅显示） |
 | AUDIT-013 | 存量租户 AI 归位/重命名依赖手动端点 | `confirmed` | PR-02：迁移补 `name/parent_id` 修正 + 双租户测试 | 数据迁移，需审批 |
-| AUDIT-020~022 | 权限停用语义、DBOnly L3 回退、缓存广播 | `confirmed`/`suspected` | RBAC 专项分支，逐条补真实 DB 负例后修复 | 权限语义变更，需审批 |
+| AUDIT-020 | 权限停用不作用于人工 RBAC | `resolved`（本批已验证） | 人工路径解码策略信封跳过停用码；策略写入同步清缓存；真实 DB 回归 + 反向验证 | 已完成 |
+| AUDIT-021~022 | DBOnly L3 回退、缓存广播 | `confirmed`/`suspected` | RBAC 专项分支，逐条补真实 DB 负例后修复 | 权限语义变更，需审批 |
 | AUDIT-023 | 权限/角色缺 DB 唯一约束 | `confirmed` | 版本化迁移 + 存量重复检测 | 数据库结构，需审批 |
 | AUDIT-024 | seeder 回退清单资源名漂移 | `confirmed` | 删除回退清单或从 catalog 派生 | 低风险 |
 | AUDIT-025 | 重复初始化覆盖托管菜单字段 | `confirmed` | 明确所有权清单或纳入保护 | 低风险 |
