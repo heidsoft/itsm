@@ -1099,6 +1099,7 @@ func NewApplication() *Application {
 	aiServiceDomain.SetEntClient(client)
 	// AI 主体零信任判定共享同一个注册表：权限策略改完，AI 执行链立即生效。
 	aiServiceDomain.SetPermissionCatalog(authz.Shared())
+	toolExecutor.SetApprovedToolGuard(aiServiceDomain)
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
 	// Skill Registry：在 ai.Service 装配完成后注入内置 Skill。
