@@ -281,6 +281,10 @@ services:
       - LLM_MODEL=${LLM_MODEL:-gpt-4}
       - LLM_API_KEY=${LLM_API_KEY:-}
       - LLM_ENDPOINT=${LLM_ENDPOINT:-}
+      # Guidance sidecar 地址（与 backend 同值）：worker 缺省会回落 localhost:8091，容器内不可达。
+      - GUIDANCE_URL=${GUIDANCE_URL:-http://itsm-ai-service:8000}
+      # 服务间令牌（与 backend/itsm-ai-service 同值）：sidecar fail-closed，缺此变量 AI 分诊 401。
+      - AI_SERVICE_TOKEN=${AI_SERVICE_TOKEN:-}
       - no_proxy=localhost,127.0.0.1
       - NO_PROXY=localhost,127.0.0.1
     depends_on:

@@ -33,6 +33,7 @@ kubectl apply -f 20-backend.yaml 21-worker.yaml 30-frontend.yaml 40-ingress.yaml
 
 ## 未覆盖（按需自补）
 
+- **itsm-ai-service（受限分诊 sidecar）**：未部署时后端/worker 的 AI 分诊走降级路径。部署后确认 `01-configmap.yaml` 的 `GUIDANCE_URL` 指向真实 Service，并在 `02-secrets.yaml` 配置与 sidecar 同值的 `AI_SERVICE_TOKEN`（sidecar fail-closed，令牌不一致则分诊 401）。
 - MinIO / 对象存储（默认部署不使用，对应 Compose `storage` profile）。
 - Grafana / Prometheus monitoring 堆栈。
 - HPA、PodDisruptionBudget、资源配额。
