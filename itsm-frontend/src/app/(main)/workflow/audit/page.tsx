@@ -31,6 +31,7 @@ import type {
   QueryAuditLogsRequest,
 } from '@/lib/api/bpmn-dashboard-api';
 import BPMNDashboardApi from '@/lib/api/bpmn-dashboard-api';
+import { WorkflowApi } from '@/lib/api/workflow-api';
 import { formatDateTime } from '@/lib/formatters';
 import { useI18n } from '@/lib/i18n';
 
@@ -49,6 +50,27 @@ export default function AuditLogsPage() {
   const [timelineVisible, setTimelineVisible] = useState(false);
   const [timeline, setTimeline] = useState<ProcessAuditLog[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(false);
+  // 流程定义 key → 中文显示名：详情弹窗不能直接甩英文工程标识
+  const [definitionNames, setDefinitionNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let alive = true;
+    WorkflowApi.getWorkflows({ page: 1, pageSize: 100 })
+      .then(result => {
+        if (!alive) return;
+        const map: Record<string, string> = {};
+        for (const wf of result.workflows || []) {
+          if (wf.code && wf.name) map[wf.code] = wf.name;
+        }
+        setDefinitionNames(map);
+      })
+      .catch(() => {
+        // 拉取失败保持空表：详情回退显示 Key，不影响审计主流程
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // 筛选条件
   const [filters, setFilters] = useState<QueryAuditLogsRequest>({
@@ -325,8 +347,12 @@ export default function AuditLogsPage() {
             <Descriptions.Item label="流程实例Key" span={2}>
               {selectedLog.processInstanceKey}
             </Descriptions.Item>
-            <Descriptions.Item label="流程定义Key" span={2}>
-              {selectedLog.processDefinitionKey}
+            <Descriptions.Item label="流程定义" span={2}>
+              {/* 中文名优先、Key 兜底 */}
+              <span title={selectedLog.processDefinitionKey}>
+                {definitionNames[selectedLog.processDefinitionKey] ||
+                  selectedLog.processDefinitionKey}
+              </span>
             </Descriptions.Item>
             <Descriptions.Item label="备注" span={2}>
               {selectedLog.comment || '-'}

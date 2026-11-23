@@ -567,7 +567,46 @@ func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 	}
 
 	// 与 GET/List 同族契约：统一返回 DTO，寻址键 instanceId（PI-*）在 camelCase 字段中透出。
-	common.SuccessWithMessage(ctx, "流程实例启动成功", dto.ToBPMNProcessInstanceResponse(instance))
+	resp := dto.ToBPMNProcessInstanceResponse(instance)
+	c.backfillInstanceDefinitionNames(workflowCtx, []*dto.BPMNProcessInstanceResponse{resp})
+	common.SuccessWithMessage(ctx, "流程实例启动成功", resp)
+}
+
+// backfillInstanceDefinitionNames 批量回填流程定义显示名。
+//
+// 实例表只存 processDefinitionKey（工程标识如 ticket_general_flow），中文显示名
+// 在 process_definitions.name；实例 DTO 由纯 mapper 生成、拿不到定义表，回填只能
+// 放在 handler 出口。定义服务缺席（测试 fake 返回 nil）或单 key 查询失败时留空，
+// 前端回退显示 Key —— 名称回填是读面增强，不得拖垮实例列表/详情主请求。
+func (c *WorkflowHandler) backfillInstanceDefinitionNames(ctx context.Context, responses []*dto.BPMNProcessInstanceResponse) {
+	if len(responses) == 0 {
+		return
+	}
+	defSvc := c.processEngine.ProcessDefinitionService()
+	if defSvc == nil {
+		return
+	}
+	// 同页多实例常落在同一 key 上，按 key 去重后逐个取最新定义（页容量 20，
+	// 唯一 key 通常个位数；catalog 无批量 KeyIn 方法，不为此扩接口）。
+	nameByKey := make(map[string]string, len(responses))
+	for _, resp := range responses {
+		key := strings.TrimSpace(resp.ProcessDefinitionKey)
+		if key == "" {
+			continue
+		}
+		if _, seen := nameByKey[key]; seen {
+			continue
+		}
+		nameByKey[key] = ""
+		def, err := defSvc.GetLatestProcessDefinition(ctx, key)
+		if err != nil || def == nil {
+			continue // 定义已删/查询失败：保持空串，前端回退 Key
+		}
+		nameByKey[key] = def.Name
+	}
+	for _, resp := range responses {
+		resp.ProcessDefinitionName = nameByKey[resp.ProcessDefinitionKey]
+	}
 }
 
 // ListProcessInstances 获取流程实例列表
@@ -600,8 +639,10 @@ func (c *WorkflowHandler) ListProcessInstances(ctx *gin.Context) {
 	}
 
 	// 使用统一响应格式
+	items := dto.ToBPMNProcessInstanceListResponse(instances)
+	c.backfillInstanceDefinitionNames(reqCtx, items)
 	listResponse := common.NewListResponse(
-		dto.ToBPMNProcessInstanceListResponse(instances),
+		items,
 		common.NewPaginationResponse(int(req.Page), int(req.PageSize), int64(total)),
 	)
 	common.Success(ctx, listResponse)
@@ -621,7 +662,9 @@ func (c *WorkflowHandler) GetProcessInstance(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, dto.ToBPMNProcessInstanceResponse(instance))
+	resp := dto.ToBPMNProcessInstanceResponse(instance)
+	c.backfillInstanceDefinitionNames(workflowCtx, []*dto.BPMNProcessInstanceResponse{resp})
+	common.Success(ctx, resp)
 }
 
 // SetProcessInstanceVariables 设置流程实例变量

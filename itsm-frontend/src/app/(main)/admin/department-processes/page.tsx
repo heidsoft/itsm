@@ -108,6 +108,8 @@ export default function DepartmentProcessPage() {
   // Load departments
   useEffect(() => {
     loadDepartments();
+    // 表格「流程定义」列要按 key 查中文名渲染，不能等打开弹窗才拉定义
+    loadProcessDefinitions();
   }, []);
 
   // Load department processes when selected
@@ -310,7 +312,15 @@ export default function DepartmentProcessPage() {
       title: '流程定义',
       dataIndex: 'processDefinitionKey',
       key: 'processDefinitionKey',
-      render: (key: string) => <Tag color="cyan">{key}</Tag>,
+      // 中文名优先、Key 兜底：直接展示英文工程标识用户看不懂
+      render: (key: string) => {
+        const def = processDefinitions.find(pd => pd.key === key);
+        return (
+          <Tag color="cyan" title={key}>
+            {def?.name || key}
+          </Tag>
+        );
+      },
     },
     {
       title: '优先级',

@@ -18,6 +18,8 @@ type InstanceRow = {
   id: string;
   businessKey: string;
   processDefinitionKey: string;
+  /** 流程定义显示名（后端回填中文名）；缺失时展示层回退 Key */
+  processDefinitionName?: string;
   status: string;
   startTime?: string;
   endTime?: string;
@@ -130,6 +132,7 @@ function WorkflowInstancesContent() {
         // 业务键缺失时明确显示 '-',不得用流程 Key 冒充业务键。
         businessKey: instance.businessKey || '-',
         processDefinitionKey: instance.workflowId || '-',
+        processDefinitionName: instance.workflowName || undefined,
         status: String(instance.status),
         startTime: instance.startTime?.toISOString(),
         endTime: instance.endTime?.toISOString(),
@@ -226,10 +229,16 @@ function WorkflowInstancesContent() {
         width: 180,
       },
       {
-        title: '流程 Key',
+        title: '流程',
         dataIndex: 'processDefinitionKey',
         key: 'processDefinitionKey',
-        width: 150,
+        width: 180,
+        // 中文名优先、Key 兜底：直接展示 ticket_general_flow 这类工程标识用户看不懂。
+        render: (_: string, row: InstanceRow) => (
+          <span title={row.processDefinitionKey}>
+            {row.processDefinitionName || row.processDefinitionKey}
+          </span>
+        ),
       },
       {
         title: '业务键',
@@ -522,6 +531,7 @@ function WorkflowInstancesContent() {
             initialInstance={selectedInstanceSummary ? {
               id: selectedInstanceSummary.id,
               processDefinitionKey: selectedInstanceSummary.processDefinitionKey,
+              processDefinitionName: selectedInstanceSummary.processDefinitionName,
               businessKey: selectedInstanceSummary.businessKey,
               status: selectedInstanceSummary.status,
               startTime: selectedInstanceSummary.startTime,

@@ -31,6 +31,8 @@ export interface ProcessHealth {
 
 export interface ProcessStat {
   processDefinitionKey: string;
+  /** 流程定义显示名（后端回填）；缺失时展示层回退 processDefinitionKey */
+  processDefinitionName?: string;
   totalInstances: number;
   runningInstances: number;
   completedInstances: number;

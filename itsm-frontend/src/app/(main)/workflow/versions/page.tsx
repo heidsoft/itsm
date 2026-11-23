@@ -376,8 +376,12 @@ export default function WorkflowVersionsPage() {
         {selectedVersion && (
           <div className="space-y-4">
             <Descriptions column={2} bordered size="small">
-              <Descriptions.Item label="流程 Key" span={2}>
-                {selectedVersion.processDefinitionKey}
+              <Descriptions.Item label="流程" span={2}>
+                {/* 中文名优先、Key 兜底：直接展示英文工程标识用户看不懂 */}
+                <span title={selectedVersion.processDefinitionKey}>
+                  {processKeyOptions.find(opt => opt.value === selectedVersion.processDefinitionKey)
+                    ?.label || selectedVersion.processDefinitionKey}
+                </span>
               </Descriptions.Item>
               <Descriptions.Item label="版本">v{selectedVersion.version}</Descriptions.Item>
               <Descriptions.Item label="状态">

@@ -109,7 +109,10 @@ type BPMNProcessInstanceResponse struct {
 	InstanceID              string                 `json:"instanceId"`
 	BusinessKey             string                 `json:"businessKey"`
 	ProcessDefinitionKey    string                 `json:"processDefinitionKey"`
-	ProcessDefinitionID     int                    `json:"processDefinitionId"`
+	// ProcessDefinitionName 流程定义显示名（如「通用工单流程」），由 handler 按定义
+	// 批量回填；定义缺失时留空，前端回退显示 Key，不得用 Key 冒充名称。
+	ProcessDefinitionName string `json:"processDefinitionName,omitempty"`
+	ProcessDefinitionID  int    `json:"processDefinitionId"`
 	Status                  string                 `json:"status"`
 	CurrentActivityID       string                 `json:"currentActivityId"`
 	CurrentActivityName     string                 `json:"currentActivityName"`

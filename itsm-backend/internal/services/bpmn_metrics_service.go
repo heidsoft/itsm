@@ -264,6 +264,38 @@ func (s *BPMNMetricsService) getTopProcesses(ctx context.Context, tenantID int, 
 		result = result[:10]
 	}
 
+	// 批量回填流程定义显示名：仪表盘「流程」列不得直接暴露 processDefinitionKey。
+	// 同一 key 多版本时优先 is_latest；查询失败保持空串（前端回退 Key），不拖垮仪表盘。
+	if tenantID > 0 && len(result) > 0 {
+		keys := make([]string, 0, len(result))
+		for _, stat := range result {
+			keys = append(keys, stat.ProcessDefinitionKey)
+		}
+		defs, err := s.client.ProcessDefinition.Query().
+			Where(
+				processdefinition.KeyIn(keys...),
+				processdefinition.TenantID(tenantID),
+			).
+			Select(processdefinition.FieldKey, processdefinition.FieldName, processdefinition.FieldIsLatest).
+			All(ctx)
+		if err == nil {
+			nameByKey := make(map[string]string, len(defs))
+			latestSeen := make(map[string]bool, len(defs))
+			for _, def := range defs {
+				if latestSeen[def.Key] {
+					continue
+				}
+				nameByKey[def.Key] = def.Name
+				if def.IsLatest {
+					latestSeen[def.Key] = true
+				}
+			}
+			for i := range result {
+				result[i].ProcessDefinitionName = nameByKey[result[i].ProcessDefinitionKey]
+			}
+		}
+	}
+
 	return result
 }
 

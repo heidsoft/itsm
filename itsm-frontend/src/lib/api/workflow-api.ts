@@ -979,6 +979,7 @@ export class WorkflowApi {
       id: string;
       instanceId: string;
       processDefinitionKey: string;
+      processDefinitionName?: string;
       businessKey: string;
       status: string;
       startTime: string;
@@ -987,7 +988,8 @@ export class WorkflowApi {
     return {
       id: item.instanceId,
       workflowId: item.processDefinitionKey || '',
-      workflowName: '',
+      // 后端回填流程定义中文名；缺失时留空由展示层回退 Key，不用 Key 冒充名称。
+      workflowName: item.processDefinitionName || '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       variables: {},
@@ -1035,6 +1037,7 @@ export class WorkflowApi {
         id: string;
         instanceId: string;
         processDefinitionKey: string;
+        processDefinitionName?: string;
         businessKey: string;
         status: string;
         startTime: string;
@@ -1048,7 +1051,7 @@ export class WorkflowApi {
     const instances: WorkflowInstance[] = list.map(item => ({
       id: item.instanceId,
       workflowId: item.processDefinitionKey || '',
-      workflowName: '',
+      workflowName: item.processDefinitionName || '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       businessKey: item.businessKey || undefined,
@@ -1076,6 +1079,7 @@ export class WorkflowApi {
       id: string;
       instanceId: string;
       processDefinitionKey: string;
+      processDefinitionName?: string;
       businessKey: string;
       status: string;
       startTime: string;
@@ -1086,7 +1090,7 @@ export class WorkflowApi {
     return {
       id: item.instanceId,
       workflowId: item.processDefinitionKey || '',
-      workflowName: '',
+      workflowName: item.processDefinitionName || '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       currentActivityId: item.currentActivityId || undefined,

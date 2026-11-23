@@ -279,7 +279,15 @@ export default function ProcessRoutingPage() {
       title: '流程',
       dataIndex:'processDefinitionKey',
       key:'processDefinitionKey',
-      render: (key: string) => <Tag color="cyan">{key}</Tag>,
+      // 中文名优先、Key 兜底：直接展示英文工程标识用户看不懂
+      render: (key: string) => {
+        const def = processDefinitions.find(pd => pd.key === key);
+        return (
+          <Tag color="cyan" title={key}>
+            {def?.name || key}
+          </Tag>
+        );
+      },
     },
     {
       title: '优先级',

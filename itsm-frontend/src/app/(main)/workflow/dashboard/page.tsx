@@ -124,10 +124,16 @@ export default function BPMNDashboardPage() {
 
   const topProcessColumns: ColumnsType<ProcessStat> = [
     {
-      title: t('workflow.processKey') || '流程Key',
+      title: t('workflow.processKey') || '流程',
       dataIndex: 'processDefinitionKey',
       key: 'processDefinitionKey',
       ellipsis: true,
+      // 中文名优先、Key 兜底：直接展示 ticket_general_flow 这类工程标识用户看不懂。
+      render: (_: unknown, record: ProcessStat) => (
+        <span title={record.processDefinitionKey}>
+          {record.processDefinitionName || record.processDefinitionKey}
+        </span>
+      ),
     },
     {
       title: t('workflow.totalInstances') || '总实例数',

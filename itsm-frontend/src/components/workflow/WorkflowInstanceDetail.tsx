@@ -153,6 +153,8 @@ const auditActionColorMap: Record<string, string> = {
 interface InstanceSummary {
   id: string;
   processDefinitionKey: string;
+  /** 流程定义显示名（后端回填中文名）；缺失时展示层回退 Key */
+  processDefinitionName?: string;
   businessKey: string;
   status: string;
   startTime?: string;
@@ -188,6 +190,7 @@ export interface WorkflowInstanceDetailProps {
 const toSummary = (instance: WorkflowInstance): InstanceSummary => ({
   id: instance.id,
   processDefinitionKey: instance.workflowId || '-',
+  processDefinitionName: instance.workflowName || undefined,
   businessKey: (instance as unknown as { businessKey?: string }).businessKey || '-',
   status: String(instance.status),
   startTime: instance.startTime ? new Date(instance.startTime).toISOString() : undefined,
@@ -423,7 +426,12 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
             <Descriptions.Item label="实例 ID">
               <span className="font-mono text-xs">{summary.id}</span>
             </Descriptions.Item>
-            <Descriptions.Item label="流程 Key">{summary.processDefinitionKey}</Descriptions.Item>
+            <Descriptions.Item label="流程">
+              {/* 中文名优先、Key 兜底：直接展示工程标识用户看不懂 */}
+              <span title={summary.processDefinitionKey}>
+                {summary.processDefinitionName || summary.processDefinitionKey}
+              </span>
+            </Descriptions.Item>
             <Descriptions.Item label="业务键">
               {/* 业务键是实例与业务单据之间唯一的关联锚点（后端写死 `type:id` 格式）。
                   只渲染文本的话，用户看完流程还得回列表页自己翻那张单，这里直接给一跳。 */}
