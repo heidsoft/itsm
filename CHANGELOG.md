@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Fix**：ServiceTask 处理器租户改为只认命令认证上下文（流程变量 tenant_id 冲突即拒绝），任务完成边界拒绝 `_` 引擎保留键与 `tenant_id`/业务归属键，堵住伪造 `_done_`/ServiceTask 完成凭据与跨租户变量注入；启动与变量 PATCH 同步拒绝冲突/身份键。
 - **Fix**：SLA 工单/事件事务内解决与问题/服务请求独立事务解决共用同一权威截止时间判定源，修复扫描前超时解决被误记达标。
 - **Fix**：事件转问题的 SLA 绑定失败写入结构化审计并告警，区分未配置策略与绑定故障。
 - **Fix**：模板搜索回车后父组件重渲染不再回放旧搜索词，保留即时搜索与 300ms 防抖去重。

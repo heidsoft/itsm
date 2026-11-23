@@ -1194,16 +1194,19 @@ export class WorkflowApi {
    * 跳过节点
    */
   static async skipNode(instanceId: string, nodeId: string): Promise<void> {
-    // 后端暂不支持跳过节点，直接完成节点
-    await WorkflowApi.completeNode({ instanceId, nodeId, output: { _skipped: true } });
+    // 后端暂不支持跳过节点，直接完成节点。
+    // 不携带 _skipped 等 _ 前缀标记：引擎保留命名空间在任务完成边界会被
+    // 后端整体拒绝（P1-02），且后端从不读取该标记。
+    await WorkflowApi.completeNode({ instanceId, nodeId, output: {} });
   }
 
   /**
    * 重新执行节点
    */
   static async retryNode(instanceId: string, nodeId: string): Promise<void> {
-    // 后端暂不支持重新执行节点，创建新任务实例
-    await WorkflowApi.completeNode({ instanceId, nodeId, output: { _retried: true } });
+    // 后端暂不支持重新执行节点，创建新任务实例。
+    // 同 skipNode：_ 前缀是引擎保留命名空间，完成边界拒绝注入。
+    await WorkflowApi.completeNode({ instanceId, nodeId, output: {} });
   }
 
   // ==================== 工作流模板 ====================

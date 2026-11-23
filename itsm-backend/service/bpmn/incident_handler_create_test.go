@@ -44,6 +44,10 @@ func newIncidentCreateFixture(t *testing.T) (context.Context, *IncidentServiceTa
 		Save(ctx)
 	require.NoError(t, err)
 
+	// ResolveTenantID 只认认证 context（P1-01）：fixture 必须像生产命令消费者
+	// 一样注入租户上下文，变量里的 tenant_id 只作为同值副本做冲突校验。
+	ctx = context.WithValue(ctx, BPMNTenantIDContextKey, tenant.ID)
+
 	handler := NewIncidentServiceTaskHandler(client, zaptest.NewLogger(t).Sugar())
 	return ctx, handler, tenant.ID, user.ID
 }

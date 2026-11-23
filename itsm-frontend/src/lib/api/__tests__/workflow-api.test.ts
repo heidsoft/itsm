@@ -654,18 +654,19 @@ describe('WorkflowApi', () => {
   });
 
   describe('skipNode', () => {
-    it('should skip a node by completing with _skipped flag', async () => {
+    it('should skip a node by completing without engine-reserved keys', async () => {
       (httpClient.put as jest.Mock).mockResolvedValueOnce(undefined);
       await WorkflowApi.skipNode('inst1', 'task1');
-      expect(httpClient.put).toHaveBeenCalledWith('/api/v1/bpmn/tasks/task1/complete', { variables: { _skipped: true } });
+      // _ 前缀是引擎保留命名空间，完成边界会整体拒绝（P1-02）；后端也不读取该标记。
+      expect(httpClient.put).toHaveBeenCalledWith('/api/v1/bpmn/tasks/task1/complete', { variables: {} });
     });
   });
 
   describe('retryNode', () => {
-    it('should retry a node', async () => {
+    it('should retry a node without engine-reserved keys', async () => {
       (httpClient.put as jest.Mock).mockResolvedValueOnce(undefined);
       await WorkflowApi.retryNode('inst1', 'task1');
-      expect(httpClient.put).toHaveBeenCalledWith('/api/v1/bpmn/tasks/task1/complete', { variables: { _retried: true } });
+      expect(httpClient.put).toHaveBeenCalledWith('/api/v1/bpmn/tasks/task1/complete', { variables: {} });
     });
   });
 

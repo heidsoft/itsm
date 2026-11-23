@@ -57,6 +57,10 @@ func newIncidentAssignFixture(t *testing.T) (context.Context, *IncidentServiceTa
 		Save(ctx)
 	require.NoError(t, err)
 
+	// ResolveTenantID 只认认证 context（P1-01）：fixture 必须注入租户上下文，
+	// 变量里的 tenant_id 只作为同值副本做冲突校验。
+	ctx = context.WithValue(ctx, BPMNTenantIDContextKey, tenant.ID)
+
 	handler := NewIncidentServiceTaskHandler(client, zaptest.NewLogger(t).Sugar())
 	return ctx, handler, tenant.ID, incident.ID, user.ID
 }
@@ -125,4 +129,61 @@ func TestIncidentAssign_KeepsExistingAssignee(t *testing.T) {
 	inc, err := handler.client.Incident.Get(ctx, incidentID)
 	require.NoError(t, err)
 	assert.Equal(t, userID, inc.AssigneeID, "已有处理人不应被清空")
+}
+
+// TestIncidentAssign_CrossTenantIdentityRejected P1-01 回归（codex 审计 2026-11-23）：
+// 身份键与认证上下文冲突必须拒绝——(1) 变量 tenant_id 与 context 租户不同值
+// （旧实现变量优先，会把查询/更新指向变量里的租户）；(2) incident_id 指向
+// 异租户事件（ctx 租户内查不到即 fail closed）。两种都不得产生任何写入。
+func TestIncidentAssign_CrossTenantIdentityRejected(t *testing.T) {
+	ctx, handler, tenantID, incidentID, userID := newIncidentAssignFixture(t)
+
+	t.Run("变量 tenant_id 与认证上下文冲突", func(t *testing.T) {
+		result, err := handler.Execute(ctx, nil, map[string]interface{}{
+			"action":      "assign_incident",
+			"incident_id": incidentID,
+			"assignee_id": userID,
+			"tenant_id":   tenantID + 999,
+		})
+		require.Error(t, err, "冲突租户必须拒绝")
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "冲突")
+
+		inc, gerr := handler.client.Incident.Get(ctx, incidentID)
+		require.NoError(t, gerr)
+		assert.Zero(t, inc.AssigneeID, "拒绝后不得写入")
+		assert.Equal(t, "new", inc.Status)
+	})
+
+	t.Run("incident_id 指向异租户事件", func(t *testing.T) {
+		foreignTenant, err := handler.client.Tenant.Create().
+			SetName("异租户").SetCode("foreign-assign").Save(ctx)
+		require.NoError(t, err)
+		foreign, err := handler.client.Incident.Create().
+			SetTitle("异租户事件").
+			SetDescription("不得被本租户流程改写").
+			SetStatus("new").
+			SetPriority("high").
+			SetSeverity("high").
+			SetIncidentNumber("INC-202610-900002").
+			SetReporterID(userID).
+			SetTenantID(foreignTenant.ID).
+			SetDetectedAt(time.Now()).
+			Save(ctx)
+		require.NoError(t, err)
+
+		_, err = handler.Execute(ctx, nil, map[string]interface{}{
+			"action":      "assign_incident",
+			"incident_id": foreign.ID,
+			"assignee_id": userID,
+			"tenant_id":   tenantID, // 与 context 同值：放行租户解析，卡在业务 ID 归属
+		})
+		require.Error(t, err, "异租户事件必须拒绝")
+		assert.Contains(t, err.Error(), "不属于当前租户")
+
+		after, gerr := handler.client.Incident.Get(ctx, foreign.ID)
+		require.NoError(t, gerr)
+		assert.Zero(t, after.AssigneeID, "异租户事件不得被改写")
+		assert.Equal(t, "new", after.Status)
+	})
 }

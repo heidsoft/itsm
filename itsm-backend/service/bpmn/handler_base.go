@@ -122,17 +122,7 @@ func GetStringFromVars(variables map[string]interface{}, key string) string {
 	return ""
 }
 
-// GetTenantIDFromVars 从流程变量中提取租户ID。
-// 缺失或非法时返回错误，禁止回退到默认租户（tenant_id=1），
-// 否则会把无租户上下文的流程数据写入 admin 租户，造成越权。
-func GetTenantIDFromVars(variables map[string]interface{}) (int, error) {
-	if id := GetIntFromVars(variables, "tenant_id"); id > 0 {
-		return id, nil
-	}
-	return 0, fmt.Errorf("流程变量缺少有效的 tenant_id，拒绝执行以避免跨租户写入")
-}
-
-// GetTenantIDFromContext 从 context 中提取 BPMN 租户ID，作为流程变量的补充来源。
+// GetTenantIDFromContext 从 context 中提取 BPMN 租户ID（命令认证注入的唯一权威来源）。
 func GetTenantIDFromContext(ctx context.Context) (int, bool) {
 	if v := ctx.Value(BPMNTenantIDContextKey); v != nil {
 		switch id := v.(type) {
@@ -153,16 +143,22 @@ func GetTenantIDFromContext(ctx context.Context) (int, bool) {
 	return 0, false
 }
 
-// ResolveTenantID 优先使用流程变量中的租户ID，其次回退到 context 中经认证注入的租户ID。
-// 两者都不可用时返回错误，绝不静默落到租户 1。
+// ResolveTenantID 返回命令认证 context 注入的租户ID——这是 ServiceTask handler
+// 唯一权威的租户来源（codex 审计 P1-01）。
+//
+// 流程变量中的 tenant_id 只允许与 context 一致（后端 TriggerProcess 启动时写入
+// 的同值副本）；不一致视为跨租户注入，直接拒绝。context 缺失同样拒绝（fail
+// closed），绝不回退到变量或默认租户——旧实现「变量优先」曾允许租户 A 的流程
+// 携带 B 的 tenant_id 把 handler 的查询/更新指向 B。
 func ResolveTenantID(ctx context.Context, variables map[string]interface{}) (int, error) {
-	if id := GetIntFromVars(variables, "tenant_id"); id > 0 {
-		return id, nil
+	ctxID, ok := GetTenantIDFromContext(ctx)
+	if !ok {
+		return 0, fmt.Errorf("缺少认证租户上下文，拒绝执行以避免跨租户写入")
 	}
-	if id, ok := GetTenantIDFromContext(ctx); ok {
-		return id, nil
+	if id := GetIntFromVars(variables, "tenant_id"); id > 0 && id != ctxID {
+		return 0, fmt.Errorf("流程变量 tenant_id=%d 与认证上下文租户 %d 冲突，拒绝执行以避免跨租户写入", id, ctxID)
 	}
-	return 0, fmt.Errorf("无法确定租户ID：流程变量与上下文均缺少 tenant_id")
+	return ctxID, nil
 }
 
 // HandlerRegistry 处理器注册中心

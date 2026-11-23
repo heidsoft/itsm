@@ -48,6 +48,15 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 			return nil, common.NewBadRequestError(fmt.Sprintf("流程内部变量 %s 不允许通过 API 覆盖", key), nil)
 		}
 	}
+	// 身份键 tenant_id 只允许与认证上下文同值（后端 TriggerProcess 写入的副本）；
+	// 冲突值会让后续 handler 的变量租户与实例租户分叉（codex 审计 P1-01），
+	// 必须在创建实例之前拒绝。
+	if raw, ok := variables["tenant_id"]; ok {
+		if id, valid := variableInt(raw); valid && id > 0 && id != tenantID {
+			return nil, common.NewBadRequestError(
+				fmt.Sprintf("流程变量 tenant_id=%d 与当前租户 %d 冲突，拒绝启动", id, tenantID), nil)
+		}
+	}
 
 	// 2. 获取流程定义（固定使用当前租户过滤，不再存在"无过滤跨租户"分支）
 	definition, err := e.client.ProcessDefinition.Query().
@@ -197,7 +206,43 @@ func (e *CustomProcessEngine) CompleteTaskWithClient(ctx context.Context, txc *e
 	return nil
 }
 
+// rejectProtectedCompletionVariables 任务完成边界的变量守卫（codex 审计 P1-02）。
+//
+// PUT /bpmn/tasks/:id/complete 与业务桥接的完成调用都会走到 completeTaskWithClient，
+// 旧实现把客户端 variables 全量合并进实例变量，于是当前任务的操作者可以写入：
+//   - `_` 前缀引擎保留键：伪造完成凭据（_serviceTaskCompletedOccurrences 跳过
+//     并行 ServiceTask、_done_ 提前满足汇聚），不需要实例变量管理权限；
+//   - 身份键 tenant_id：与 P1-01 的变量租户覆盖同一注入面；
+//   - 业务归属 business_id/business_type/business_key：实例一旦启动归属即不可变，
+//     改写会让审批决策审计与业务对象错位。
+//
+// 内核写内部变量走 mergeVariablesInTx / updateProcessInstanceVariablesCAS 等
+// 类型化路径，不经过本守卫；被拒绝的完成请求在任何库写入之前失败。
+func rejectProtectedCompletionVariables(variables map[string]interface{}) error {
+	for key := range variables {
+		if strings.HasPrefix(key, "_") {
+			return common.NewBadRequestError(
+				fmt.Sprintf("流程内部变量 %s 不允许通过任务完成写入", key), nil)
+		}
+		switch key {
+		case "tenant_id":
+			return common.NewBadRequestError(
+				"租户身份变量 tenant_id 不允许通过任务完成改写", nil)
+		case "business_id", "business_type", "business_key":
+			return common.NewBadRequestError(
+				fmt.Sprintf("业务归属变量 %s 不允许通过任务完成改写", key), nil)
+		}
+	}
+	return nil
+}
+
 func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *ent.Client, tenantID int, taskID string, variables map[string]interface{}) (*ent.ProcessTask, error) {
+	// 完成边界守卫放在最前：被拒绝的请求不得产生任何库交互（任务状态、
+	// 实例变量、命令、审计全无变化）。
+	if err := rejectProtectedCompletionVariables(variables); err != nil {
+		return nil, err
+	}
+
 	// 1. 获取任务（固定按当前租户过滤，不存在"无过滤跨租户"分支）
 	task, err := txc.ProcessTask.Query().
 		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).

@@ -142,6 +142,11 @@ func (s *bpmnProcessInstanceService) SetProcessInstanceVariables(ctx context.Con
 			if strings.HasPrefix(key, "_") {
 				return common.NewBadRequestError(fmt.Sprintf("流程内部变量 %s 不允许通过 API 覆盖", key), nil)
 			}
+			// 身份键只由后端生成（实例行 tenant_id 才是权威）；PATCH 改写它会让
+			// ServiceTask handler 的变量租户与实例租户分叉（codex 审计 P1-01）。
+			if key == "tenant_id" {
+				return common.NewBadRequestError("租户身份变量 tenant_id 不允许通过 API 覆盖", nil)
+			}
 		}
 		for key, value := range variables {
 			vars[key] = value
