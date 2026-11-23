@@ -25,6 +25,18 @@ func NewHandler(svc Service, initialization *InitializationService, logger *zap.
 
 // GetInitializationStatus 返回租户产品基线的真实安装状态：
 // 逐组件只读验证 + outbox 命令状态 + 历史版本标记。只读，不写任何数据。
+
+// @Summary 获取租户初始化状态
+// @Description 只读验证租户产品基线各组件的安装状态与 outbox 命令状态，不写任何数据。权限码 tenant:read。
+// @Tags 租户管理
+// @Produce json
+// @Param id path int true "租户ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response "无效ID"
+// @Failure 403 {object} common.Response "缺少 tenant:read 权限"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tenants/{id}/initialization [get]
 func (h *Handler) GetInitializationStatus(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -96,6 +108,19 @@ func (h *Handler) blockIfLockingSystemTenant(c *gin.Context, tenantID int, statu
 }
 
 // CreateTenant creates a new tenant
+
+// @Summary 创建租户
+// @Description 新建租户；编码需符合 字母数字开头+字母数字下划线连字符 约束。权限码 tenant:write。
+// @Tags 租户管理
+// @Produce json
+// @Param body body dto.CreateTenantRequest true "租户创建请求"
+// @Success 200 {object} common.Response{data=dto.TenantResponse}
+// @Failure 400 {object} common.Response "参数错误或编码非法"
+// @Failure 403 {object} common.Response "缺少 tenant:write 权限"
+// @Failure 409 {object} common.Response "租户编码已存在"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tenants [post]
 func (h *Handler) CreateTenant(c *gin.Context) {
 	var req dto.CreateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -121,11 +146,38 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 }
 
 // ListTenants lists tenants with pagination
+
+// @Summary 列出租户
+// @Description 分页列出可见租户。平台超管可读全量，其余按自身租户范围收敛；兼容 /admin/tenants 旧路径。权限码 tenant:read。
+// @Tags 租户管理
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response{data=dto.TenantListResponse}
+// @Failure 403 {object} common.Response "缺少 tenant:read 权限"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tenants [get]
 func (h *Handler) ListTenants(c *gin.Context) {
 	h.listTenants(c)
 }
 
 // UpdateTenantStatus updates a tenant's status
+
+// @Summary 更新租户状态
+// @Description 变更租户状态。白名单仅 active/suspended/expired；deleted 必须走 DELETE 以保留「仍有用户拒绝删除」守卫。系统默认租户禁止锁定为 suspended/expired，返回 409。
+// @Tags 租户管理
+// @Produce json
+// @Param id path int true "租户ID"
+// @Param body body map[string]interface{} true "含 status 字段"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response "无效ID或非法状态"
+// @Failure 403 {object} common.Response "越权或缺少 tenant:write 权限"
+// @Failure 404 {object} common.Response "租户不存在"
+// @Failure 409 {object} common.Response "系统默认租户禁止锁定"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tenants/{id}/status [put]
 func (h *Handler) UpdateTenantStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -171,6 +223,19 @@ func (h *Handler) UpdateTenantStatus(c *gin.Context) {
 }
 
 // GetTenant gets a tenant by ID
+
+// @Summary 获取租户详情
+// @Description 按 ID 读取租户详情。非平台超管只能读自身租户。权限码 tenant:read。
+// @Tags 租户管理
+// @Produce json
+// @Param id path int true "租户ID"
+// @Success 200 {object} common.Response{data=dto.TenantResponse}
+// @Failure 400 {object} common.Response "无效ID"
+// @Failure 403 {object} common.Response "越权或缺少 tenant:read 权限"
+// @Failure 404 {object} common.Response "租户不存在"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tenants/{id} [get]
 func (h *Handler) GetTenant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -190,6 +255,20 @@ func (h *Handler) GetTenant(c *gin.Context) {
 }
 
 // UpdateTenant updates a tenant
+
+// @Summary 更新租户
+// @Description 按 ID 更新租户信息。非平台超管只能改自身租户。权限码 tenant:write。
+// @Tags 租户管理
+// @Produce json
+// @Param id path int true "租户ID"
+// @Param body body dto.UpdateTenantRequest true "租户更新请求"
+// @Success 200 {object} common.Response{data=dto.TenantResponse}
+// @Failure 400 {object} common.Response "参数错误"
+// @Failure 403 {object} common.Response "越权或缺少 tenant:write 权限"
+// @Failure 404 {object} common.Response "租户不存在"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tenants/{id} [put]
 func (h *Handler) UpdateTenant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -225,6 +304,20 @@ func (h *Handler) UpdateTenant(c *gin.Context) {
 }
 
 // DeleteTenant deletes a tenant
+
+// @Summary 删除租户
+// @Description 软删除租户；仍有用户时拒绝删除（409）。系统默认租户禁止删除。权限码 tenant:write。
+// @Tags 租户管理
+// @Produce json
+// @Param id path int true "租户ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response "无效ID"
+// @Failure 403 {object} common.Response "越权或缺少 tenant:write 权限"
+// @Failure 404 {object} common.Response "租户不存在"
+// @Failure 409 {object} common.Response "仍有用户或系统默认租户"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tenants/{id} [delete]
 func (h *Handler) DeleteTenant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -330,6 +423,18 @@ func (h *Handler) listTenants(c *gin.Context) {
 }
 
 // GetTenantSettings returns settings for the current tenant (from JWT context)
+
+// @Summary 获取当前租户设置
+// @Description 从 JWT 上下文解析当前租户并返回其设置快照（含套餐/层级/计费标识）。权限码 tenant:read。
+// @Tags 租户管理
+// @Produce json
+// @Success 200 {object} common.Response
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 403 {object} common.Response "缺少 tenant:read 权限"
+// @Failure 404 {object} common.Response "租户不存在"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/system-configs/settings [get]
 func (h *Handler) GetTenantSettings(c *gin.Context) {
 	tenantID, ok := c.Get("tenant_id")
 	if !ok {
@@ -358,6 +463,19 @@ func (h *Handler) GetTenantSettings(c *gin.Context) {
 }
 
 // UpdateTenantSettings updates settings for the current tenant
+
+// @Summary 更新当前租户设置
+// @Description 从 JWT 上下文解析当前租户并更新设置。状态字段被拒绝（必须走 /tenants/:id/status 以保留系统租户锁定防护）。权限码 tenant:write。
+// @Tags 租户管理
+// @Produce json
+// @Param body body dto.UpdateTenantRequest true "租户设置更新请求（不含 status）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response "参数错误或携带 status 字段"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 403 {object} common.Response "缺少 tenant:write 权限"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/system-configs/settings [put]
 func (h *Handler) UpdateTenantSettings(c *gin.Context) {
 	tenantID, ok := c.Get("tenant_id")
 	if !ok {
