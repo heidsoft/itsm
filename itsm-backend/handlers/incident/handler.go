@@ -43,6 +43,17 @@ func failIncidentOperation(c *gin.Context, err error) {
 	common.InternalError(c, "事件操作失败")
 }
 
+// respondIncidentLookupError 是事件详情/子资源只读端点的统一错误映射。
+// 只有真不存在才返回 404；DB 故障必须走 500，避免前端把查询故障误判成
+// 「事件已删除」并隐藏刷新入口。
+func respondIncidentLookupError(c *gin.Context, err error) {
+	if ent.IsNotFound(err) {
+		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
+		return
+	}
+	common.RespondError(c, err, "事件操作失败")
+}
+
 // Acknowledge 事件管理-确认事件
 // @Summary 确认事件
 // @Description 确认（受理）指定事件
@@ -1435,7 +1446,7 @@ func (h *IncidentHandler) GetRootCause(c *gin.Context) {
 	}
 	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
+		respondIncidentLookupError(c, err)
 		return
 	}
 
@@ -1520,7 +1531,7 @@ func (h *IncidentHandler) GetImpactAssessment(c *gin.Context) {
 	}
 	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
+		respondIncidentLookupError(c, err)
 		return
 	}
 
@@ -1603,7 +1614,7 @@ func (h *IncidentHandler) GetClassification(c *gin.Context) {
 	}
 	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
+		respondIncidentLookupError(c, err)
 		return
 	}
 
@@ -1691,7 +1702,7 @@ func (h *IncidentHandler) GetIncidentEvents(c *gin.Context) {
 
 	events, err := h.service.GetIncidentEvents(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
+		respondIncidentLookupError(c, err)
 		return
 	}
 
@@ -1727,7 +1738,7 @@ func (h *IncidentHandler) GetIncidentAlerts(c *gin.Context) {
 
 	alerts, err := h.service.GetIncidentAlerts(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
+		respondIncidentLookupError(c, err)
 		return
 	}
 
@@ -1763,7 +1774,7 @@ func (h *IncidentHandler) GetIncidentMetrics(c *gin.Context) {
 
 	inc, err := h.service.GetIncidentMetricsData(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
+		respondIncidentLookupError(c, err)
 		return
 	}
 
