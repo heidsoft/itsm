@@ -58,12 +58,13 @@ func (h *Handler) GetTicketView(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+	userID := c.GetInt("user_id")
+	if tenantID == 0 || userID == 0 {
+		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
 		return
 	}
 
-	view, err := h.viewService.GetTicketView(c.Request.Context(), viewID, tenantID)
+	view, err := h.viewService.GetTicketView(c.Request.Context(), viewID, tenantID, userID)
 	if err != nil {
 		h.logger.Errorw("Failed to get ticket view", "error", err, "view_id", viewID, "tenant_id", tenantID)
 		common.FailWithErr(c, err, "操作失败")

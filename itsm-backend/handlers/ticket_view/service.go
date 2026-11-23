@@ -68,15 +68,20 @@ func (s *TicketViewService) ListTicketViews(
 	return responses, nil
 }
 
-// GetTicketView 获取工单视图详情
+// GetTicketView 获取工单视图详情。
+// 与 ListTicketViews 必须同口径：非共享视图只有创建人可读，避免猜 ID 绕过列表过滤。
 func (s *TicketViewService) GetTicketView(
 	ctx context.Context,
-	viewID, tenantID int,
+	viewID, tenantID, userID int,
 ) (*dto.TicketViewResponse, error) {
 	view, err := s.client.TicketView.Query().
 		Where(
 			ticketview.ID(viewID),
 			ticketview.TenantID(tenantID),
+			ticketview.Or(
+				ticketview.CreatedBy(userID),
+				ticketview.IsShared(true),
+			),
 		).
 		WithCreator().
 		Only(ctx)

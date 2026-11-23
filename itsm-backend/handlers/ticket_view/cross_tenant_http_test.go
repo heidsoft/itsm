@@ -10,6 +10,8 @@
 //     ent.NotFoundError 以 %w 包装进 `ticket view not found`，分类正确）；
 //   - 跨租户读/更/删零泄漏零副作用：不回显视图内容、不改名、不删行；
 //   - 跨租户与不存在资源的错误形态不可区分；
+//   - 同租户非创建人也不能读私有视图（列表已经按 created_by/is_shared 过滤，
+//     详情必须同一口径；否则猜 ID 即可绕过列表拿到 filters/columns）；
 //   - owner 对自己视图的读/改/删是正控制。
 package ticket_view_test
 
@@ -38,14 +40,15 @@ import (
 )
 
 type fixture struct {
-	engine   *gin.Engine
-	client   *ent.Client
-	secret   string
-	tenantA  *ent.Tenant
-	tenantB  *ent.Tenant
-	userA    *ent.User // tenant A super_admin：视图创建人
-	stranger *ent.User // tenant B super_admin：能穿过 RBAC，但视图在租户 A
-	viewA    *ent.TicketView
+	engine     *gin.Engine
+	client     *ent.Client
+	secret     string
+	tenantA    *ent.Tenant
+	tenantB    *ent.Tenant
+	userA      *ent.User // tenant A super_admin：视图创建人
+	sameTenant *ent.User // tenant A super_admin：非创建人，验证私有视图读面
+	stranger   *ent.User // tenant B super_admin：能穿过 RBAC，但视图在租户 A
+	viewA      *ent.TicketView
 }
 
 func newFixture(t *testing.T) *fixture {
@@ -60,6 +63,8 @@ func newFixture(t *testing.T) *fixture {
 	tenantB := client.Tenant.Create().SetName("View B").SetCode("view-b").SetDomain("view-b.example.com").SetStatus("active").SaveX(ctx)
 
 	userA := client.User.Create().SetUsername("view-a-owner").SetEmail("view-a@example.com").SetName("Owner A").
+		SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
+	sameTenant := client.User.Create().SetUsername("view-a-other").SetEmail("view-a-other@example.com").SetName("Other A").
 		SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
 	stranger := client.User.Create().SetUsername("view-b-stranger").SetEmail("view-b@example.com").SetName("Stranger B").
 		SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantB.ID).SaveX(ctx)
@@ -83,7 +88,7 @@ func newFixture(t *testing.T) *fixture {
 
 	return &fixture{
 		engine: engine, client: client, secret: secret,
-		tenantA: tenantA, tenantB: tenantB, userA: userA, stranger: stranger, viewA: viewA,
+		tenantA: tenantA, tenantB: tenantB, userA: userA, sameTenant: sameTenant, stranger: stranger, viewA: viewA,
 	}
 }
 
@@ -128,6 +133,30 @@ func TestTicketViewCrossTenant_HTTP(t *testing.T) {
 		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
 		require.Contains(t, w.Body.String(), `"code":0`)
 		require.Contains(t, w.Body.String(), "Tenant A 私有视图")
+	})
+
+	t.Run("同租户非创建人读私有视图 404 且零内容泄漏", func(t *testing.T) {
+		w := fx.do(t, http.MethodGet, idPath, fx.sameTenant, nil)
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":4004`)
+		assert.NotContains(t, w.Body.String(), "Tenant A 私有视图")
+		assert.NotContains(t, w.Body.String(), "filters")
+
+		wList := fx.do(t, http.MethodGet, "/api/v1/tickets/views", fx.sameTenant, nil)
+		require.Equal(t, http.StatusOK, wList.Code)
+		assert.Empty(t, envelopeItems(t, wList), "列表与详情必须同口径：私有视图不应出现在他人列表")
+	})
+
+	t.Run("共享视图对同租户他人可见（正控制）", func(t *testing.T) {
+		shared := fx.client.TicketView.Create().
+			SetName("Tenant A 共享视图").
+			SetIsShared(true).
+			SetCreatedBy(fx.userA.ID).
+			SetTenantID(fx.tenantA.ID).
+			SaveX(ctx)
+		w := fx.do(t, http.MethodGet, fmt.Sprintf("/api/v1/tickets/views/%d", shared.ID), fx.sameTenant, nil)
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), "Tenant A 共享视图")
 	})
 
 	t.Run("跨租户读视图 404 且零内容泄漏", func(t *testing.T) {
@@ -189,7 +218,8 @@ func TestTicketViewCrossTenant_HTTP(t *testing.T) {
 
 		wList := fx.do(t, http.MethodGet, "/api/v1/tickets/views", fx.userA, nil)
 		require.Equal(t, http.StatusOK, wList.Code)
-		assert.Len(t, envelopeItems(t, wList), 1, "正控制：owner 列表必须能看到自己的视图")
+		assert.NotEmpty(t, envelopeItems(t, wList), "正控制：owner 列表必须能看到自己的视图")
+		assert.Contains(t, wList.Body.String(), "Tenant A 改名后视图")
 
 		wDel := fx.do(t, http.MethodDelete, idPath, fx.userA, nil)
 		require.Equal(t, http.StatusOK, wDel.Code, "body=%s", wDel.Body.String())
