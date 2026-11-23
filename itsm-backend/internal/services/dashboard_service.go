@@ -681,32 +681,28 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 	recentActivities, err := s.getRecentActivitiesForDashboard(ctx, tenantID, 10)
 	if err != nil {
 		s.logger.Errorw("Failed to get recent activities", "error", err)
-		// 不返回错误，使用空数组
-		recentActivities = []RecentActivityData{}
+		return nil, fmt.Errorf("获取最近活动失败: %w", err)
 	}
 
 	// 获取响应时间分布数据
 	responseTimeDistribution, err := s.getResponseTimeDistribution(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get response time distribution", "error", err)
-		// 不返回错误，使用空数组
-		responseTimeDistribution = []ResponseTimeDistributionData{}
+		return nil, fmt.Errorf("获取响应时间分布失败: %w", err)
 	}
 
 	// 获取团队工作负载数据
 	teamWorkload, err := s.getTeamWorkload(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get team workload", "error", err)
-		// 不返回错误，使用空数组
-		teamWorkload = []TeamWorkloadData{}
+		return nil, fmt.Errorf("获取团队工作负载失败: %w", err)
 	}
 
 	// 获取高峰时段数据
 	peakHours, err := s.getPeakHours(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get peak hours", "error", err)
-		// 不返回错误，使用空数组
-		peakHours = []PeakHourData{}
+		return nil, fmt.Errorf("获取高峰时段失败: %w", err)
 	}
 
 	return &DashboardOverviewData{
@@ -1202,8 +1198,9 @@ func (s *DashboardService) getSatisfactionDataForDashboard(ctx context.Context, 
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get tickets for satisfaction data", "error", err)
-		// 返回空数据而不是错误
-		return []SatisfactionData{}, nil
+		// fail-closed：与工单趋势/SLA 同口径，查询故障必须上抛，不能降级成空满意度
+		// 让看板把「采集失败」误读成「本月无评分」。
+		return nil, fmt.Errorf("获取满意度数据失败: %w", err)
 	}
 
 	// 按月份分组统计
@@ -1289,7 +1286,7 @@ func (s *DashboardService) getRecentActivitiesForDashboard(ctx context.Context, 
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get tickets for recent activities", "error", err)
-		return []RecentActivityData{}, nil
+		return nil, fmt.Errorf("获取最近活动失败: %w", err)
 	}
 
 	// 获取状态映射

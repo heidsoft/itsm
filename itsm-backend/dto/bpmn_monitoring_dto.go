@@ -139,7 +139,7 @@ type PerformanceMetrics struct {
 	PeakConcurrency     int     `json:"peakConcurrency"`     // 峰值并发数
 	ResourceUtilization float64 `json:"resourceUtilization"` // 资源利用率
 	ErrorRate           float64 `json:"errorRate"`           // 错误率
-	Availability        float64 `json:"availability"`        // 可用性
+	Availability        float64 `json:"availability"`        // 可用性（=100-错误率；无实例时为 0 表示未测量）
 	LatencyPercentile95 float64 `json:"latencyPercentile95"` // 95%延迟
 	LatencyPercentile99 float64 `json:"latencyPercentile99"` // 99%延迟
 }
