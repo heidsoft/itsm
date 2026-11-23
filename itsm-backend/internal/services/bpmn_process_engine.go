@@ -80,6 +80,12 @@ func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) Proce
 	engine.taskService = &bpmnTaskService{client: client, logger: logger, groupResolver: engine.groupResolver, engine: engine}
 	engine.auditService = NewBPMNAuditService(client, logger)
 
+	// 审计 P1-07：业务审批桥接/工单流程在事务内另建裸引擎，构造函数不带 timer
+	// 依赖，导致中间定时事件报「未配置」整笔回滚、边界定时事件静默不注册。
+	// 进程级运行时由 bootstrap 注册一次后所有引擎共享（见 bpmn_timer_runtime.go）；
+	// 未注册时快照为 nil，行为与引入前一致。显式 SetTimerServices 永远优先覆盖。
+	engine.timerStore, engine.timerScheduler = timerRuntimeSnapshot()
+
 	// 注册流程相关的内置函数
 	engine.registerProcessFunctions()
 

@@ -364,7 +364,9 @@ func (e *CustomProcessEngine) reregisterInstanceTimers(ctx context.Context, inst
 	// 当前活动是用户任务 → 重建绑定到它的 boundary timers
 	for _, task := range process.UserTasks {
 		if task.ID == instance.CurrentActivityID {
-			e.registerBoundaryTimers(ctx, instance, process, task.ID)
+			if err := e.registerBoundaryTimers(ctx, instance, process, task.ID); err != nil {
+				return err
+			}
 			break
 		}
 	}

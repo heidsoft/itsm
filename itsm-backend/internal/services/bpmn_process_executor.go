@@ -1378,7 +1378,9 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 		}
 	}
 
-	e.registerBoundaryTimers(ctx, instance, process, task.ID)
+	if err := e.registerBoundaryTimers(ctx, instance, process, task.ID); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -1985,9 +1987,24 @@ func (e *CustomProcessEngine) handleIntermediateCatchEvent(ctx context.Context, 
 }
 
 // registerBoundaryTimers 在 UserTask 创建后，扫描并注册绑定到该任务的 boundary timer。
-func (e *CustomProcessEngine) registerBoundaryTimers(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, taskDefKey string) {
+//
+// 审计 P1-07：timerStore 未配置时旧实现直接 return，边界超时永远不会触发且不留
+// 任何痕迹——与中间定时事件「显式报错」的口径不一致（一处响亮失败、一处静默丢）。
+// 现在只要该活动确实有待注册的边界定时器就返回明确错误，调用方所在事务随之回滚，
+// 实例不会带着一个永远不会触发的超时继续跑；活动本身没有 boundary timer 时不受影响。
+func (e *CustomProcessEngine) registerBoundaryTimers(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, taskDefKey string) error {
 	if e.timerStore == nil {
-		return
+		for _, boundary := range process.BoundaryEvents {
+			if boundary.AttachedToRef != taskDefKey {
+				continue
+			}
+			if boundary.TimerEventDefinition == nil || !e.hasTimerExpression(boundary.TimerEventDefinition) {
+				continue
+			}
+			return fmt.Errorf("定时器服务未配置，无法为活动 %s 注册边界定时器 %s（该超时将永远不会触发）",
+				taskDefKey, display(boundary.Name, boundary.ID))
+		}
+		return nil
 	}
 
 	for _, boundary := range process.BoundaryEvents {
@@ -2037,6 +2054,7 @@ func (e *CustomProcessEngine) registerBoundaryTimers(ctx context.Context, instan
 			"fire_at", fireAt,
 		)
 	}
+	return nil
 }
 
 // cancelTaskDueTimers 在任务完成/终止时取消该任务的 task_due 定时器。

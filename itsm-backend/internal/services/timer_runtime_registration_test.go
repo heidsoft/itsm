@@ -271,7 +271,16 @@ func TestRegisterBoundaryTimers_NilTimerStore(t *testing.T) {
 	require.NoError(t, err)
 	process := definitions.Processes[0]
 
-	engine.registerBoundaryTimers(ctx, instance, process, "review_task")
+	// 审计 P1-07：活动确实带边界定时器而 store 未配置时必须显式报错，
+	// 旧实现静默 return —— 超时永远不会触发且不留任何痕迹。
+	err = engine.registerBoundaryTimers(ctx, instance, process, "review_task")
+	require.Error(t, err, "带边界定时器的活动在 store 缺失时必须响亮失败")
+	assert.Contains(t, err.Error(), "定时器服务未配置")
+	assert.Contains(t, err.Error(), "review_task")
+
+	// 活动本身没有绑定边界定时器时保持 nil：不该因为全局缺 store 就拦住普通任务。
+	err = engine.registerBoundaryTimers(ctx, instance, process, "some_other_task")
+	require.NoError(t, err, "无边界定时器的活动不应受 store 缺失影响")
 }
 
 // ==================== Boundary timer cancellation tests ====================
