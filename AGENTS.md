@@ -55,6 +55,16 @@ Docs and code are one bidirectional loop, not a one-way afterthought. In every c
 
 3. **Doc drift is a defect.** Fix docs in the same batch as the code that invalidated them; if truly impossible, log a follow-up in `CHANGELOG.md` `[Unreleased]`. Run `make docs-gate` (advisory today) when docs or Makefile targets changed — gate C.5 auto-verifies make-target existence and ROADMAP/CHANGELOG freshness. Full rules: [docs/documentation-governance.md](./docs/documentation-governance.md).
 
+## Parallel Development Protocol (multiple agents, one tree)
+
+When more than one agent/session shares this working tree, follow `itsm-parallel-dev` skill (`.workbuddy/skills/itsm-parallel-dev/SKILL.md`). Non-negotiables:
+
+- Prefer a separate `git worktree` per session (mandatory when touching generated files such as `rbac_precheck_gen.go`). If forced to share the tree, run `python3 scripts/parallel/session-ledger.py enter --id <date-topic-n> --claim <file...>` BEFORE editing — without an entry snapshot you cannot attribute WIP later.
+- **Never write "未触碰 X / not touching X" claims into `CHANGELOG.md`** — parallel sessions can change X at any time, making the claim false at commit time. Keep exclusions in the session ledger note or daily log, never in shipped docs.
+- Before commit: `session-ledger.py diff` (mine vs others' WIP) → `session-ledger.py check --commit` (claim conflicts / changelog contradictions / secrets / HEAD drift) → explicit `git add` only (no `git add -A`) → `bash scripts/parallel/gate-at-head.sh` to classify gate failures as baseline-existing vs newly introduced.
+- One commit = one topic. Record pre-existing gate failures in the commit body with the isolation-tree evidence. `git commit` hooks must pass (no `--no-verify`).
+- After commit: `session-ledger.py note --id <id> --commit HEAD`; before push: `session-ledger.py push-guard` — a parallel session may have advanced `origin/main`; rebase and retest if so. Push only on explicit user request.
+
 ## Development Commands
 
 ### Frontend (itsm-frontend)
