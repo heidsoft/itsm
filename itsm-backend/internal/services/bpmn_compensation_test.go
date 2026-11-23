@@ -49,6 +49,11 @@ type compensationHandler struct {
 
 func (h *compensationHandler) GetTaskType() string  { return "ServiceTask" }
 func (h *compensationHandler) GetHandlerID() string { return h.id }
+
+// SupportsCompensation 显式 opt-in（审计 P1-09）：本替身的 Execute 真的会按
+// _compensate 分支计数，语义上等价于「实现了撤销」，因此声明可补偿能力，
+// 补偿管线测试才能继续覆盖登记→补偿全链路。未 opt-in 的 handler 一律不登记。
+func (h *compensationHandler) SupportsCompensation() bool { return true }
 func (h *compensationHandler) Validate(context.Context, map[string]interface{}) error {
 	return nil
 }

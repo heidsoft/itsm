@@ -42,10 +42,28 @@ type compensationEntry struct {
 // 只登记真实执行过的活动（occurrence 级幂等）；重复登记同一活动时
 // 刷新快照并提升 occurrence。
 //
+// 审计 P1-09：登记即对外承诺「该活动可回滚」。承诺的前提是 handler 显式声明
+// 支持补偿（bpmn.CompensationCapableHandler）——未声明的 handler 的 Execute 只会
+// 重做正向动作（重发 webhook/通知、重写工单状态），把「补偿」变成二次副作用。
+// 因此这里 fail-closed：不支持补偿的活动**不登记**，也就不会被承诺可回滚；
+// 补偿触发时自然没有它的目标，而不是把正向动作再执行一遍。
+//
 // 快照必须是副本且剔除补偿簿记键：直接把实例变量 map 存进
 // _compensationRegistered 会形成自引用（JSON 序列化报 cycle），
 // 且每次登记都嵌入上一次登记的完整簿记，变量无限增长。
 func (e *CustomProcessEngine) registerCompensation(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, elementID, serviceRef string, occurrence int, snapshot map[string]interface{}) error {
+	handler := e.callbackRegistry.GetHandler(serviceRef)
+	switch {
+	case handler == nil:
+		e.logger.Debugw("跳过补偿登记：handler 未注册，无法承诺可回滚",
+			"element_id", elementID, "service_ref", serviceRef, "instance_id", instance.ID)
+		return nil
+	case !bpmn.HandlerSupportsCompensation(handler):
+		e.logger.Debugw("跳过补偿登记：handler 未声明可补偿能力（P1-09 不支持补偿的活动不得自动承诺可回滚）",
+			"element_id", elementID, "service_ref", serviceRef, "instance_id", instance.ID)
+		return nil
+	}
+
 	updated, err := updateProcessInstanceVariablesCAS(ctx, txc, instance.ID, instance.TenantID, func(vars map[string]interface{}) error {
 		registered := compensationEntries(vars)
 		if _, exists := registered[elementID]; !exists {
@@ -134,10 +152,19 @@ func (e *CustomProcessEngine) runCompensation(ctx context.Context, txc *ent.Clie
 }
 
 // compensateOne 补偿单个活动：调用原 handler（_compensate=true），写审计。
+//
+// 审计 P1-09：这里做**防御性复检**（fail-closed）。登记侧已按能力门禁过滤，
+// 但补偿范围持久化在实例变量里、可能来自门禁加入之前的老实例，或 handler 在
+// 登记后被重新注册成不支持补偿的实现——此时绝不能把正向动作当补偿重做一遍。
 func (e *CustomProcessEngine) compensateOne(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, elementID string, entry compensationEntry, actorID int) error {
 	handler := e.callbackRegistry.GetHandler(entry.ServiceRef)
 	if handler == nil {
 		return fmt.Errorf("补偿活动 %s 的 handler '%s' 未注册", elementID, entry.ServiceRef)
+	}
+	if !bpmn.HandlerSupportsCompensation(handler) {
+		return fmt.Errorf("补偿活动 %s 的 handler '%s' 未声明可补偿能力，拒绝执行补偿："+
+			"不支持回滚的活动不得被当作可回滚执行（会把正向副作用再做一遍）",
+			elementID, entry.ServiceRef)
 	}
 	variables := map[string]interface{}{}
 	for k, v := range entry.Variables {

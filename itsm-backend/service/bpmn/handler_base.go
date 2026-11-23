@@ -53,6 +53,34 @@ type ServiceTaskHandlerInterface interface {
 	GetHandlerID() string
 }
 
+// CompensationCapableHandler 是「可被补偿」的显式能力声明（codex 审计 P1-09）。
+//
+// 背景：引擎原先对所有 ServiceTask 无条件登记补偿范围，补偿时取原 serviceRef、
+// 加 `_compensate=true` 后调用同一个 handler。而绝大多数 handler 的 Execute 只按
+// action 执行**正向**动作（webhook 重发、通知重发、工单状态重写），于是「补偿」
+// 变成把刚做过的副作用再做一遍——远端操作既不会被撤销，事务回滚也管不到已发出的
+// 调用。注释里「整单回滚，不留下半补偿状态」只描述数据库簿记，不能证明业务可回滚。
+//
+// 因此补偿能力改为 **opt-in**：只有显式实现本接口并返回 true 的 handler 才会被
+// 登记为可补偿、才会在补偿阶段被允许执行。未实现本接口（或返回 false）的 handler
+// 一律视为**不支持补偿**——不登记 = 不承诺可回滚，而不是先承诺再把正向动作重做一遍。
+//
+// 真正实现补偿语义（独立 undo handler / 幂等 undo 输入 / 外部回执）后才应返回 true。
+type CompensationCapableHandler interface {
+	ServiceTaskHandlerInterface
+
+	// SupportsCompensation 报告该 handler 是否实现了真正的撤销语义。
+	SupportsCompensation() bool
+}
+
+// HandlerSupportsCompensation 判断 handler 是否声明了可补偿能力。
+// fail-closed：未实现 CompensationCapableHandler 的 handler 一律返回 false，
+// 不因为「实现了基础接口」就被当成可回滚。
+func HandlerSupportsCompensation(handler ServiceTaskHandlerInterface) bool {
+	capable, ok := handler.(CompensationCapableHandler)
+	return ok && capable.SupportsCompensation()
+}
+
 // HandlerBase 处理器基类
 // 提供通用的辅助方法
 type HandlerBase struct {
