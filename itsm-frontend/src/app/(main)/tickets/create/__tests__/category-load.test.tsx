@@ -7,9 +7,14 @@ import { TicketCategoryApi } from '@/lib/api/ticket-category-api';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import CreateTicketPage from '../page';
 
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
-}));
+jest.mock('next/navigation', () => {
+  const searchParams = new URLSearchParams();
+
+  return {
+    useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+    useSearchParams: () => searchParams,
+  };
+});
 
 jest.mock('@/lib/api/ticketTypeApi', () => ({
   TicketTypeApi: { list: jest.fn() },
