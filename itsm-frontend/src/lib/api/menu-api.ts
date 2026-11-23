@@ -139,5 +139,8 @@ export class MenuAdminAPI {
 
 // 兼容历史调用：保留旧的函数导出
 export const getUserMenus = async (): Promise<MenuTreeResponse> => {
-  return httpClient.get<MenuTreeResponse>('/api/v1/auth/menus');
+  const { main, admin } = await httpClient.get<{ main: MenuItem[] | null; admin: MenuItem[] | null }>(
+    '/api/v1/auth/menus'
+  );
+  return { main: main ?? [], admin: admin ?? [] };
 };

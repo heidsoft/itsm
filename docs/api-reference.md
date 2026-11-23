@@ -3260,6 +3260,7 @@ DELETE /api/v1/org/teams/{id}/members           # 移除成员，权限 team:wri
 - 上级必须是**同租户**的菜单，且不能是自身或自身的后代；违反时 HTTP 400 + code 4000，
   消息分别是 `上级菜单不存在或不属于当前租户` / `上级菜单不能是当前菜单自身` / `上级菜单不能是当前菜单的子菜单`，
   被拒绝的写入不落库。成环会让按 `parentId` 组装的整棵子树在页面上消失。
+- `GET /api/v1/auth/menus` 的 `main` 和 `admin` 始终返回数组。当前用户在某组没有菜单时，该组返回 `[]`。
 - `GET /api/v1/auth/menus` 的 `main` / `admin` 划分只看**顶级菜单**的路径前缀：
   `/admin`、`/system`、`/workflow` 开头进 `admin`，其余进 `main`；子树跟随其顶级菜单归属。
 

@@ -701,6 +701,9 @@ func (s *menuServiceImpl) backfillParentMenus(filtered, all []*ent.Menu) []*ent.
 
 // buildMenuTree 构建菜单树
 func (s *menuServiceImpl) buildMenuTree(menus []*ent.Menu) (mainMenus, adminMenus []dto.MenuDTO) {
+	mainMenus = []dto.MenuDTO{}
+	adminMenus = []dto.MenuDTO{}
+
 	// 构建子菜单映射
 	childrenMap := make(map[int][]*ent.Menu)
 	for _, m := range menus {

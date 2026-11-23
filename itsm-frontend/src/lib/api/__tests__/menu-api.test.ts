@@ -133,4 +133,13 @@ describe('getUserMenus', () => {
     expect(mockGet).toHaveBeenCalledWith('/api/v1/auth/menus');
     expect(res).toEqual(expected);
   });
+
+  it('normalizes the empty menu buckets returned by older backends', async () => {
+    const main = [{ id: 1, path: '/tickets', name: '工单管理' }];
+    mockGet.mockResolvedValueOnce({ main, admin: null });
+    await expect(getUserMenus()).resolves.toEqual({ main, admin: [] });
+
+    mockGet.mockResolvedValueOnce({ main: null, admin: [] });
+    await expect(getUserMenus()).resolves.toEqual({ main: [], admin: [] });
+  });
 });

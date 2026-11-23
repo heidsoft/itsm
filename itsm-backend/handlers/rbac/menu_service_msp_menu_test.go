@@ -2,6 +2,8 @@ package rbac
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"itsm-backend/dto"
@@ -11,6 +13,7 @@ import (
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/middleware"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -148,4 +151,26 @@ func TestGetUserMenus_MSPEntryRequiresProviderMembership(t *testing.T) {
 		require.NoError(t, err)
 		require.NotContains(t, menuPaths(resp), "/msp")
 	})
+}
+
+func TestGetUserMenus_EmptyAdminBucketIsArray(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:menu_empty_admin?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	userID, tenantID := seedMSPMenuUser(t, client, "plain_agent", "standard", "")
+	seedRBACMenus(t, client, tenantID, "agent")
+	logger := zaptest.NewLogger(t).Sugar()
+	handler := NewHandler(nil, nil, NewMenuService(client, logger), logger)
+	router := gin.New()
+	router.GET("/api/v1/auth/menus", func(c *gin.Context) {
+		c.Set("user_id", userID)
+		c.Set("tenant_id", tenantID)
+		handler.GetUserMenus(c)
+	})
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/auth/menus", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	require.Contains(t, response.Body.String(), `"code":0`)
+	require.Contains(t, response.Body.String(), `"path":"/tickets"`)
+	require.Contains(t, response.Body.String(), `"admin":[]`)
 }
