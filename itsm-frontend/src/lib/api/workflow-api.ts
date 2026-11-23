@@ -172,7 +172,7 @@ export interface BpmnProcessApprovalDecision {
   businessId?: string;
   actorId: number;
   actorName?: string;
-  action: 'approve' | 'reject' | 'delegate' | 'transfer' | 'add_approver' | 'withdraw' | 'timeout' | 'system_decision';
+  action: 'approve' | 'reject' | 'delegate' | 'transfer' | 'add_approver' | 'create_countersign' | 'withdraw' | 'timeout' | 'system_decision';
   decision: string;
   comment?: string;
   variablesSnapshot?: Record<string, unknown>;

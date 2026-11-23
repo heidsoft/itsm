@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - **Fix**：ServiceTask 处理器租户改为只认命令认证上下文（流程变量 tenant_id 冲突即拒绝），任务完成边界拒绝 `_` 引擎保留键与 `tenant_id`/业务归属键，堵住伪造 `_done_`/ServiceTask 完成凭据与跨租户变量注入；启动与变量 PATCH 同步拒绝冲突/身份键。
+- **Fix**：通用会签入口补对象级授权与参数收口（codex 审计 P1-03）——创建会签此前只挂 `task:update` 资源级门槛，任意登录用户可对同租户任意任务发起会签；现按处理人/候选人/`task:admin` 做对象级校验，父任务或流程实例已终态一律拒绝，审批人必须同租户且活跃、不得重复，会签模式限 `serial`/`parallel`、通过阈值限 `1..审批人数`，子任务+父任务配置+审计写入包进同一事务（失败零残留），父任务节点配置（rejectStrategy/timeoutAction/allowDelegate/allowAddApprover）改为合并不再被整体覆盖，创建事实落 `create_countersign` 审计并在审计页展示。
 - **Fix**：SLA 工单/事件事务内解决与问题/服务请求独立事务解决共用同一权威截止时间判定源，修复扫描前超时解决被误记达标。
 - **Fix**：事件转问题的 SLA 绑定失败写入结构化审计并告警，区分未配置策略与绑定故障。
 - **Fix**：模板搜索回车后父组件重渲染不再回放旧搜索词，保留即时搜索与 300ms 防抖去重。

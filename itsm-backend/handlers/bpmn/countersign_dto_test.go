@@ -3,12 +3,14 @@ package bpmn
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
 
+	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/processtask"
 
@@ -17,6 +19,28 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// seedCounterSignActors 补上 P1-03 对象级授权所需的最小世界：
+// 首个创建的租户拿到 ID 1（与 X-Test-Tenant=1 的口径一致），随后连续创建
+// count 个活跃用户（ID 1..count），让路由上下文里的 user_id=7 与审批人 8/9
+// 都真实存在于租户 1——AuthorizeTaskAccess 与 validateTargetUser 都要求
+// 账号真实、同租户且活跃，缺任何一环会签创建都会按设计拒绝。
+func seedCounterSignActors(t *testing.T, client *ent.Client, count int) {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.Tenant.Create().
+		SetName("会签测试租户").SetCode("cs-actors").SetDomain("cs-actors.test").SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+	for i := 1; i <= count; i++ {
+		name := fmt.Sprintf("cs-actor-%d", i)
+		_, err := client.User.Create().
+			SetUsername(name).SetEmail(name + "@test.com").SetName(name).
+			SetPasswordHash("hash").SetRole("agent").SetActive(true).SetTenantID(1).
+			Save(ctx)
+		require.NoError(t, err)
+	}
+}
 
 // POST /api/v1/bpmn/tasks/:id/counter-sign 曾直接 common.Success(tasks) 序列化
 // []*ent.ProcessTask，把 Ent 的 snake_case 字段和内部列暴露到接口上。这里锁住返回
@@ -56,6 +80,8 @@ func TestCreateCounterSignTasks_ReturnsDTO(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:bpmn_countersign_dto?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { client.Close() })
 
+	// user 7 = 路由操作人；8/9 = 会签审批人（P1-03 要求账号真实存在且活跃）。
+	seedCounterSignActors(t, client, 9)
 	definition := seedProcessDefinition(t, client, 1)
 	instance := seedInstance(t, client, definition, "PI-cs")
 	seedAssignedTask(t, client, instance, "task-cs-parent")

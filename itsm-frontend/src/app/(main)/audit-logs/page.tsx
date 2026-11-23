@@ -79,6 +79,7 @@ const actionLabels: Record<string, string> = {
   activity_completed: '活动完成',
   delegate: '委派',
   add_approver: '添加审批人',
+  create_countersign: '创建会签',
   system_decision: '系统决策',
 };
 

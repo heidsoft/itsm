@@ -100,6 +100,8 @@ const countersignWireBPMN = `<?xml version="1.0" encoding="UTF-8"?>
 func TestCounterSignRoutes_NumericTaskIDIsTheSameContract(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:bpmn_countersign_numeric?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { client.Close() })
+	// P1-03：创建走对象级授权，路由操作人(7)与审批人(8/9)必须真实存在。
+	seedCounterSignActors(t, client, 9)
 	r := newTaskListTestRouter(t, client)
 
 	definition := seedProcessDefinition(t, client, 1)

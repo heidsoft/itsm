@@ -1281,15 +1281,118 @@ func resolveCounterSignTask(ctx context.Context, client *ent.Client, taskIDOrKey
 }
 
 // CreateCounterSignTasks 创建会签子任务，返回 camelCase DTO（不暴露 Ent 模型）。
+//
+// 通用会签入口的收口顺序（codex 审计 P1-03）：
+//  1. 请求形状校验（审批人非空、无重复）——语义错误先于寻址与授权，
+//     保证 400 不被 404/403 掩盖；
+//  2. 父任务解析（数字主键/业务键，限定本租户）；
+//  3. 对象级授权 AuthorizeTaskAccess：路由的 task:update 只是资源级门槛，
+//     同租户内还须是该任务的处理人/候选人或 task:admin，杜绝任意登录用户
+//     对任意任务发起会签；
+//  4. 终态守卫：父任务已结束、流程实例非 running 时不得复活出子任务；
+//  5. 审批人逐一校验（同租户且活跃），拒绝跨租户/已停用/不存在的账号；
+//  6. 子任务 + 父任务会签配置 + 审计写入包进同一事务，任一步失败零残留。
+//
+// 与 AddApproverTask 不同，本入口不检查 allowAddApprover：加签是在既有审批
+// 结构上追加一人，而会签是按请求显式声明整套审批结构（模式/阈值/全员），
+// 操作语义不同。这里的等价门禁是对象级授权（只有任务处理人/候选人/task:admin
+// 能发起）加全量审计留痕（action=create_countersign）。
 func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *CounterSignRequest) ([]*dto.BPMNTaskResponse, error) {
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	tasks, err := createCounterSignTasksWithClient(ctx, s.client, parentTaskID, tenantID, req)
+
+	// 1) 请求形状：先于寻址/授权，语义错误必须是 400。
+	if req == nil || len(req.Approvers) == 0 {
+		return nil, common.NewBadRequestError("会签审批人不能为空", nil)
+	}
+	seenApprovers := make(map[string]bool, len(req.Approvers))
+	for _, approver := range req.Approvers {
+		key := strings.TrimSpace(approver)
+		if key == "" {
+			return nil, common.NewBadRequestError("会签审批人不能为空", nil)
+		}
+		if seenApprovers[key] {
+			return nil, common.NewBadRequestError(fmt.Sprintf("会签审批人重复: %s", key), nil)
+		}
+		seenApprovers[key] = true
+	}
+
+	// 2) 父任务解析（数字主键/业务键，跨租户一律 not-found）。
+	parentTask, err := resolveCounterSignTask(ctx, s.client, parentTaskID, tenantID)
 	if err != nil {
 		return nil, err
 	}
+
+	// 3) 对象级授权：只有该任务的处理人/候选人或 task:admin 能发起会签。
+	if err := s.AuthorizeTaskAccess(ctx, parentTask, true); err != nil {
+		return nil, err
+	}
+
+	// 4) 终态守卫（入口快照；helper 在事务内落库前还会复查一次）。
+	if !isBpmnTaskOpen(parentTask.Status) {
+		return nil, common.NewBadRequestError("任务已结束，不能创建会签", nil)
+	}
+	instance, err := s.client.ProcessInstance.Query().
+		Where(processinstance.ID(parentTask.ProcessInstanceID), processinstance.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewNotFoundError(parentTaskID)
+		}
+		return nil, fmt.Errorf("加载流程实例失败: %w", err)
+	}
+	if instance.Status != "running" {
+		return nil, common.NewBadRequestError("流程实例已结束，不能创建会签", nil)
+	}
+
+	// 5) 审批人逐一校验：同租户且活跃。
+	for _, approver := range req.Approvers {
+		if verr := s.validateTargetUser(ctx, tenantID, strings.TrimSpace(approver)); verr != nil {
+			return nil, common.NewBadRequestError(
+				fmt.Sprintf("会签审批人校验失败: %s (%v)", approver, verr), nil)
+		}
+	}
+
+	// 6) 整套写入（子任务 + 父任务配置 + 审计）包进一个事务。
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开启会签事务失败: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+	tasks, err := createCounterSignTasksWithClient(ctx, tx.Client(), parentTaskID, tenantID, req)
+	if err != nil {
+		return nil, err
+	}
+	// 审计与创建同事务落库；写入失败不回滚业务（与 AddApproverTask 同一立场），
+	// 仅记录日志供巡检补偿。
+	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if _, aerr := tx.ProcessApprovalDecision.Create().
+		SetProcessInstanceID(instance.ID).
+		SetProcessTaskID(parentTask.ID).
+		SetProcessInstanceKey(instance.ProcessInstanceID).
+		SetTaskID(parentTask.TaskID).
+		SetProcessDefinitionKey(instance.ProcessDefinitionKey).
+		SetNodeKey(parentTask.TaskDefinitionKey).
+		SetActorID(actorID).
+		SetAction("create_countersign").
+		SetDecision("created").
+		SetComment(fmt.Sprintf("approvalType=%s approvers=%d", req.ApprovalType, len(req.Approvers))).
+		SetTenantID(instance.TenantID).
+		Save(ctx); aerr != nil {
+		s.logger.Errorw("记录会签创建审计决策失败",
+			"task_id", parentTask.TaskID, "process_instance_id", instance.ID, "error", aerr)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交会签事务失败: %w", err)
+	}
+	committed = true
 
 	instanceIDs := make([]int, 0, len(tasks))
 	seen := make(map[int]bool, len(tasks))
@@ -1325,6 +1428,17 @@ func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, p
 	if err != nil {
 		return nil, err
 	}
+	// 终态守卫的事务内复查：入口快照到落库之间父任务可能已被完成/取消，
+	// 读到终态就整笔回滚，不再复活子任务。
+	if !isBpmnTaskOpen(parentTask.Status) {
+		return nil, common.NewBadRequestError("任务已结束，不能创建会签", nil)
+	}
+	// 会签模式只允许 serial/parallel（空串沿用历史默认 parallel）；
+	// 自由字符串写进父任务配置后会由投票/状态读出歧义行为，这里直接拒绝。
+	approvalType, err := normalizeCounterSignApprovalType(req.ApprovalType)
+	if err != nil {
+		return nil, err
+	}
 	canonicalParentID := parentTask.TaskID
 
 	// 生成根任务ID（如果是第一个会签任务）
@@ -1337,12 +1451,16 @@ func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, p
 	if threshold == 0 {
 		threshold = len(req.Approvers)
 	}
+	if threshold < 1 || threshold > len(req.Approvers) {
+		return nil, common.NewBadRequestError(
+			fmt.Sprintf("会签通过阈值 %d 不在 1..%d 范围内", threshold, len(req.Approvers)), nil)
+	}
 
 	var tasks []*ent.ProcessTask
 	for i, approver := range req.Approvers {
 		taskID := fmt.Sprintf("%s_countersign_%d", canonicalParentID, i)
 		status := common.ProcessTaskStatusAssigned
-		if req.ApprovalType == "serial" && i > 0 {
+		if approvalType == "serial" && i > 0 {
 			status = "created"
 		}
 		task, err := client.ProcessTask.Create().
@@ -1366,22 +1484,40 @@ func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, p
 		tasks = append(tasks, task)
 	}
 
-	// 更新父任务状态为会签中
+	// 更新父任务状态为会签中。父任务 TaskVariables 必须合并而非整体覆盖：
+	// 引擎创建的父任务可能携带 rejectStrategy/timeoutAction/allowDelegate/
+	// allowAddApprover 等节点配置，整体覆盖会把它们静默销毁。
+	parentVars := make(map[string]interface{}, len(parentTask.TaskVariables)+6)
+	for key, value := range parentTask.TaskVariables {
+		parentVars[key] = value
+	}
+	parentVars["approval_type"] = approvalType
+	parentVars["threshold"] = threshold
+	parentVars["total"] = len(req.Approvers)
+	parentVars["completed"] = 0
+	parentVars["approved"] = 0
+	parentVars["rejected"] = 0
 	_, err = client.ProcessTask.UpdateOneID(parentTask.ID).
-		SetTaskVariables(map[string]interface{}{
-			"approval_type": req.ApprovalType,
-			"threshold":     threshold,
-			"total":         len(req.Approvers),
-			"completed":     0,
-			"approved":      0,
-			"rejected":      0,
-		}).
+		SetTaskVariables(parentVars).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("更新父任务会签配置失败: %w", err)
 	}
 
 	return tasks, nil
+}
+
+// normalizeCounterSignApprovalType 归一化并校验收口会签模式。
+// 空串沿用历史默认 parallel；其余非 {serial, parallel} 一律拒绝。
+func normalizeCounterSignApprovalType(value string) (string, error) {
+	switch strings.TrimSpace(value) {
+	case "":
+		return "parallel", nil
+	case "serial", "parallel":
+		return strings.TrimSpace(value), nil
+	default:
+		return "", common.NewBadRequestError(fmt.Sprintf("不支持的会签模式: %s", value), nil)
+	}
 }
 
 // GetCounterSignStatus 获取会签状态。
