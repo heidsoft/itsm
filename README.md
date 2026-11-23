@@ -297,8 +297,11 @@ go test ./...                            # 运行测试
 go build -o itsm-backend main.go         # 构建二进制
 
 # ent 代码生成（在仓库根目录执行；生成到隔离暂存目录后按内容差分同步）
-make entgen                              # 改过 ent/schema/** 后运行
+make entgen                              # 改过 ent/schema/** 后运行（隔离暂存 + 差分同步）
 make entgen-check                        # CI 同款一致性校验，不写盘
+make entgen-verify                       # 生成后 gofmt/build/test 校验，不重复跑生成
+
+# 旧入口 `go generate ./ent` 已弃用：它原地写入 ent/，绕过暂存与差分保护。
 
 # 前端开发
 cd itsm-frontend

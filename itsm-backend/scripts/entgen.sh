@@ -32,6 +32,55 @@ STAGE_ROOT="${CACHE_DIR}/runs"
 LOG_FILE="${CACHE_DIR}/last-run.log"
 mkdir -p "${BIN_DIR}" "${STAGE_ROOT}"
 
+# The generation itself is isolated in a per-run staging dir, but the diff +
+# write-back phase must be serialized: two concurrent runs could otherwise
+# interleave deletes and copies into ent/. Use an atomic mkdir lock (portable
+# on macOS where flock is unavailable) and revoke stale locks by owner PID.
+SYNC_LOCK_DIR="${CACHE_DIR}/.sync.lock"
+LOCK_HELD=0
+
+acquire_sync_lock() {
+  local deadline=$((SECONDS + 300))
+  while true; do
+    if mkdir "${SYNC_LOCK_DIR}" 2>/dev/null; then
+      echo "$$" > "${SYNC_LOCK_DIR}/owner"
+      LOCK_HELD=1
+      return 0
+    fi
+    local owner=""
+    if [ -f "${SYNC_LOCK_DIR}/owner" ]; then
+      owner="$(cat "${SYNC_LOCK_DIR}/owner" 2>/dev/null || true)"
+      if [ -n "${owner}" ] && ! kill -0 "${owner}" 2>/dev/null; then
+        rm -f "${SYNC_LOCK_DIR}/owner" 2>/dev/null || true
+        rmdir "${SYNC_LOCK_DIR}" 2>/dev/null || true
+        continue
+      fi
+    fi
+    if [ "${SECONDS}" -ge "${deadline}" ]; then
+      echo "[entgen] another sync holds ${SYNC_LOCK_DIR}; aborting after 300s" >&2
+      return 1
+    fi
+    sleep 1
+  done
+}
+
+release_sync_lock() {
+  if [ "${LOCK_HELD}" = "1" ]; then
+    rm -f "${SYNC_LOCK_DIR}/owner" 2>/dev/null || true
+    rmdir "${SYNC_LOCK_DIR}" 2>/dev/null || true
+    LOCK_HELD=0
+  fi
+  return 0
+}
+
+on_signal() {
+  release_sync_lock
+  exit 130
+}
+
+trap release_sync_lock EXIT
+trap on_signal INT TERM
+
 # The generator is pinned by entgo.io/ent in go.mod. Rebuilding whenever that
 # version changes prevents stale generated code after a dependency bump.
 ENT_VERSION="$(awk '$1 == "entgo.io/ent" { print $2; exit }' "${BACKEND_DIR}/go.mod")"
@@ -84,6 +133,10 @@ for required in client.go mutation.go migrate/schema.go; do
     exit 1
   fi
 done
+
+# Serialize the diff decision and write-back. The lock is acquired only after
+# a complete staging tree exists, so failed generations never hold it.
+acquire_sync_lock
 
 python3 - "${BACKEND_DIR}" "${STAGE_DIR}" "${MODE}" <<'PY'
 import hashlib
@@ -150,8 +203,16 @@ for kind, rel in changes:
     dst = ent / rel
     if kind == "D":
         dst.unlink()
-    else:
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(staged[rel], dst)
+        continue
+    # Atomic replace avoids a truncated tracked file if the process is killed
+    # mid-copy; the lock above makes the temp name collision-free in practice.
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dst.with_name(f".{dst.name}.entgen-{os.getpid()}.tmp")
+    try:
+        shutil.copyfile(staged[rel], tmp)
+        os.replace(tmp, dst)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
 print("[entgen] synced into ent/")
 PY

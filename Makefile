@@ -1,5 +1,5 @@
 # ITSM Makefile - 构建和部署自动化
-.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-scripts test-unit test-e2e lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene fresh-install-gate scope-creep product-drift verify-scripts fmt-backend entgen entgen-check ci-parity ci-parity-strict health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
+.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-scripts test-unit test-e2e lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene fresh-install-gate scope-creep product-drift verify-scripts fmt-backend entgen entgen-check entgen-verify ci-parity ci-parity-strict health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
 
 # 默认版本
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "latest")
@@ -266,6 +266,15 @@ entgen: ## 重新生成 ent 代码（隔离暂存 + 差分同步，失败不写 
 
 entgen-check: ## 校验 ent 生成代码与 schema 一致（CI 用，不写盘）
 	@bash itsm-backend/scripts/entgen.sh --check
+
+entgen-verify: ## 校验 ent 产物格式、编译与测试（本地用，不再跑一次生成）
+	@echo "$(BLUE)检查 ent/ gofmt...$(NC)"
+	@cd itsm-backend && test -z "$$(gofmt -l ent)" || { echo "ent/ 需要 gofmt:"; gofmt -l ent; exit 1; }
+	@echo "$(BLUE)构建后端...$(NC)"
+	@cd itsm-backend && $(GO) build ./...
+	@echo "$(BLUE)运行后端测试...$(NC)"
+	@cd itsm-backend && $(GO) test ./...
+	@echo "$(GREEN)entgen-verify 完成$(NC)"
 
 swagger-gen: ## 重新生成 OpenAPI/Swagger 文档（itsm-backend/docs，版本锁定 go.mod）
 	@echo "$(BLUE)生成 Swagger 文档...$(NC)"

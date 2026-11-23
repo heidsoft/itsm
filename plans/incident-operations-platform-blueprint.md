@@ -1197,7 +1197,7 @@ lib/api/
 
 每个 Epic 完成后必须：
 
-- [ ] Ent schema 生成（`go generate ./ent`）
+- [ ] Ent schema 生成（`make entgen`；校验用 `make entgen-check`）
 - [ ] Migration 文件生成（`go run -tags migrate main.go`）
 - [ ] DTO + Mapper 单测 ≥ 80%
 - [ ] Service 层表驱动测试 ≥ 80%

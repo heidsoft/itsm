@@ -83,7 +83,7 @@
 - **`handlers/<domain>/`**：HTTP 入口 + 领域规则（`handler.go` / `service.go` / `repository.go` / `entity.go`），只调用本域或公开 service，**不直接访问 Ent**。返回 DTO，**禁止返回 Ent 模型**
 - **`service/`**：跨领域共享业务逻辑；单一领域规则应下沉到 `handlers/<domain>/service.go`
 - **`internal/commandbus/` + `operational_commands`**：可靠异步副作用（事务型 outbox + Worker 租约认领）；通知、审批、连接器、BPMN 均经此路径
-- **`ent/schema/`**：数据模型，**改 schema 必须 `go generate`**
+- **`ent/schema/`**：数据模型，改 schema 必须在仓库根目录执行 `make entgen`
 - **`middleware/`**：横切关注点（auth / rbac / tenant / logging / metrics）
 - **`dto/`**：请求/响应结构，使用 **camelCase 字段名**
 - **`cache/`**：Redis 客户端封装（缓存与限流）

@@ -38,7 +38,7 @@
 | `roles` | 已有，但**缺 is_active/status 字段** | `ent/schema/role.go` 没有 `is_active` 或 `status` 字段 |
 
 **迁移策略**：
-1. 先创建缺失的 Ent Schema 并执行 `go generate ./ent`
+1. 先创建缺失的 Ent Schema 并执行 `make entgen`
 2. `TicketWorkflowService` 迁移时，逐步将 `rawDB.ExecContext` 替换为 Ent 调用
 3. `CIRelationship` 添加 `tenant_id` 字段需要数据库迁移脚本设置默认值
 
@@ -190,7 +190,7 @@
    - `createWorkflowRecord` → `client.TicketWorkflowRecord.Create`
    - `ApproveTicket` 中的审批记录操作 → `client.TicketApproval` 查询/更新
 4. 移除 `rawDB *sql.DB` 依赖
-5. 执行 `go generate ./ent`
+5. 执行 `make entgen`
 
 **依赖**: 必须先于 DATA-001 完成，因为事务保护需要基于 Ent 的 `client.Tx()`
 
@@ -518,7 +518,7 @@ func checkRolePermissionFromDB(db DBQuerier, client *ent.Client, role, resource,
 
 | 编号 | 任务名称 | PRD编号 | 依赖 | 复杂度 | 实现步骤 | 涉及文件 |
 |------|---------|---------|------|--------|---------|---------|
-| T1-1 | CIRelationship Schema 添加 tenant_id | SEC-001 | 无 | M | 1) 修改 `ent/schema/ci_relationship.go` 添加 tenant_id 字段<br>2) 执行 `go generate ./ent`<br>3) 创建迁移脚本为存量数据填充 tenant_id | `ent/schema/ci_relationship.go`, `migrations/20260614_ci_relationship_tenant_id.sql` |
+| T1-1 | CIRelationship Schema 添加 tenant_id | SEC-001 | 无 | M | 1) 修改 `ent/schema/ci_relationship.go` 添加 tenant_id 字段<br>2) 执行 `make entgen`<br>3) 创建迁移脚本为存量数据填充 tenant_id | `ent/schema/ci_relationship.go`, `migrations/20260614_ci_relationship_tenant_id.sql` |
 | T1-2 | CMDB ListRelationships 添加 tenantID 过滤 | SEC-001 | T1-1 | S | 1) `ListRelationships` 添加 `cirelationship.TenantID(tenantID)` 条件<br>2) `GetCITopology` 递归查询添加 tenant_id 过滤<br>3) 编写单元测试 | `service/cmdb_service.go`, `service/cmdb_service_test.go` |
 | T1-3 | BPMN evaluateCondition 修复默认 false | SEC-002 | 无 | S | 1) `CustomProcessEngine.evaluateCondition` 评估失败改 `return false`，日志改 Error<br>2) `GatewayEngine.evaluateExclusiveGatewayConditions` 无条件匹配时返回错误<br>3) 编写测试 | `service/bpmn_process_engine.go`, `service/bpmn_gateway_engine.go` |
 | T1-4 | ACL 表达式引擎实现 | SEC-003 | 无 | L | 1) 新建 `middleware/acl_expression_engine.go`，实现递归下降解析器<br>2) 支持 ==, !=, >, <, >=, <=, &&, \|\|, ! 和 ctx 变量引用<br>3) 修改 `EvaluateACLScript` 调用新引擎<br>4) 空字符串 return true，解析/执行异常 return false<br>5) 编写单元测试覆盖典型场景 | `middleware/acl_expression_engine.go`, `middleware/acl_expression_engine_test.go`, `middleware/smart_permission.go` |
@@ -529,7 +529,7 @@ func checkRolePermissionFromDB(db DBQuerier, client *ent.Client, role, resource,
 |------|---------|---------|------|--------|---------|---------|
 | T2-1 | CreateRelationship 添加 tenantID 校验 | SEC-004 | T1-1 | S | 1) `CreateRelationshipRequest` 增加 TenantID 字段<br>2) 创建前查询 source/target CI 是否属于当前租户<br>3) 校验失败返回 403<br>4) 创建关系时设置 tenant_id | `service/cmdb_service.go`, `controller/cmdb_controller.go` |
 | T2-2 | checkRolePermissionFromDB 实现数据库查询 | SEC-005 | 无 | M | 1) 函数签名增加 `*ent.Client` 参数<br>2) 使用 `loadRolePermissionsFromDB` 逻辑查询 role_permissions 表<br>3) 根据 `PermissionConfig.Mode` 合并策略处理<br>4) 编写测试 | `middleware/smart_permission.go` |
-| T2-3 | 新建 TicketApproval 和 TicketWorkflowRecord Ent Schema | ARCH-001 | 无 | M | 1) 创建 `ent/schema/ticket_approval.go`<br>2) 创建 `ent/schema/ticket_workflow_record.go`<br>3) 执行 `go generate ./ent`<br>4) 验证 Schema 与现有表结构对齐 | `ent/schema/ticket_approval.go`, `ent/schema/ticket_workflow_record.go` |
+| T2-3 | 新建 TicketApproval 和 TicketWorkflowRecord Ent Schema | ARCH-001 | 无 | M | 1) 创建 `ent/schema/ticket_approval.go`<br>2) 创建 `ent/schema/ticket_workflow_record.go`<br>3) 执行 `make entgen`<br>4) 验证 Schema 与现有表结构对齐 | `ent/schema/ticket_approval.go`, `ent/schema/ticket_workflow_record.go` |
 | T2-4 | TicketWorkflowService Ent 迁移 | ARCH-001 | T2-3 | L | 1) 逐步替换 `rawDB.ExecContext` 为 Ent 调用<br>2) `getTicket` → `client.Ticket.Get`<br>3) `createWorkflowRecord` → `client.TicketWorkflowRecord.Create`<br>4) `ApproveTicket` 中的审批操作 → Ent 调用<br>5) 移除 `rawDB *sql.DB` 依赖<br>6) 所有现有功能测试通过 | `service/ticket_workflow_service.go` |
 | T2-5 | 工单审批流程添加事务保护 | DATA-001 | T2-4 | M | 1) 在 Ent 版本基础上为写操作添加 `client.Tx()`<br>2) `AcceptTicket`、`RejectTicket`、`ApproveTicket`、`ResolveTicket`、`CloseTicket`、`ReopenTicket` 均包裹事务<br>3) 事务失败 Rollback 并返回明确错误<br>4) 编写回滚场景测试 | `service/ticket_workflow_service.go` |
 | T2-6 | BPMN 变量合并原子操作 | DATA-002 | 无 | M | 1) 使用 Ent 事务包裹变量合并<br>2) ProcessInstance 添加 version 字段实现乐观锁<br>3) 更新时检查版本号，不匹配则重试<br>4) 编写并发测试 | `service/bpmn_process_engine.go`, `ent/schema/process_instance.go` |

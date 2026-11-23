@@ -57,7 +57,7 @@ cd ent
 只在 `make entgen` 本身不可用时用；它会**原地写入** `ent/`，中断后须
 `git checkout -- itsm-backend/ent` 恢复。
 
-### 方式 B：项目旧入口（不推荐）
+### 方式 B：旧入口（已弃用，仅为兼容旧脚本）
 
 ```bash
 cd /Users/heidsoft/Downloads/research/itsm/itsm-backend
@@ -65,7 +65,11 @@ go generate ./ent
 ```
 
 等价于 `ent/generate.go` 里的 `go run -mod=mod entgo.io/ent/cmd/ent generate ./schema`。
-每次重编译 entc、原地写入，且可能改动 go.mod/go.sum；保留仅为兼容旧脚本。
+每次重编译 entc、原地写入，且可能改动 go.mod/go.sum。**不要在新脚本或文档中使用**；
+统一用仓库根目录的 `make entgen`（隔离暂存 + SHA-256 差分同步，失败不写 `ent/`）。
+旧入口保留仅为兼容，未确认兼容性前不删除。
+
+生成完成后建议跑 `make entgen-verify`（gofmt/build/test，不重复生成）。
 
 
 ### 方式 C：后台运行（强烈推荐，可规避超时）
