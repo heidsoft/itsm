@@ -306,7 +306,7 @@ func (s *PredictionService) ExportPredictionReport(ctx context.Context, req *dto
 	case "excel":
 		return s.exportPredictionToExcel(response)
 	case "pdf":
-		return s.exportPredictionToPDF(response)
+		return nil, "", common.NewBadRequestError("PDF 导出暂未开放，请使用 Excel 或 CSV", nil)
 	default:
 		return nil, "", fmt.Errorf("unsupported format: %s", format)
 	}
@@ -366,28 +366,4 @@ func (s *PredictionService) exportPredictionToCSV(response *dto.TrendPredictionR
 // exportPredictionToExcel 导出预测为Excel格式
 func (s *PredictionService) exportPredictionToExcel(response *dto.TrendPredictionResponse) ([]byte, string, error) {
 	return s.reportExport.ExportPredictionToExcel(context.Background(), response)
-}
-
-// exportPredictionToPDF 导出预测为PDF格式（简化版）
-func (s *PredictionService) exportPredictionToPDF(response *dto.TrendPredictionResponse) ([]byte, string, error) {
-	return s.reportExport.ExportToPDF(context.Background(), &dto.DeepAnalyticsResponse{
-		Data: func() []dto.AnalyticsDataPoint {
-			points := make([]dto.AnalyticsDataPoint, len(response.Predictions))
-			for i, p := range response.Predictions {
-				points[i] = dto.AnalyticsDataPoint{
-					Name:  p.Date,
-					Value: p.PredictedValue,
-				}
-			}
-			return points
-		}(),
-		Summary: dto.AnalyticsSummary{
-			Total:                0,
-			Resolved:             0,
-			AvgResponseTime:      0,
-			AvgResolutionTime:    0,
-			SLACompliance:        response.Confidence * 100,
-			CustomerSatisfaction: 0,
-		},
-	})
 }

@@ -2103,6 +2103,8 @@ Authorization: Bearer <accessToken>
 
 **口径版本契约**：响应携带 `metricVersion`（总体）与 `metricVersions`（各块独立）——任何指标的计算语义变更（窗口、过滤、分母、环比基线）都必须递增对应版本，下游管理层月报与对账脚本以版本号感知口径变化，禁止凭数字猜语义。空集合一律序列化为 `[]` 而非 `null`。导出通道 `POST /api/v1/analytics/export` 的审计由全局审计中间件承载（`export` 动作 + 请求体摘要入 `audit_logs`）。
 
+**导出格式契约**：`POST /api/v1/analytics/export` 与 `POST /api/v1/tickets/prediction/export` 的 `format` 只接受 `csv` / `excel`；`pdf` 与其他值返回 HTTP 400 / `code=1001`。旧版本手拼的 PDF 缺字体对象与可校验的 xref 偏移，预测导出还把置信度写成「SLA 合规率」，不能作为可下载报告交付；真实 PDF 渲染器（含中文字体与校验）接入前不得重新开放该参数。前端 API 客户端类型与后端保持一致。
+
 ### 报表目录（GET /api/v1/reports）
 
 ```http

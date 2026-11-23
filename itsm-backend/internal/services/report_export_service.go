@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 
 	"github.com/xuri/excelize/v2"
@@ -115,99 +116,14 @@ func (s *ReportExportService) ExportToExcel(ctx context.Context, data *dto.DeepA
 	return buf.Bytes(), filename, nil
 }
 
-// ExportToPDF 导出为PDF格式
+// ExportToPDF 显式拒绝 PDF 导出。
+//
+// 旧实现手拼 PDF 字节：xref 偏移是硬编码常量、字体对象缺失，严格阅读器无法打开；
+// 预测导出还把「预测置信度」塞进 SLACompliance 字段并打印成「SLA 合规率」。
+// 这是伪装成成功的能力半成品，会直接误导容量/合规决策。在引入真实 PDF 渲染器
+// （含中文字体与可校验的 cross-reference 表）之前，统一返回参数错误。
 func (s *ReportExportService) ExportToPDF(ctx context.Context, data *dto.DeepAnalyticsResponse) ([]byte, string, error) {
-	// 使用简单的文本格式生成PDF兼容内容
-	// 实际生产中应使用 gofpdf 或其他PDF库
-
-	var content bytes.Buffer
-
-	// PDF头
-	content.WriteString("%PDF-1.4\n")
-	content.WriteString("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n")
-	content.WriteString("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n")
-
-	// 页面内容
-	content.WriteString("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>\nendobj\n")
-	content.WriteString("4 0 obj\n<< /Length 5 0 R >>\nstream\n")
-
-	// 标题
-	content.WriteString("BT\n")
-	content.WriteString("/F1 24 Tf\n")
-	content.WriteString("100 750 Td\n")
-	content.WriteString("(数据分析报告) Tj\n")
-	content.WriteString("ET\n")
-
-	// 生成时间
-	content.WriteString("BT\n")
-	content.WriteString("/F1 12 Tf\n")
-	content.WriteString("100 720 Td\n")
-	content.WriteString("(生成时间: " + time.Now().Format("2006-01-02 15:04:05") + ") Tj\n")
-	content.WriteString("ET\n")
-
-	// 数据表格
-	y := 680
-	content.WriteString("BT\n")
-	content.WriteString("/F1 10 Tf\n")
-	for _, point := range data.Data {
-		line := fmt.Sprintf("%s - 数值: %.2f, 数量: %d", escapePDFText(point.Name), point.Value, point.Count)
-		content.WriteString(fmt.Sprintf("100 %d Td\n", y))
-		content.WriteString(fmt.Sprintf("(%s) Tj\n", line))
-		y -= 20
-	}
-	content.WriteString("ET\n")
-
-	// 汇总信息
-	y -= 30
-	content.WriteString("BT\n")
-	content.WriteString("/F1 14 Tf\n")
-	content.WriteString(fmt.Sprintf("100 %d Td\n", y))
-	content.WriteString("(汇总信息) Tj\n")
-	y -= 25
-	content.WriteString("ET\n")
-
-	summaryData := []struct {
-		Label string
-		Value interface{}
-	}{
-		{"总计", data.Summary.Total},
-		{"已解决", data.Summary.Resolved},
-		{"平均响应时间", fmt.Sprintf("%.2f", data.Summary.AvgResponseTime)},
-		{"平均解决时间", fmt.Sprintf("%.2f", data.Summary.AvgResolutionTime)},
-		{"SLA合规率", fmt.Sprintf("%.2f%%", data.Summary.SLACompliance)},
-		{"客户满意度", fmt.Sprintf("%.2f", data.Summary.CustomerSatisfaction)},
-	}
-
-	content.WriteString("/F1 10 Tf\n")
-	for _, s := range summaryData {
-		line := fmt.Sprintf("%s: %v", s.Label, s.Value)
-		content.WriteString(fmt.Sprintf("100 %d Td\n", y))
-		content.WriteString(fmt.Sprintf("(%s) Tj\n", line))
-		y -= 15
-	}
-
-	content.WriteString("endstream\nendobj\n")
-	content.WriteString("5 0 obj\n")
-	content.WriteString(fmt.Sprintf("%d\n", content.Len()))
-	content.WriteString("endobj\n")
-
-	// xref
-	content.WriteString("xref\n")
-	content.WriteString("0 6\n")
-	content.WriteString("0000000000 65535 f \n")
-	content.WriteString("0000000009 00000 n \n")
-	content.WriteString("0000000058 00000 n \n")
-	content.WriteString("0000000115 00000 n \n")
-	content.WriteString("0000000206 00000 n \n")
-	content.WriteString("0000000245 00000 n \n")
-
-	content.WriteString("trailer\n<< /Size 6 /Root 1 0 R >>\n")
-	content.WriteString("startxref\n")
-	content.WriteString(fmt.Sprintf("%d\n", content.Len()))
-	content.WriteString("%%EOF")
-
-	filename := fmt.Sprintf("analytics_report_%s.pdf", time.Now().Format("20060102_150405"))
-	return content.Bytes(), filename, nil
+	return nil, "", common.NewBadRequestError("PDF 导出暂未开放，请使用 Excel 或 CSV", nil)
 }
 
 func neutralizeSpreadsheetFormula(value string) string {

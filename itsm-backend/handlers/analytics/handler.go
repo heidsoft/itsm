@@ -29,7 +29,7 @@ func NewHandler(analyticsService AnalyticsService) *Handler {
 
 // ExportAnalytics 导出分析数据
 // @Summary 导出分析数据
-// @Description 导出分析数据为CSV格式
+// @Description 导出分析数据为 CSV 或 Excel；PDF 渲染器尚未接入，显式拒绝。
 // @Tags 数据分析
 // @Accept json
 // @Produce json
@@ -44,8 +44,8 @@ func (h *Handler) ExportAnalytics(ctx *gin.Context) {
 	}
 
 	format := ctx.DefaultQuery("format", "csv")
-	if format != "csv" && format != "excel" && format != "pdf" {
-		common.Fail(ctx, common.ParamErrorCode, "不支持的导出格式，支持: csv, excel, pdf")
+	if format != "csv" && format != "excel" {
+		common.Fail(ctx, common.ParamErrorCode, "不支持的导出格式，支持: csv, excel")
 		return
 	}
 
@@ -75,8 +75,6 @@ func (h *Handler) ExportAnalytics(ctx *gin.Context) {
 		contentType = "text/csv"
 	case "excel":
 		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-	case "pdf":
-		contentType = "application/pdf"
 	}
 
 	ctx.Header("Content-Type", contentType)

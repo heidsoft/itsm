@@ -53,7 +53,7 @@ export class TicketAnalyticsApi {
   // ApiRequestError，服务端业务文案原样透出给调用方。
   static async exportAnalytics(
     config: AnalyticsConfig,
-    format: 'excel' | 'pdf' | 'csv'
+    format: 'excel' | 'csv'
   ): Promise<Blob> {
     return httpClient.request<Blob>({
       method: 'POST',

@@ -270,7 +270,7 @@ class TicketAnalyticsService {
   async exportAnalytics(params: {
     dateFrom: string;
     dateTo: string;
-    format: 'csv' | 'excel' | 'pdf';
+    format: 'csv' | 'excel';
     groupBy?: string;
   }): Promise<Blob> {
     return TicketAnalyticsApi.exportAnalytics(

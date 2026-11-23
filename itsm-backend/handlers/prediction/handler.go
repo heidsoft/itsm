@@ -35,6 +35,7 @@ func NewHandler(predictionService PredictionService, logger *zap.SugaredLogger) 
 }
 
 // ExportPredictionReport POST /api/v1/tickets/prediction/export
+// PDF 渲染器尚未接入，format=pdf 返回 400；不返回伪造的 PDF 或把置信度冒充 SLA 合规率。
 func (h *Handler) ExportPredictionReport(ctx *gin.Context) {
 	var req dto.TrendPredictionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -43,8 +44,8 @@ func (h *Handler) ExportPredictionReport(ctx *gin.Context) {
 	}
 
 	format := ctx.DefaultQuery("format", "csv")
-	if format != "csv" && format != "excel" && format != "pdf" {
-		common.Fail(ctx, common.ParamErrorCode, "不支持的导出格式，支持: csv, excel, pdf")
+	if format != "csv" && format != "excel" {
+		common.Fail(ctx, common.ParamErrorCode, "不支持的导出格式，支持: csv, excel")
 		return
 	}
 
@@ -70,8 +71,6 @@ func (h *Handler) ExportPredictionReport(ctx *gin.Context) {
 		contentType = "text/csv"
 	case "excel":
 		contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-	case "pdf":
-		contentType = "application/pdf"
 	}
 
 	ctx.Header("Content-Type", contentType)
