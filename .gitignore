@@ -336,3 +336,5 @@ itsm-backend/aliyun-connection-check
 itsm-backend/aliyun-sdk-api-verify
 # 同上：OSS 验证命令的本地编译产物（~9MB）。OSS SDK 体积不小，但产物不入库。
 itsm-backend/aliyun-oss-api-verify
+# 本地 Redis 的 RDB 转储（开发栈意外落盘），运行产物不入库。
+dump.rdb
