@@ -599,8 +599,49 @@ func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, 
 // 核心状态机：executeStep → handleElement → 元素处理
 // ---------------------------------------------------------------------------
 
+// maxSyncAdvanceSteps 是单次同步推进（一次 StartProcess / CompleteTask / ServiceTask
+// 完成等请求内的 executeStep→handleElement 递归链）的总步数上限。
+// 既有 maxGatewayForkDepth 只统计相邻并行/包容网关嵌套，且 dispatch→handleElement
+// 与 handleElement→网关两处会丢/重置 depth（codex 审计 P1-11）：排他网关自环、
+// parallel→exclusive→parallel 等任意同步环可无限递归，耗尽请求资源、事务连接
+// 与调用栈。10000 步对真实流程（模板级 ≤百节点）留有百倍余量，对环路则在
+// 有限步内确定性失败。
+const maxSyncAdvanceSteps = 10000
+
+type syncAdvanceBudgetKey struct{}
+
+type syncAdvanceBudget struct{ steps int }
+
+// advanceSyncStep 是每次同步推进前的统一闸门：共享、只递增的步数预算 +
+// ctx 取消检查（取消请求在下一步立即生效，而不是等环路跑完）。
+// 预算通过 ctx 在同一次推进的递归链上共享（首个进入者创建，下游必须继续
+// 传返回的 ctx），相互独立的请求各自持有预算互不影响。
+// 返回错误即中止本次推进；调用方所在事务随错误回滚，不留半推进状态。
+func advanceSyncStep(ctx context.Context) (context.Context, error) {
+	budget, _ := ctx.Value(syncAdvanceBudgetKey{}).(*syncAdvanceBudget)
+	if budget == nil {
+		budget = &syncAdvanceBudget{}
+		ctx = context.WithValue(ctx, syncAdvanceBudgetKey{}, budget)
+	}
+	if err := ctx.Err(); err != nil {
+		return ctx, fmt.Errorf("流程推进已取消: %w", err)
+	}
+	budget.steps++
+	if budget.steps > maxSyncAdvanceSteps {
+		return ctx, fmt.Errorf(
+			"单次流程推进超过步数上限 %d 步，流程图可能存在无等待点的同步环路，已中止本次推进；请检查网关/节点环路，将业务循环改为持久化异步续接",
+			maxSyncAdvanceSteps)
+	}
+	return ctx, nil
+}
+
 // executeStep 执行流程步骤
 func (e *CustomProcessEngine) executeStep(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, currentElementID string, variables map[string]interface{}) error {
+	ctx, err := advanceSyncStep(ctx)
+	if err != nil {
+		return err
+	}
+
 	outgoingFlows := e.findOutgoingFlows(process, currentElementID)
 
 	if len(outgoingFlows) == 0 {
@@ -643,6 +684,13 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, txc *ent.Client, 
 }
 
 func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, elementID string) error {
+	// 同步推进预算闸门（P1-11）：与 executeStep 共享同一 ctx 预算，
+	// 排他网关等经 executeStep↔handleElement 互递归的环路在此计数收口。
+	ctx, err := advanceSyncStep(ctx)
+	if err != nil {
+		return err
+	}
+
 	// 解析节点的展示名写入 CurrentActivityName。
 	// 这里必须覆盖所有节点类型，不能只认 userTask/endEvent：prod 实测
 	// incident_emergency_flow 停留在 <serviceTask id="Activity_AutoAssign" name="自动分配">，
@@ -655,7 +703,7 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client
 		elementName = name
 	}
 
-	_, err := txc.ProcessInstance.UpdateOne(instance).
+	_, err = txc.ProcessInstance.UpdateOne(instance).
 		SetCurrentActivityID(elementID).
 		SetCurrentActivityName(elementName).
 		Save(ctx)
