@@ -8,6 +8,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
@@ -442,7 +443,21 @@ func (h *TimerEventHandler) interruptActivity(ctx context.Context, instance *ent
 		Where(
 			processtask.ProcessInstanceID(instance.ID),
 			processtask.TaskDefinitionKey(activityID),
-			processtask.StatusIn("created", "waiting", "in_progress"),
+			// 审计 P1-08：中断型边界计时器必须取消「仍会阻塞推进」的全部在途状态。
+			// 旧集合只有 created/waiting/in_progress，而正常认领写的是 assigned
+			// （bpmn_task_service.go claim），delegated 同理是活跃态——漏掉它们会让
+			// 被中断活动残留可用任务，超时路径推进后旧任务仍可被完成，形成双分支并行。
+			// started/waiting/in_progress 为存量值（新代码不写入），一并纳入以覆盖老数据。
+			// finalizing 不在此列：它是会签末票的瞬时态，由 TimeoutScanner 的
+			// ScanStuckFinalizingTasks 单独恢复，抢取消会破坏该恢复契约。
+			processtask.StatusIn(
+				common.ProcessTaskStatusCreated,
+				common.ProcessTaskStatusAssigned,
+				common.ProcessTaskStatusStarted,
+				common.ProcessTaskStatusDelegated,
+				"waiting",
+				"in_progress",
+			),
 		).
 		SetStatus("cancelled").
 		Save(ctx)
