@@ -192,7 +192,9 @@ describe('能力矩阵控制台', () => {
     fireEvent.click(screen.getAllByText('查看完整理由')[0]);
 
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('已闭环进展')).toBeInTheDocument();
+    // 文案随产品语言治理调整（「已闭环进展」→「已达成进展」），断言须同源更新
+    expect(within(dialog).getByText('已达成进展')).toBeInTheDocument();
+    expect(within(dialog).queryByText('已闭环进展')).not.toBeInTheDocument();
     expect(within(dialog).getByText('剩余阻断')).toBeInTheDocument();
     expect(within(dialog).getByText('晋升条件')).toBeInTheDocument();
     expect(within(dialog).getByText('接口原文')).toBeInTheDocument();
