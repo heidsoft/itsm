@@ -2,14 +2,20 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  App, Button, Card, Form, Input, Modal, Popconfirm, Space, Table, Tag, Typography,
+  App, Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag, Typography,
 } from 'antd';
 import { PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
   emailIntakeService, type ServiceCustomer, type CustomerBranch,
 } from '@/lib/services/emailIntakeService';
+import {
+  CUSTOMER_FORM_EMPTY_HINT, toBranchPayload, toCustomerPayload,
+} from '@/lib/services/customer-payload';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
+
+// 别名在接口里是 string[]（后端 customerRequest.Aliases）。表单用 tags 模式收集，
+// 提交体构造统一走 customer-payload，避免页面内随手写 `?? ''` 破坏类型契约。
 
 export default function CustomersPage() {
   const { message } = App.useApp();
@@ -47,10 +53,19 @@ export default function CustomersPage() {
     const values = await customerForm.validateFields();
     try {
       if (editingCustomer) {
-        await emailIntakeService.updateCustomer(editingCustomer.id, { ...editingCustomer, ...values });
+        await emailIntakeService.updateCustomer(
+          editingCustomer.id,
+          toCustomerPayload(
+            values,
+            editingCustomer.status || 'active',
+            // 历史名不在此表单里编辑，但接口是整体替换语义：
+            // 不回传就等于把已积累的历史名清空，所以原样带上。
+            editingCustomer.historicalNames ?? []
+          )
+        );
         message.success('客户已更新');
       } else {
-        await emailIntakeService.createCustomer({ ...values, status: 'active' });
+        await emailIntakeService.createCustomer(toCustomerPayload(values, 'active'));
         message.success('客户已创建');
       }
       setCustomerModal(false);
@@ -61,15 +76,19 @@ export default function CustomersPage() {
   };
 
   const disableCustomer = async (id: number) => {
-    await emailIntakeService.disableCustomer(id);
-    message.success('客户已停用');
-    load();
+    try {
+      await emailIntakeService.disableCustomer(id);
+      message.success('客户已停用');
+      load();
+    } catch { message.error('停用失败'); }
   };
 
   const saveBranch = async () => {
     const values = await branchForm.validateFields();
     try {
-      await emailIntakeService.createBranch({ ...values, customerId: selectedCustomer!.id, status: 'active' });
+      await emailIntakeService.createBranch(
+        toBranchPayload(values, selectedCustomer!.id, 'active')
+      );
       message.success('分支已添加');
       setBranchModal(false);
       branchForm.resetFields();
@@ -157,8 +176,14 @@ export default function CustomersPage() {
           <Form.Item name="shortName" label="简称">
             <Input placeholder="例如：某某科技" />
           </Form.Item>
-          <Form.Item name="aliases" label="别名（逗号分隔）">
-            <Input placeholder="客户名称的其他写法" />
+          <Form.Item name="aliases" label="别名">
+            <Select
+              mode="tags"
+              open={false}
+              suffixIcon={null}
+              tokenSeparators={[',', '，', '、']}
+              placeholder={CUSTOMER_FORM_EMPTY_HINT}
+            />
           </Form.Item>
         </Form>
       </Modal>
@@ -171,8 +196,14 @@ export default function CustomersPage() {
           <Form.Item name="name" label="分支名称" rules={[{ required: true }]}>
             <Input placeholder="例如：上海分公司" />
           </Form.Item>
-          <Form.Item name="aliases" label="别名（逗号分隔）">
-            <Input placeholder="分支的其他写法" />
+          <Form.Item name="aliases" label="别名">
+            <Select
+              mode="tags"
+              open={false}
+              suffixIcon={null}
+              tokenSeparators={[',', '，', '、']}
+              placeholder={CUSTOMER_FORM_EMPTY_HINT}
+            />
           </Form.Item>
         </Form>
       </Modal>

@@ -955,7 +955,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           <Form.Item name="communicationPlan" label="危机沟通计划">
             <Input.TextArea
               rows={3}
-              placeholder="可选：说明通报对象、沟通频率、作战室/应急群等安排..."
+              placeholder="可选：说明通报对象、沟通频率、应急群/电话会议等安排..."
               showCount
               maxLength={1000}
             />

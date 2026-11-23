@@ -426,8 +426,11 @@ const AIApprovalQueue: React.FC = () => {
   const { message } = App.useApp();
   useAuthStoreHydration();
   const { hasPermission } = usePermissions();
-  // 通过/驳回按钮与后端审批路由（ai:write）同码；见操作列。
-  const canApprove = hasPermission(PERM.ai.write);
+  // 通过/驳回按钮与后端审批路由同码：router/ai_routes.go 的
+  // POST /agent/tools/:id/approve 挂 RequirePermission("ai","approve")，
+  // 即 ai:approve。前端若用 ai:write，会与后端错位——持有 ai:approve 的
+  // 审批人（一线/管理）看不到按钮，而只有 ai:write 的账号看到按钮却会被 403。
+  const canApprove = hasPermission(PERM.ai.approve);
 
   const [items, setItems] = useState<ToolApproval[]>([]);
   // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
@@ -709,11 +712,11 @@ const AIApprovalQueue: React.FC = () => {
           r.approvalState === 'pending_agent' ||
           r.approvalState === 'pending_agent_two' ||
           r.approvalState === 'awaiting_second';
-        // 审批动作挂 ai:write（与后端 POST /agent/tools/:id/approve 的
-        // RequirePermission 同码）；无权限只隐藏按钮，授权仍以后端为准。
+        // 审批动作挂 ai:approve（与后端 POST /agent/tools/:id/approve 的
+        // RequirePermission("ai","approve") 同码）；无权限只隐藏按钮，授权以后端为准。
         if (!actionable) return <Text type="secondary">已处理</Text>;
         if (!canApprove) {
-          return <Text type="secondary">无审批权限（需 ai:write）</Text>;
+          return <Text type="secondary">无审批权限（需 ai:approve）</Text>;
         }
         return (
           <Space>

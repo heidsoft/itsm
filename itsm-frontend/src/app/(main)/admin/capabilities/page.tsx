@@ -129,7 +129,7 @@ function PilotReasonDetail({ item }: { item: ProductCapabilityState }) {
         {item.degradedReason ? ` · 此刻不可用：${item.degradedReason}` : ''}
       </Text>
       <div>
-        <Text strong>已闭环进展</Text>
+        <Text strong>已达成进展</Text>
         <Paragraph style={{ marginTop: 4, marginBottom: 0 }}>
           {parts.progress || '（理由未区分进展与阻断，见下方剩余阻断）'}
         </Paragraph>

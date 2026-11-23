@@ -565,7 +565,7 @@ export default function ServiceGraphRegistryPage() {
   return (
     <div className="space-y-6 p-6">
       <ManagementPageHeader
-        title="Service Graph Registry"
+        title="发现注册中心"
         description="集中管理发现源、云服务和云账号的接入信息及历史记录。"
         actions={
           <Space wrap>
@@ -608,7 +608,7 @@ export default function ServiceGraphRegistryPage() {
             <Card size="small" className="h-full bg-slate-50">
               <Text type="secondary">注册中心说明</Text>
               <div className="mt-2">
-                先定义发现源和云服务，再把云账号与 CI、关系和对账串起来，才能形成可持续的图谱治理闭环。
+                先定义发现源和云服务，再把云账号与 CI、关系、对账三者关联起来，发现结果才能落到具体的配置项上。
               </div>
             </Card>
           </Col>

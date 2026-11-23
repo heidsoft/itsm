@@ -1,6 +1,7 @@
 package menubaseline_test
 
 import (
+	"strings"
 	"testing"
 
 	domainrole "itsm-backend/domain/role"
@@ -532,6 +533,42 @@ func TestMenuBaseline_LowRiskRehomeAssignments(t *testing.T) {
 		}
 		if !found {
 			t.Errorf("收敛目标菜单 %s 已不存在", path)
+		}
+	}
+}
+
+// 页面名与真实内容对齐（2026-11-24）：/cmdb/registry 此前叫「服务图谱」，但页面
+// 实际是发现源 / 云服务 / 云账号 / 发现历史 / 待建账资源的登记表，既没有服务，
+// 也没有图谱。「服务图谱」这个名字把运维引向拓扑页找不到的东西，属于名实不符。
+//
+// 真正的图在 /cmdb/relationships（关系管理）与 /cmdb/topology（拓扑图）。
+// 这里钉住新名与描述，并断言旧名不再复活——改名走 (tenantID,path) upsert 自动
+// 传播到存量库，因此不需要 SQL 迁移。
+func TestMenuBaseline_DiscoveryRegistryNaming(t *testing.T) {
+	var found bool
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if spec.Path != "/cmdb/registry" {
+			continue
+		}
+		found = true
+		if spec.Name != "发现注册中心" {
+			t.Errorf("/cmdb/registry 的菜单名是 %q，应为 %q（页面是发现源/云账号登记表，非图谱）", spec.Name, "发现注册中心")
+		}
+		if spec.ParentPath != "/cmdb" {
+			t.Errorf("/cmdb/registry 的父级是 %q，应为 /cmdb", spec.ParentPath)
+		}
+		if spec.PermissionCode != "cmdb:read" {
+			t.Errorf("/cmdb/registry 的权限码是 %q，应保持 cmdb:read", spec.PermissionCode)
+		}
+	}
+	if !found {
+		t.Fatal("菜单基线缺少 /cmdb/registry")
+	}
+
+	// 旧名不得复活（含同义的技术腔「Service Graph」）
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if spec.Name == "服务图谱" || strings.Contains(spec.Name, "Service Graph") {
+			t.Errorf("菜单 %s 仍使用名实不符的旧名 %q", spec.Path, spec.Name)
 		}
 	}
 }

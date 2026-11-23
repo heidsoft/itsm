@@ -29,6 +29,7 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 import CISearchSelect from '@/components/cmdb/CISearchSelect';
+import { kpiValue as kpi } from '@/lib/cmdb/certification-kpi';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import {
   CMDBApi,
@@ -52,6 +53,7 @@ function isOverdue(task: CICertificationTask): boolean {
   if (task.status !== 'pending' || !task.dueAt) return false;
   return dayjs(task.dueAt).isBefore(dayjs());
 }
+
 
 export default function CICertificationPage() {
   const { message } = App.useApp();
@@ -222,7 +224,7 @@ export default function CICertificationPage() {
     <div className='space-y-6 p-6'>
       <ManagementPageHeader
         title='数据认证'
-        description='按任务清单核对配置项是否仍然准确：谁确认、什么时候确认、依据是什么。逾期的待办会持续提醒。'
+        description='按任务清单核对配置项是否仍然准确：谁确认、什么时候确认、依据是什么。逾期的待办在列表中单独标出。'
         actions={
           <Space wrap>
             <Button onClick={() => void loadData(page)} loading={loading}>
@@ -252,14 +254,14 @@ export default function CICertificationPage() {
       <Row gutter={[16, 16]}>
         <Col xs={12} md={6}>
           <Card size='small'>
-            <Statistic title='待确认' value={data?.pending ?? 0} loading={loading} />
+            <Statistic title='待确认' value={kpi(data?.pending)} loading={loading} />
           </Card>
         </Col>
         <Col xs={12} md={6}>
           <Card size='small'>
             <Statistic
               title='已逾期'
-              value={data?.overdue ?? 0}
+              value={kpi(data?.overdue)}
               loading={loading}
               styles={data && data.overdue > 0 ? { content: { color: '#cf1322' } } : undefined}
             />
@@ -267,12 +269,12 @@ export default function CICertificationPage() {
         </Col>
         <Col xs={12} md={6}>
           <Card size='small'>
-            <Statistic title='已确认' value={data?.confirmed ?? 0} loading={loading} />
+            <Statistic title='已确认' value={kpi(data?.confirmed)} loading={loading} />
           </Card>
         </Col>
         <Col xs={12} md={6}>
           <Card size='small'>
-            <Statistic title='任务总数' value={data?.total ?? 0} loading={loading} />
+            <Statistic title='任务总数' value={kpi(data?.total)} loading={loading} />
           </Card>
         </Col>
       </Row>

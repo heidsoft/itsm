@@ -163,7 +163,7 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "云账号管理", Path: "/cmdb/cloud-accounts", Icon: "Cloud", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 755, Description: "云平台账号管理"},
 		{Name: "云资源列表", Path: "/cmdb/cloud-resources", Icon: "CloudLightning", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 756, Description: "已发现云资源"},
 		{Name: "云服务目录", Path: "/cmdb/cloud-services", Icon: "CloudDrizzle", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 757, Description: "云服务产品目录"},
-		{Name: "服务图谱", Path: "/cmdb/registry", Icon: "Compass", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 758, Description: "Service Graph 注册表"},
+		{Name: "发现注册中心", Path: "/cmdb/registry", Icon: "Compass", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 758, Description: "云发现源、云服务、云账号的接入与建账登记"},
 		{Name: "云资源核对", Path: "/cmdb/reconciliation", Icon: "RefreshCw", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 759, Description: "云资源与 CI 核对"},
 		// 数据认证：CMDB Health 的 Compliance 维度。运维按任务清单核对「这条资产还准不准」，
 		// 逾期待办持续暴露。与云资源核对区分：对账比的是「云上有、库里没有」，

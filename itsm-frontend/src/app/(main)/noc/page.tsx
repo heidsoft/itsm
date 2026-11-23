@@ -164,7 +164,7 @@ export default function NOCPage() {
     <div className="p-6 min-h-screen bg-gray-50">
       <div className="mb-6">
         <Title level={2} style={{ marginBottom: 4 }}>NOC 工作台</Title>
-        <Text type="secondary">重大事件作战室：实时跟踪企业级重大事件处置进展</Text>
+        <Text type="secondary">重大事件跟踪：集中查看企业级重大事件的处置进展与当前负责人</Text>
       </div>
 
       {/* KPI 卡片：加载期不渲染，避免首帧先闪一遍全 0 的假指标 */}

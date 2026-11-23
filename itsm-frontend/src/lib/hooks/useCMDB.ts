@@ -20,6 +20,11 @@ export const CMDB_KEYS = {
   ciList: (query?: GetCIListRequest) => [...CMDB_KEYS.cis(), 'list', query] as const,
   ciDetail: (id: string) => [...CMDB_KEYS.cis(), 'detail', id] as const,
   ciRelationships: (id: string) => [...CMDB_KEYS.cis(), 'relationships', id] as const,
+  // 所有 CI 关系查询的共同前缀。关系的增删改可能发生在两侧 CI 上（而 mutation
+  // 入参只有关系 id，拿不到源/目标），所以按「cis/relationships」整棵失效，
+  // 不能用 ['cmdb','relationships']——那条键与上面的 ciRelationships 路径不匹配，
+  // 会让删除后列表原地不动（曾因此出现「删了还在」）。
+  relationshipsRoot: () => [...CMDB_KEYS.cis(), 'relationships'] as const,
   ciChanges: (id: string) => [...CMDB_KEYS.cis(), 'changes', id] as const,
   graph: (query: GraphQuery) => [...CMDB_KEYS.all, 'graph', query] as const,
   impactAnalysis: (ciId: string) => [...CMDB_KEYS.all, 'impact-analysis', ciId] as const,
@@ -348,6 +353,7 @@ export function useCreateRelationshipMutation() {
         queryKey: CMDB_KEYS.ciRelationships(String(result.targetCiId)),
       });
       queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'topology'] });
+      queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'graph'] });
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.stats() });
     },
   });
@@ -360,8 +366,9 @@ export function useUpdateRelationshipMutation() {
       CIRelationshipAPI.updateRelationship(id, data),
     onSuccess: () => {
       message.success('关系已更新');
-      queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'relationships'] });
+      queryClient.invalidateQueries({ queryKey: CMDB_KEYS.relationshipsRoot() });
       queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'topology'] });
+      queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'graph'] });
     },
   });
 }
@@ -375,7 +382,7 @@ export function useDeleteRelationshipMutation() {
         : CIRelationshipAPI.deleteRelationship(Number(id)),
     onSuccess: () => {
       message.success('关系已删除');
-      queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'relationships'] });
+      queryClient.invalidateQueries({ queryKey: CMDB_KEYS.relationshipsRoot() });
       queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'topology'] });
     },
   });
