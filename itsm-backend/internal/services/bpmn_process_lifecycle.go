@@ -10,12 +10,26 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
+	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/internal/commandbus"
 	"itsm-backend/metrics"
 	"itsm-backend/service/bpmn"
 )
+
+// lifecycleStateChangedError 在生命周期条件更新未命中时报告状态已被并发
+// 改变。loaded 是 load 阶段通过校验的快照状态——冲突意味着它已过期，
+// 必须以 conflict 拒绝，而不是覆盖新状态。
+func lifecycleStateChangedError(loaded, action, required string) error {
+	return common.NewAppError(
+		common.ErrCodeConflict,
+		fmt.Sprintf("流程实例状态已并发变化（读取时为 %s），不能%s（要求：%s）", loaded, action, required),
+		http.StatusConflict,
+		nil,
+	)
+}
 
 // 实例状态词表见 ent/schema/process_instance.go：running / suspended / completed / terminated。
 type instanceTransition struct {
@@ -74,12 +88,19 @@ func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanc
 		return err
 	}
 
-	_, err = e.client.ProcessInstance.UpdateOne(instance).
+	// P1-05：条件更新——load 到写入之间状态可能被并发终止/完成改掉，
+	// 无条件写会把终态实例改回 suspended（复活可执行态）。提交时重验
+	// status=running，不成立即 conflict。
+	_, err = e.client.ProcessInstance.UpdateOneID(instance.ID).
+		Where(processinstance.StatusEQ("running")).
 		SetStatus("suspended").
 		SetSuspendedTime(time.Now()).
 		SetSuspendedReason(reason).
 		Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return lifecycleStateChangedError(instance.Status, "暂停", "running")
+		}
 		return fmt.Errorf("暂停流程实例失败: %w", err)
 	}
 
@@ -119,10 +140,15 @@ func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstance
 		return err
 	}
 
-	_, err = e.client.ProcessInstance.UpdateOne(instance).
+	// P1-05：条件更新，load 与写入之间被并发改态即 conflict（同 suspend）。
+	_, err = e.client.ProcessInstance.UpdateOneID(instance.ID).
+		Where(processinstance.StatusEQ("suspended")).
 		SetStatus("running").
 		Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return lifecycleStateChangedError(instance.Status, "恢复", "suspended")
+		}
 		return fmt.Errorf("恢复流程实例失败: %w", err)
 	}
 
@@ -161,15 +187,31 @@ func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInsta
 		return err
 	}
 
-	_, err = e.client.ProcessInstance.UpdateOne(instance).
+	// P1-05：终止的实例状态改写、任务取消与未执行命令取消收进同一个事务——
+	// 任一步失败整体回滚，不留下「实例已终止但 ServiceTask 命令仍在排队」
+	// 的分叉（consumer 的状态守卫只兜执行时竞态，源头登记停止事实才不会
+	// 让命令滞留 pending 反复重试/告警）。
+	tx, err := e.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开启终止事务失败: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	txc := tx.Client()
+
+	// 条件更新：load 到提交之间可能被并发完成/再次终止改态（同 suspend）。
+	_, err = txc.ProcessInstance.UpdateOneID(instance.ID).
+		Where(processinstance.StatusIn("running", "suspended")).
 		SetStatus("terminated").
 		SetEndTime(time.Now()).
 		Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return lifecycleStateChangedError(instance.Status, "终止", "running/suspended")
+		}
 		return fmt.Errorf("终止流程实例失败: %w", err)
 	}
 
-	_, err = e.client.ProcessTask.Update().
+	_, err = txc.ProcessTask.Update().
 		Where(processtask.ProcessInstanceID(instance.ID)).
 		Where(processtask.StatusNEQ("completed")).
 		Where(processtask.StatusNEQ("cancelled")).
@@ -177,10 +219,33 @@ func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInsta
 		SetCompletedTime(time.Now()).
 		Save(ctx)
 	if err != nil {
-		e.logger.Warnw("取消流程任务失败", "error", err)
+		return fmt.Errorf("取消流程任务失败: %w", err)
+	}
+
+	// 同事务取消该实例未执行的命令（pending/processing）：
+	//   - pending：不再被 worker 认领执行；
+	//   - processing：在飞命令的 lease心跳/成功/失败更新都带
+	//     StatusEQ(processing) 谓词，状态被改成 cancelled 后这些更新全部
+	//     落空（ErrLeaseLost），旧 worker 不得再推进已终止的流程。
+	if _, err := txc.OperationalCommand.Update().
+		Where(
+			operationalcommand.AggregateTypeEQ("process_instance"),
+			operationalcommand.AggregateIDEQ(instance.ID),
+			operationalcommand.StatusIn(commandbus.StatusPending, commandbus.StatusProcessing),
+		).
+		SetStatus(commandbus.StatusCancelled).
+		SetCompletedAt(time.Now()).
+		Save(ctx); err != nil {
+		return fmt.Errorf("取消流程服务命令失败: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("提交终止事务失败: %w", err)
 	}
 
 	// 终止后取消该实例的活跃定时器（同挂起：终止实例不应再有 timer 触发）。
+	// timer store 不参与本事务（独立客户端），失败仅告警——timer 回调侧
+	// 只认 running 实例，漏取消最多产生一次无效触发。
 	e.cancelInstanceTimers(ctx, instance)
 
 	userID, userName := e.lifecycleActor(ctx)

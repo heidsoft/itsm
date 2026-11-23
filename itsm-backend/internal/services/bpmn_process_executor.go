@@ -283,6 +283,13 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 			"流程实例已结束，不能继续完成任务",
 			fmt.Sprintf("instanceId=%d status=%s", instance.ID, instance.Status))
 	}
+	// P1-05：暂停实例不得被普通 CompleteTask 推进——否则 suspend 只挡得住
+	// 新入口，挡不住仍在飞行的完成请求，恢复后的实际状态与暂停点不一致。
+	if instance.Status == "suspended" {
+		return nil, common.NewBusinessError(common.ConflictCode,
+			"流程实例已暂停，恢复后才能继续完成任务",
+			fmt.Sprintf("instanceId=%d status=%s", instance.ID, instance.Status))
+	}
 
 	// 3. 获取流程定义并解析
 	// A running instance is immutable with respect to its deployed definition.
@@ -1650,11 +1657,24 @@ func matchRuleConditions(conditions []map[string]interface{}, taskName string) b
 // ---------------------------------------------------------------------------
 
 func (e *CustomProcessEngine) completeProcess(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance) error {
-	_, err := txc.ProcessInstance.UpdateOne(instance).
+	// P1-05：只允许 running→completed。后继 endEvent 与并发终止/暂停
+	// 竞态下，无条件写会把 terminated/suspended 翻成 completed（终态复活）。
+	// 条件更新在提交时重验数据库当前状态：状态已变化即 NotFound，
+	// 整个推进事务回滚，由入口守卫按终态/暂停语义收敛。
+	_, err := txc.ProcessInstance.UpdateOneID(instance.ID).
+		Where(processinstance.StatusEQ("running")).
 		SetStatus("completed").
 		SetEndTime(time.Now()).
 		Save(ctx)
-	return err
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return common.NewBusinessError(common.ConflictCode,
+				"流程实例状态已变化，不能标记完成",
+				fmt.Sprintf("instanceId=%d", instance.ID))
+		}
+		return err
+	}
+	return nil
 }
 
 // recordGatewayHistory 将网关路由决策写入流程执行历史，使并行/包容/排他网关的

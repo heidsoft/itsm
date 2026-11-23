@@ -2087,14 +2087,15 @@ func advanceTicketWorkflowTx(
 	// 进程实例变量（待办认领维度），不回写 ticket 域。
 	if actorUserID > 0 {
 		if inst, ierr := txc.ProcessInstance.Get(ctx, task.ProcessInstanceID); ierr == nil && inst != nil {
-			merged := make(map[string]interface{}, len(inst.Variables)+1)
-			for k, v := range inst.Variables {
-				merged[k] = v
-			}
-			merged["requester_id"] = actorUserID
-			if _, uerr := txc.ProcessInstance.UpdateOneID(inst.ID).
-				SetVariables(merged).
-				Save(ctx); uerr != nil {
+			// P1-04：接受人写入必须走 version 条件更新。原实现 Get 后无条件
+			// SetVariables 全量写回，与并行 ServiceTask/人工完成/变量 PATCH
+			// 并发时会把它们刚提交的 receipt/occurrence/_done_ 覆掉（读旧写旧，
+			// 且不增加 version，其他写者的 CAS 也察觉不到这次覆盖）。CAS 冲突
+			// 时该写入仅告警不阻断推进，与原「非阻断」语义一致。
+			if _, uerr := updateProcessInstanceVariablesCAS(ctx, txc, inst.ID, inst.TenantID, func(vars map[string]interface{}) error {
+				vars["requester_id"] = actorUserID
+				return nil
+			}); uerr != nil {
 				logger.Warnw("写入接受人流程变量失败（非阻断，继续推进）",
 					"error", uerr, "ticket_id", ticketID, "instance_id", inst.ID)
 			}

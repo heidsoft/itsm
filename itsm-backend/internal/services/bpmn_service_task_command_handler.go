@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/operationalcommand"
@@ -37,6 +38,24 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	completed := intMapVariable(instance.Variables, "_serviceTaskCompletedOccurrences")
 	if completed[elementID] >= occurrence {
 		return nil
+	}
+	// P1-05 实例状态守卫（副作用执行前）：
+	//   - 已终止/完成的实例不得再执行副作用——否则结束的流程仍可能发
+	//     Webhook、改业务状态。返回 NotFound 语义错误，commandbus worker 的
+	//     isAggregateGone 分支会把命令置为 cancelled（终态停止事实），不进
+	//     死信、不再重试，与「聚合已删除」同一收敛通道。
+	//   - 暂停实例返回可重试错误：命令回到 pending 退避重试，恢复后照常
+	//     执行，不因暂停而丢命令；暂停超过重试上限进 dead_letter，由人工
+	//     恢复后 requeue（与其它瞬时失败同一运维口径）。
+	// 幂等早退（上方 occurrence 判定）刻意放在守卫之前：已完成的 occurrence
+	// 重放必须仍返回 nil，保持 worker 视角的成功语义。
+	if instance.Status == "terminated" || instance.Status == "completed" {
+		return common.NewNotFoundError(fmt.Sprintf(
+			"流程实例 %d 已处于终态(%s)，ServiceTask 命令停止执行", instance.ID, instance.Status))
+	}
+	if instance.Status != "running" {
+		return fmt.Errorf(
+			"流程实例 %d 当前状态为 %s，ServiceTask 暂停执行，待实例恢复 running 后重试", instance.ID, instance.Status)
 	}
 	if err := e.verifyServiceTaskCommandLease(workflowCtx, e.client, cmd); err != nil {
 		return err
@@ -125,6 +144,15 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	if err != nil {
 		return fmt.Errorf("重新加载流程实例失败: %w", err)
 	}
+	// P1-05 完成提交前复核实例状态：入口快照到提交之间实例可能被并发
+	// 终止/暂停。非 running 一律回滚——既不写完成凭据，也不让后续
+	// completeProcess 把 terminated 翻成 completed。回滚后重试会命中
+	// 上方状态守卫，按终态/暂停分别收敛。
+	if current.Status != "running" {
+		return fmt.Errorf(
+			"ServiceTask 完成时流程实例状态为 %s（要求 running），完成事务回滚: instance=%d",
+			current.Status, current.ID)
+	}
 	completed = intMapVariable(current.Variables, "_serviceTaskCompletedOccurrences")
 	if completed[elementID] >= occurrence {
 		return tx.Commit()
@@ -164,15 +192,25 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	}
 	current.Variables["_serviceTaskReceipts"] = receipts
 
-	// 变量写入说明（为何此处不走 updateProcessInstanceVariablesCAS）：
-	// 本完成事务在第 119 行已通过 lockServiceTaskCommandLease 取得该命令
-	// 的 lease 行锁——它会阻止 lease 接管与流程推进并发提交，因此事务内
-	// 重新加载的 current.Variables 到 SetVariables 之间不存在已知的并发
-	// 写者；CAS 的重试语义在事务内反而无法安全执行（重试意味着部分写入
-	// 已发生）。lease 失效路径（如手工运维命令）与该写入之间的理论竞争
-	// 由下方 conditional 复核（completed/occurrences 双检）兜底：状态已
-	// 变化时走上面的 stale 分支报错，而不是覆盖写入。
-	if _, err := txc.ProcessInstance.UpdateOneID(current.ID).SetVariables(current.Variables).Save(workflowCtx); err != nil {
+	// 变量写入必须走 version 条件更新（codex 审计 P1-04）：
+	// 本事务只锁了自己的命令行（lockServiceTaskCommandLease 锁谓词绑定
+	// cmd.ID），不锁同实例的其他 ServiceTask 命令、人工 CompleteTask 或
+	// 变量 PATCH——它们各自以 version CAS 写同一行。SQL 行锁只序列化写
+	// 语句，不能保护「写前读到的旧 JSON」：若此处无条件写回，A/B 两分支
+	// 各自读到同一旧版本时，后提交者会把先提交者的 receipt/occurrence/
+	// _done_ 整体覆掉，随后再做自己的 CAS 也补不回已丢字段。因此以读到的
+	// current.Version 做条件更新：并发写者已提交时条件不成立 → 本事务
+	// 整体回滚，worker 重试时重读最新 JSON 再合并，不丢任何分支凭据。
+	if _, err := txc.ProcessInstance.UpdateOneID(current.ID).
+		Where(processinstance.VersionEQ(current.Version)).
+		SetVariables(current.Variables).
+		SetVersion(current.Version + 1).
+		Save(workflowCtx); err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf(
+				"流程实例版本冲突（ID=%d version=%d），并发写入已发生，完成事务回滚待重试",
+				current.ID, current.Version)
+		}
 		return fmt.Errorf("保存 ServiceTask 完成凭据与输出失败: %w", err)
 	}
 	// 审计与完成凭据同事务：任一条写失败都会让整个完成事务回滚，
