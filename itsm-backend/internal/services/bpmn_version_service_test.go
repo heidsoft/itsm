@@ -42,6 +42,19 @@ func setupVersionFixture(t *testing.T) versionFixture {
 	return versionFixture{svc: svc, client: client, tenantID: tenant.ID}
 }
 
+// versionValidBPMN 生成能通过 activate lint 门禁的最小合法 BPMN（P1-10 后
+// ActivateVersion 必过 validateActivatableBPMNXML：命名空间 + 起止事件 + 连线齐全）。
+func versionValidBPMN(processID string) string {
+	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" targetNamespace="http://test">
+  <bpmn:process id="%s" name="%s" isExecutable="true">
+    <bpmn:startEvent id="start_%s"/>
+    <bpmn:endEvent id="end_%s"/>
+    <bpmn:sequenceFlow id="flow_%s" sourceRef="start_%s" targetRef="end_%s"/>
+  </bpmn:process>
+</bpmn:definitions>`, processID, processID, processID, processID, processID, processID, processID)
+}
+
 func seedDefinition(t *testing.T, f versionFixture, key, version string) int {
 	t.Helper()
 	ctx := context.Background()
@@ -196,7 +209,7 @@ func TestBPMNVersion_ActivateVersion(t *testing.T) {
 		_, err := f.svc.CreateVersion(ctx, &CreateVersionRequest{
 			ProcessDefinitionKey: "activate_test",
 			Name:                 fmt.Sprintf("activate v%d", i+2),
-			BPMNXML:              fmt.Sprintf("<definitions id=\"%d\"/>", i+2),
+			BPMNXML:              versionValidBPMN(fmt.Sprintf("act_v%d", i+2)),
 			TenantID:             f.tenantID,
 			CreatedBy:            "1",
 		})
@@ -299,7 +312,7 @@ func TestBPMNVersion_RollbackToVersion(t *testing.T) {
 	defer f.client.Close()
 	ctx := context.Background()
 
-	xml1 := "<definitions><process id=\"p1\" name=\"original\"></process></definitions>"
+	xml1 := versionValidBPMN("original")
 	seedDefinitionWithXML(t, f, "rollback_test", "1", xml1)
 
 	for i := 0; i < 2; i++ {

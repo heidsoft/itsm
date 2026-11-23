@@ -192,6 +192,12 @@ func (s *bpmnProcessDefinitionService) UpdateProcessDefinition(ctx context.Conte
 		return nil, err
 	}
 
+	// P1-10：已发布/已有实例的定义内容不可变。必须先于激活 lint 判定——
+	// 「换图」请求要拿到明确 409（去建新版本），而不是被 lint 语义掩盖。
+	if err := rejectImmutableXMLChange(ctx, s.client.ProcessInstance, definition, req.BPMNXML); err != nil {
+		return nil, err
+	}
+
 	willBeActive := definition.IsActive
 	if req.IsActive != nil {
 		willBeActive = *req.IsActive
@@ -267,6 +273,11 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 	).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取待发布流程定义失败: %w", err)
+	}
+	// P1-10：已发布行重发布只允许幂等保存（XML 一致）；换图必须创建新版本。
+	// 必须在停用旧版本之前拦截——拒绝时零写入（defer rollback 兜底）。
+	if err := rejectImmutableXMLChange(ctx, tx.ProcessInstance, definition, req.BPMNXML); err != nil {
+		return nil, err
 	}
 	if _, err = tx.ProcessDefinition.Update().Where(
 		processdefinition.Key(key), processdefinition.TenantID(tenantID),
@@ -515,6 +526,42 @@ func validateActivatableBPMNXML(bpmnXML string) error {
 		return fmt.Errorf("BPMN 发布校验失败")
 	}
 	return fmt.Errorf("BPMN 发布校验失败: %s", strings.Join(messages, "；"))
+}
+
+// rejectImmutableXMLChange 拦截对「已发布或已被实例引用」的流程定义的原行 XML 替换。
+//
+// P1-10：运行中实例按 definition ID 加载图，原地换图会让进行中的实例在下一次
+// 推进时读到新图（节点消失、审批路径改变）。锁定面有二：
+//  1. 当前激活版本（StartProcess 只加载 active+latest，换图影响后续所有实例）；
+//  2. 已被任意流程实例引用（含历史——实例按 ID 读图，换图破坏记录一致性）。
+//
+// 注意：schema 上 deployed_at 是 Default(time.Now)，行创建即非零，不能当
+// 「首次发布」标记；IsActive 才是发布语义（发布=激活，StartProcess 也只认它）。
+// 空 XML（不改内容）与完全相同的 XML（幂等保存/重发布）一律放行；既未激活也
+// 无实例引用的行是惰性草稿，没有任何运行时读取方，允许原地编辑。
+// instances 传 client 或 tx 的 ProcessInstance 访问器，保证发布路径在同事务内判定。
+func rejectImmutableXMLChange(ctx context.Context, instances *ent.ProcessInstanceClient, definition *ent.ProcessDefinition, newXML string) error {
+	if newXML == "" || newXML == string(definition.BpmnXML) {
+		return nil
+	}
+	locked := definition.IsActive
+	if !locked {
+		exist, err := instances.Query().
+			Where(processinstance.ProcessDefinitionID(definition.ID)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("检查流程实例失败: %w", err)
+		}
+		locked = exist
+	}
+	if !locked {
+		return nil
+	}
+	return common.NewAppError(
+		common.ErrCodeConflict,
+		fmt.Sprintf("流程定义 %s v%s 已发布或已有流程实例引用，BPMN 内容不可原地修改，请创建新版本后发布", definition.Key, definition.Version),
+		http.StatusConflict, nil,
+	)
 }
 
 // validateCandidateDefinition is deliberately deterministic. AI output is

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
@@ -206,6 +207,26 @@ func (s *BPMNVersionService) ListVersions(ctx context.Context, processKey string
 
 // ActivateVersion 激活指定版本
 func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey string, version int, tenantID int) (err error) {
+	// P1-10：激活（含 RollbackToVersion 链路）是统一 lint 门禁——草稿版本允许
+	// 保存未过 lint 的 XML，但任何让它可执行的路径必须先过与设计器发布相同的
+	// validateActivatableBPMNXML。目标版本必须先加载：不存在时报错，否则旧实现
+	// 会把全部版本置 inactive 而激活 0 行（静默“成功”且清空激活态）。
+	target, err := s.client.ProcessDefinition.Query().
+		Where(
+			processdefinition.Key(processKey),
+			processdefinition.Version(fmt.Sprintf("%d", version)), // 转换为string
+			processdefinition.TenantID(tenantID),
+		).
+		First(ctx)
+	if err != nil {
+		return fmt.Errorf("目标版本不存在: %w", err)
+	}
+	if err := validateActivatableBPMNXML(string(target.BpmnXML)); err != nil {
+		// BPMN 不合法是调用方输入问题：400 语义（同 CreateProcessDefinition 发布路径），
+		// 不能落成 500 兜底。
+		return common.NewValidationError("BPMN XML 校验失败", err)
+	}
+
 	// 开始事务
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
@@ -255,19 +276,10 @@ func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey str
 
 	// 激活即切换生产时间表：按目标版本 XML 整体替换 start timer（先取消旧
 	// pending 再重建）。不同步会让激活后的版本按旧版本（或空）时间表启动实例，
-	// 回滚路径经 ActivateVersion 同样继承该语义。
+	// 回滚路径经 ActivateVersion 同样继承该语义。目标定义在门前已加载（target），
+	// 内容经 P1-10 不可变校验，直接复用，避免 commit 后二次读取。
 	if s.timerStore != nil {
-		def, err := s.client.ProcessDefinition.Query().
-			Where(
-				processdefinition.Key(processKey),
-				processdefinition.Version(fmt.Sprintf("%d", version)),
-				processdefinition.TenantID(tenantID),
-			).
-			First(ctx)
-		if err != nil {
-			return fmt.Errorf("版本已激活但加载目标版本定义失败: %w", err)
-		}
-		if _, err := SyncStartTimers(ctx, s.client, s.timerStore, def.BpmnXML, processKey, tenantID); err != nil {
+		if _, err := SyncStartTimers(ctx, s.client, s.timerStore, target.BpmnXML, processKey, tenantID); err != nil {
 			return fmt.Errorf("版本已激活但同步 start timer 时间表失败: %w", err)
 		}
 	}
