@@ -5,6 +5,12 @@
 >
 > 本文是 docs/product/ 家族的新增文档，与 `ai-automation-status.md` 并列，专注"菜单/页面/功能"层。菜单事实以 `pkg/menubaseline/baseline.go` 为准，不以本文为准。
 
+> **2026-11-23 菜单低风险收敛**：顶级菜单由 29 棵收敛到 **22 棵**（总数仍 101 条，只改 `ParentPath`、不改任何 `path`）。降级均为同权限码或同能力门控的近亲：
+> `我的工作台→服务台`、`我的请求→服务请求`、`NOC 作战室→事件管理`、`持续改进→问题管理`、`标准变更库→变更管理`、`我的应用→应用市场`、`客户管理(MSP)及其分配页→客户与合同`。
+> 存量库靠 `upsertBaselineMenu` 按 `(tenantID, path)` 自动重挂，**无需 SQL 迁移**；`filterMSPMenus` 按 `/msp` path 前缀判定，MSP 可见性与层级无关。
+> 守卫：`pkg/menubaseline/baseline_guard_test.go` 的 `TestMenuBaseline_ConsolidationRatchet`（锁 22 顶级 / 101 总数 / 父级必为顶级 / path 唯一）与 `TestMenuBaseline_LowRiskRehomeAssignments`（锁定归属）。
+> 下方 §2 的"21 顶级"表格为历史快照，仅作字段口径参考，条数已过时，以 baseline.go 为准。
+
 ---
 
 ## §1 菜单架构总览

@@ -21,17 +21,24 @@ func MenuDefinitions() []MenuSpec {
 	return []MenuSpec{
 		// ===== 顶级主菜单（parent_path 为空） =====
 		{Name: "服务台", Path: "/dashboard", Icon: "LayoutDashboard", PermissionCode: "dashboard:read", SortOrder: 10, Description: "服务台概览"},
-		// 个人工作台：页面早已存在（数据源 GET /api/v1/workbench，要求 dashboard:read），
-		// 但从未挂过菜单，0 入口 0 引用，功能对用户不可达。
-		// 命名带「我的」与顶级「服务台」（运营概览）区分——审计报告 3.3-①「三个台」病灶。
-		{Name: "我的工作台", Path: "/workbench", Icon: "List", ParentPath: "", PermissionCode: "dashboard:read", SortOrder: 12, Description: "个人工作台"},
+		// 个人工作台：页面早已存在（数据源 GET /api/v1/workbench，要求 dashboard:read）。
+		// 2026-11-23 低风险收敛：作为「服务台」子项（同 dashboard:read、同无 cap 门控），
+		// 两个「台」不再平级并存，消除审计报告 3.3-①「三个台」病灶。path 不变。
+		{Name: "我的工作台", Path: "/workbench", Icon: "List", ParentPath: "/dashboard", PermissionCode: "dashboard:read", SortOrder: 12, Description: "个人工作台"},
 		{Name: "服务请求", Path: "/service-requests", Icon: "FileText", ParentPath: "", PermissionCode: "service_request:read", SortOrder: 20, Description: "服务请求管理"},
 		{Name: "工单管理", Path: "/tickets", Icon: "FileText", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 23, Description: "工单管理"},
-		{Name: "我的请求", Path: "/my-requests", Icon: "User", ParentPath: "", PermissionCode: "service_request:read", SortOrder: 25, Description: "我的服务请求"},
+		// 2026-11-23 低风险收敛：与「服务请求」同 permission code（service_request:read），
+		// 挂为其子项后两者共用 serviceRequest capability 门控，path 不变。
+		{Name: "我的请求", Path: "/my-requests", Icon: "User", ParentPath: "/service-requests", PermissionCode: "service_request:read", SortOrder: 25, Description: "我的服务请求"},
 		{Name: "事件管理", Path: "/incidents", Icon: "AlertCircle", ParentPath: "", PermissionCode: "incident:read", SortOrder: 30, Description: "事件管理"},
 		// 命名对齐 Description「重大事件作战室」，同时消除「NOC工作台」与「我的工作台」的「台」字撞车（审计报告 3.3-①）。
-		{Name: "NOC 作战室", Path: "/noc", Icon: "Activity", ParentPath: "", PermissionCode: "incident:read", SortOrder: 35, Description: "重大事件作战室"},
+		// 2026-11-23 低风险收敛：与「事件管理」同 permission code（incident:read），
+		// 它本就是事件域的运营视图（值班/重大事件），挂为事件子项，path 不变。
+		{Name: "NOC 作战室", Path: "/noc", Icon: "Activity", ParentPath: "/incidents", PermissionCode: "incident:read", SortOrder: 35, Description: "重大事件作战室"},
 		{Name: "问题管理", Path: "/problems", Icon: "HelpCircle", ParentPath: "", PermissionCode: "problem:read", SortOrder: 40, Description: "问题管理"},
+		// 2026-11-23 低风险收敛：持续改进由问题管理驱动（问题→已知错误→改进），
+		// 与「问题管理」同 problem:read，作为其子项。门控随之收紧为 problem capability（见测试锁定）。path 不变。
+		{Name: "持续改进", Path: "/improvements", Icon: "TrendingUp", ParentPath: "/problems", PermissionCode: "problem:read", SortOrder: 155, Description: "持续改进跟踪"},
 		// 图标用 GitPullRequest：变更域语义（分支合入）；原 BarChart3 与工单统计/瓶颈分析撞车（审计报告 3.3-⑧）。
 		{Name: "变更管理", Path: "/changes", Icon: "GitPullRequest", ParentPath: "", PermissionCode: "change:read", SortOrder: 50, Description: "变更管理"},
 		{Name: "知识库", Path: "/knowledge", Icon: "Book", ParentPath: "", PermissionCode: "knowledge:read", SortOrder: 60, Description: "知识库管理"},
@@ -54,7 +61,10 @@ func MenuDefinitions() []MenuSpec {
 		// 旧码 approval:read 只授配置角色，且 /approvals 挂在 /workflow 下会落进 admin 桶
 		// （前端只给管理角色渲染），导致 agent/manager/end_user 这些真正的待办处理人没有入口。
 		{Name: "我的待办", Path: "/approvals", Icon: "CheckCircle", ParentPath: "", PermissionCode: "task:read", SortOrder: 115, Description: "待我审批与待办任务"},
-		{Name: "客户管理", Path: "/msp", Icon: "Building", ParentPath: "", PermissionCode: "msp:read", SortOrder: 120, Description: "客户管理 (MSP)"},
+		// 2026-11-23 低风险收敛：MSP 客户管理归入「客户与合同」业务域（同属客户主数据），
+		// 子项 /msp/management 一并平铺到父级，避免三级菜单前端不渲染。
+		// MSP 可见性由 filterMSPMenus 按 path 前缀 /msp 判定，与层级无关，行为不变。path 不变。
+		{Name: "客户管理", Path: "/msp", Icon: "Building", ParentPath: "/email-intake", PermissionCode: "msp:read", SortOrder: 120, Description: "客户管理 (MSP)"},
 		{Name: "发布管理", Path: "/releases", Icon: "Rocket", ParentPath: "", PermissionCode: "release:read", SortOrder: 130, Description: "发布管理"},
 
 		// ===== 顶级扩展业务菜单 =====
@@ -62,10 +72,13 @@ func MenuDefinitions() []MenuSpec {
 		// 曾用 dashboard:read（该码是全角色基线，为了让服务台落地页可用），
 		// 结果最终用户侧边栏也出现整套报表入口（审计遗留项 6）。
 		{Name: "报表中心", Path: "/reports", Icon: "PieChart", ParentPath: "", PermissionCode: "report:read", SortOrder: 140, Description: "ITSM 业务报表中心"},
-		{Name: "标准变更库", Path: "/standard-changes", Icon: "BookCopy", ParentPath: "", PermissionCode: "change:read", SortOrder: 150, Description: "标准变更模板库"},
-		{Name: "持续改进", Path: "/improvements", Icon: "TrendingUp", ParentPath: "", PermissionCode: "problem:read", SortOrder: 155, Description: "持续改进跟踪"},
+		// 2026-11-23 低风险收敛：标准变更库是变更域的模板子类型，与「变更管理」同 change:read，
+		// 作为其子项。门控随之收紧为 change capability。path 不变。
+		{Name: "标准变更库", Path: "/standard-changes", Icon: "BookCopy", ParentPath: "/changes", PermissionCode: "change:read", SortOrder: 150, Description: "标准变更模板库"},
 		{Name: "应用市场", Path: "/marketplace", Icon: "Store", ParentPath: "", PermissionCode: "marketplace:read", SortOrder: 160, Description: "连接器 / 技能 / 插件市场"},
-		{Name: "我的应用", Path: "/installations", Icon: "Package", ParentPath: "", PermissionCode: "marketplace:read", SortOrder: 165, Description: "已安装的扩展应用"},
+		// 2026-11-23 低风险收敛：「我的应用」是应用市场的已安装视图，与父级同 marketplace:read
+		// 且同受 marketplace capability 门控，降级不改变可见性。path 不变。
+		{Name: "我的应用", Path: "/installations", Icon: "Package", ParentPath: "/marketplace", PermissionCode: "marketplace:read", SortOrder: 165, Description: "已安装的扩展应用"},
 		{Name: "项目管理", Path: "/projects", Icon: "GanttChart", ParentPath: "", PermissionCode: "project:read", SortOrder: 170, Description: "项目管理"},
 		{Name: "应用与服务", Path: "/applications", Icon: "Layers", ParentPath: "", PermissionCode: "application:read", SortOrder: 175, Description: "应用系统与微服务管理"},
 
@@ -220,7 +233,9 @@ func MenuDefinitions() []MenuSpec {
 
 		// ===== 子菜单：MSP 客户管理 =====
 		// 该页是 MSP 把客户分配给服务人员/团队（客户分配），不是「子页」占位（D34-1）。
-		{Name: "客户分配", Path: "/msp/management", Icon: "Settings", ParentPath: "/msp", PermissionCode: "msp:write", SortOrder: 122, Description: "MSP 客户与服务人员的分配关系"},
+		// 2026-11-23：父级 /msp 从顶级降为「客户与合同」子项，本项一并平铺到同一父级，
+		// 否则会变成三级菜单而前端 MenuItems.tsx 不渲染（只支持两级）。path 不变。
+		{Name: "客户分配", Path: "/msp/management", Icon: "Settings", ParentPath: "/email-intake", PermissionCode: "msp:write", SortOrder: 122, Description: "MSP 客户与服务人员的分配关系"},
 
 		// ===== 子菜单：发布管理 =====
 		{Name: "新建发布", Path: "/releases/new", Icon: "Plus", ParentPath: "/releases", PermissionCode: "release:write", SortOrder: 132},

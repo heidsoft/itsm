@@ -379,9 +379,14 @@ func TestMenuBaseline_CustomerContractChildren(t *testing.T) {
 	}
 	// 客户主数据子页使用语义化顶级 URL（/customers /support-contracts /source-organizations），
 	// 仍挂在「客户与合同」父菜单下，避免 /email-intake/xxx 把客户主数据藏进报障入口。
-	want := []string{"/customers", "/support-contracts", "/source-organizations"}
+	// 2026-11-23 低风险收敛：MSP 客户管理（/msp）与其分配页（/msp/management）平铺到同一父级，
+	// 二者 path 前缀 /msp 仍受 filterMSPMenus 门控，与非 MSP 租户无关。
+	want := []string{
+		"/customers", "/support-contracts", "/source-organizations",
+		"/msp", "/msp/management",
+	}
 	if len(children) != len(want) {
-		t.Errorf("/email-intake 下有 %d 个子项（%v），应为 %d 个客户主数据子项", len(children), names, len(want))
+		t.Errorf("/email-intake 下有 %d 个子项（%v），应为 %d 个（3 客户主数据 + 2 MSP 平铺）", len(children), names, len(want))
 	}
 	for _, p := range want {
 		if _, ok := children[p]; !ok {
@@ -448,6 +453,85 @@ func TestMenuBaseline_AICenterRetiredAndCapabilitiesRehomed(t *testing.T) {
 	for _, parent := range []string{"/tickets", "/approvals", "/audit-logs"} {
 		if _, ok := byPath[parent]; !ok {
 			t.Errorf("业务父级菜单 %s 不存在，子菜单重挂后不可达", parent)
+		}
+	}
+}
+
+// 菜单收敛棘轮（2026-11-23）：顶级菜单从 29 收敛到 22，防止再次平铺膨胀。
+//
+// 收敛只改 ParentPath、不改 path：存量库靠 upsertBaselineMenu 按 (tenantID, path)
+// 自动重挂，无需 SQL 迁移。因此这里锁三件事——
+//  1. 顶级数量与总数：22 顶级 / 101 总条目；
+//  2. 前端只渲染两级（MenuItems.tsx renderMenuItems 的 child 无 children），
+//     任何 ParentPath 都必须是顶级菜单，杜绝三级菜单静默消失；
+//  3. path 唯一，避免 upsert 按 path 覆盖导致两处入口指向同一行。
+func TestMenuBaseline_ConsolidationRatchet(t *testing.T) {
+	specs := menubaseline.MenuDefinitions()
+	const wantTotal = 101
+	const wantTopLevel = 22
+	if len(specs) != wantTotal {
+		t.Errorf("菜单基线共 %d 条，应为 %d 条（收敛只改归属，不增删条目）", len(specs), wantTotal)
+	}
+
+	byPath := make(map[string]menubaseline.MenuSpec, len(specs))
+	for _, spec := range specs {
+		if _, dup := byPath[spec.Path]; dup {
+			t.Errorf("菜单基线出现重复 path %s", spec.Path)
+		}
+		byPath[spec.Path] = spec
+	}
+
+	topLevel := make(map[string]bool)
+	for _, spec := range specs {
+		if spec.ParentPath == "" {
+			topLevel[spec.Path] = true
+		}
+	}
+	if len(topLevel) != wantTopLevel {
+		t.Errorf("顶级菜单共 %d 棵，应为 %d 棵（收敛棘轮）", len(topLevel), wantTopLevel)
+	}
+
+	for _, spec := range specs {
+		if spec.ParentPath == "" {
+			continue
+		}
+		if !topLevel[spec.ParentPath] {
+			t.Errorf("菜单 %s 的父级 %s 不是顶级菜单（前端只渲染两级，三级会被静默丢弃）", spec.Path, spec.ParentPath)
+		}
+		if spec.ParentPath == spec.Path {
+			t.Errorf("菜单 %s 的父级指向自身", spec.Path)
+		}
+	}
+}
+
+// 本次低风险收敛的归属锁定：只并同权限码 / 同能力门控的近亲，防止后续会话把
+// 跨权限或跨桶的菜单塞进同一父级，制造「看得到点不动」或能力未就绪时的空入口。
+func TestMenuBaseline_LowRiskRehomeAssignments(t *testing.T) {
+	want := map[string]string{
+		"/workbench":        "/dashboard",        // 同 dashboard:read
+		"/my-requests":      "/service-requests", // 同 service_request:read
+		"/noc":              "/incidents",        // 同 incident:read，事件运营视图
+		"/improvements":     "/problems",         // 同 problem:read，问题驱动改进
+		"/standard-changes": "/changes",          // 同 change:read，变更模板
+		"/installations":    "/marketplace",      // 同 marketplace:read + 同 marketplace capability
+		"/msp":              "/email-intake",     // 客户主数据域；MSP 过滤按 path 前缀，与层级无关
+		"/msp/management":   "/email-intake",     // 平铺避免三级
+	}
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if expected, ok := want[spec.Path]; ok && spec.ParentPath != expected {
+			t.Errorf("菜单 %s 的父级是 %q，应为 %q（低风险收敛锁定）", spec.Path, spec.ParentPath, expected)
+		}
+	}
+	for path := range want {
+		found := false
+		for _, spec := range menubaseline.MenuDefinitions() {
+			if spec.Path == path {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("收敛目标菜单 %s 已不存在", path)
 		}
 	}
 }
