@@ -277,20 +277,6 @@
   background-color: var(--color-bg-active);
 }
 
-:global(html.dark) .customMenu :global(.ant-menu-item) {
-  color: var(--color-text-secondary) !important;
-}
-
-:global(html.dark) .customMenu :global(.ant-menu-item:hover) {
-  color: var(--color-primary-light) !important;
-  background-color: var(--color-bg-active) !important;
-}
-
-:global(html.dark) .customMenu :global(.ant-menu-item-selected) {
-  background-color: var(--color-primary-soft) !important;
-  color: var(--color-primary-light) !important;
-}
-
 /* 侧栏底部用户名/角色：亮色下有硬编码深色字，暗色侧栏上不可读，需跟随主题变量 */
 :global(html.dark) .userName {
   color: var(--color-text-primary);

@@ -148,14 +148,27 @@ html.dark .ant-menu-submenu-popup {
   background-color: var(--color-bg-elevated) !important;
   color: var(--color-text-primary) !important;
 }
-html.dark .ant-menu-submenu-popup .ant-menu-item,
-html.dark .ant-menu-submenu-popup .ant-menu-submenu-title {
+html.dark .ant-menu-sub.ant-menu-inline {
+  background: transparent !important;
+}
+
+html.dark .ant-menu :is(.ant-menu-item, .ant-menu-submenu-title):not(:where(.ant-menu-item-disabled, .ant-menu-submenu-disabled > .ant-menu-submenu-title)) {
+  color: var(--color-text-secondary) !important;
+}
+
+html.dark .ant-menu :is(.ant-menu-item, .ant-menu-submenu-title):is(:hover, :active):not(:where(.ant-menu-item-disabled, .ant-menu-item-selected, .ant-menu-submenu-disabled > .ant-menu-submenu-title, .ant-menu-submenu-selected > .ant-menu-submenu-title)) {
+  background: var(--color-bg-active) !important;
   color: var(--color-text-primary) !important;
 }
-html.dark .ant-menu-submenu-popup .ant-menu-item:hover,
-html.dark .ant-menu-submenu-popup .ant-menu-submenu-title:hover {
-  background-color: var(--color-bg-active) !important;
+
+html.dark .ant-menu .ant-menu-item-selected:not(.ant-menu-item-disabled),
+html.dark .ant-menu .ant-menu-submenu-selected:not(.ant-menu-submenu-disabled) > .ant-menu-submenu-title {
+  background: var(--color-primary-soft) !important;
   color: var(--color-primary-light) !important;
+}
+
+html.dark .ant-menu .ant-menu-item-selected .ant-menu-title-content {
+  color: inherit !important;
 }
 
 /* ========== Breadcrumb 面包屑 ========== */

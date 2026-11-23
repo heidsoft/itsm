@@ -55,6 +55,16 @@ describe('深色模式 + 菜单交互回归锁', () => {
       expect(tsx).toContain('ConfigProvider');
     });
 
+    it('深色展开和收缩菜单共享选中底色，覆盖亮色渐变', () => {
+      const css = read(ANTD_OVERRIDES);
+      expect(css).toMatch(
+        /html\.dark \.ant-menu \.ant-menu-item-selected[^{}]*\{[^}]*background: var\(--color-primary-soft\) !important/
+      );
+      expect(css).toMatch(
+        /html\.dark \.ant-menu-sub\.ant-menu-inline \{[^}]*background: transparent !important/
+      );
+    });
+
     it('收缩态 submenu popup 有暗色背景与文字覆盖', () => {
       const css = read(ANTD_OVERRIDES);
       // 必须存在一个 html.dark .ant-menu-submenu-popup 规则块，块内同时设暗底与浅字。
