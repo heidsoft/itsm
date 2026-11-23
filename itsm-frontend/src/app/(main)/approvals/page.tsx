@@ -6,7 +6,7 @@
  * 旧的工单/变更/服务请求业务列表保留为只读参考视图。
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   App,
   Alert,
@@ -41,6 +41,8 @@ import {
   ExternalLink,
   ArrowRightLeft,
   UserPlus,
+  BookOpen,
+  ShieldAlert,
 } from 'lucide-react';
 import Link from 'next/link';
 import { httpClient } from '@/lib/api/http-client';
@@ -48,7 +50,14 @@ import { WorkflowApi, type BpmnMyTask } from '@/lib/api/workflow-api';
 import { useBatchTaskDecision, type BatchDecisionResult } from '@/lib/hooks/useBatchTaskDecision';
 import { UserApi, type User } from '@/lib/api/user-api';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 import { useI18n } from '@/lib/i18n/useI18n';
+import {
+  useApprovalOverviews,
+  ApprovalOverviewTable,
+  type ApprovalDomain,
+} from '@/components/business/ApprovalOverviewList';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -225,6 +234,43 @@ export default function ApprovalsCenterPage() {
   const { message } = App.useApp();
   const { t } = useI18n();
   const { user } = useAuthStore();
+  const { hasPermission } = usePermissions();
+
+  // 按权限决定哪些审批域可见：无权限的域既不显示 Tab，也不发请求（fail-closed）。
+  // 菜单门控码与各审批页一致：目录 service_request:read / 知识 knowledge:write / 工具 ai:read。
+  const enabledDomains = useMemo<ApprovalDomain[]>(() => {
+    const domains: ApprovalDomain[] = [];
+    if (hasPermission(PERM.service_request.read)) domains.push('service');
+    if (hasPermission(PERM.knowledge.write)) domains.push('knowledge');
+    if (hasPermission(PERM.ai.read)) domains.push('aiTool');
+    return domains;
+  }, [hasPermission]);
+
+  const { states: overviewStates, refresh: refreshOverviews } = useApprovalOverviews(enabledDomains);
+
+  // 概览状态标签与表头文案集中在此，交给纯展示组件渲染。
+  const overviewStatusLabel = useCallback(
+    (status: string) => {
+      const label = t(`approvalCenter.overviewStatus.${status}`);
+      // t 找不到词条时返回完整 key；此时显示后端原始状态值，不把内部 key 暴露给用户。
+      return label.includes('overviewStatus.') ? status : label;
+    },
+    [t]
+  );
+  const overviewLabels = useMemo(
+    () => ({
+      title: t('approvalCenter.overviewCol.title'),
+      subtitle: t('approvalCenter.overviewCol.subtitle'),
+      time: t('approvalCenter.overviewCol.time'),
+      status: t('approvalCenter.overviewCol.status'),
+      actions: t('approvalCenter.overviewCol.actions'),
+      goHandle: t('approvalCenter.overviewGoHandle'),
+      empty: t('approvalCenter.overviewEmpty'),
+      loadFailed: t('approvalCenter.overviewLoadFailed'),
+      retry: t('common.retry'),
+    }),
+    [t]
+  );
 
   // BPMN 待办
   const [taskLoading, setTaskLoading] = useState(false);
@@ -371,6 +417,7 @@ export default function ApprovalsCenterPage() {
   const handleRefresh = () => {
     loadTasks();
     loadLegacy();
+    void refreshOverviews();
   };
 
   // 领取任务（无负责人时）
@@ -966,6 +1013,66 @@ export default function ApprovalsCenterPage() {
                 </div>
               ),
             },
+            ...(enabledDomains.includes('service')
+              ? [{
+                  key: 'service-approvals',
+                  label: (
+                    <span className="flex items-center gap-2">
+                      <FileText /> {t('approvalCenter.tabServiceApprovals')}
+                      <Badge count={overviewStates.service.items.length} showZero={false} />
+                    </span>
+                  ),
+                  children: (
+                    <ApprovalOverviewTable
+                      domain="service"
+                      state={overviewStates.service}
+                      onRetry={() => void refreshOverviews()}
+                      statusLabel={overviewStatusLabel}
+                      labels={overviewLabels}
+                    />
+                  ),
+                }]
+              : []),
+            ...(enabledDomains.includes('knowledge')
+              ? [{
+                  key: 'knowledge-reviews',
+                  label: (
+                    <span className="flex items-center gap-2">
+                      <BookOpen /> {t('approvalCenter.tabKnowledgeReviews')}
+                      <Badge count={overviewStates.knowledge.items.length} showZero={false} />
+                    </span>
+                  ),
+                  children: (
+                    <ApprovalOverviewTable
+                      domain="knowledge"
+                      state={overviewStates.knowledge}
+                      onRetry={() => void refreshOverviews()}
+                      statusLabel={overviewStatusLabel}
+                      labels={overviewLabels}
+                    />
+                  ),
+                }]
+              : []),
+            ...(enabledDomains.includes('aiTool')
+              ? [{
+                  key: 'ai-tool-approvals',
+                  label: (
+                    <span className="flex items-center gap-2">
+                      <ShieldAlert /> {t('approvalCenter.tabAiToolApprovals')}
+                      <Badge count={overviewStates.aiTool.items.length} showZero={false} />
+                    </span>
+                  ),
+                  children: (
+                    <ApprovalOverviewTable
+                      domain="aiTool"
+                      state={overviewStates.aiTool}
+                      onRetry={() => void refreshOverviews()}
+                      statusLabel={overviewStatusLabel}
+                      labels={overviewLabels}
+                    />
+                  ),
+                }]
+              : []),
           ]}
         />
       </Card>
