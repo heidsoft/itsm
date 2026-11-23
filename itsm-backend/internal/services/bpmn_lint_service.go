@@ -324,6 +324,9 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 			})
 		}
 	}
+
+	// --- 规则组 10：令牌/汇聚语义（审计 P1-06 的部署期缓解） ---
+	s.lintTokenSemantics(process, adjacency, flowTargets, result)
 }
 
 func (s *BPMNLintService) lintApprovalRejectionConfiguration(process *BPMNProcess, adjacency map[string][]string, result *dto.BPMNLintResult) {
@@ -523,6 +526,127 @@ func (s *BPMNLintService) lintGateway(prefix, id, name, defaultFlow string, adja
 		})
 	}
 	_ = defaultFlow
+}
+
+// forkRef 记录一个分叉网关的类型与展示名，供 R2 的错误消息引用。
+type forkRef struct {
+	kind string // "并行" / "包容"
+	name string
+}
+
+// lintTokenSemantics 拒绝引擎令牌语义无法正确执行的图形（审计 P1-06 的部署期缓解）。
+//
+// 引擎的汇聚与结束都建立在「节点完成过」而非令牌/occurrence 上：
+//   - 汇聚（并行/包容）对每个入边源要么读 _done_ 这个永久 bool，要么查用户任务
+//     是否还存在未结束任务——没有「该分支本轮是否被激活」的概念；
+//   - 任意 endEvent 到达即把整个实例置 completed。
+//
+// 真修复是持久化 token/occurrence；在那之前这里在部署期拒绝两类必然被错误
+// 执行的图形（规则分级：error = 部署后引擎无法正确执行）：
+//
+//	R1 收敛型包容网关（入度 ≥2）：包容分叉只激活命中条件的分支，而包容汇聚
+//	   等待全部静态入边，未激活的分支永远不会「完成」→ 实例永久停在网关上。
+//	R2 并行/包容分叉存在「不经汇聚直达 endEvent」的路径：先到的分支把整个
+//	   实例置 completed，另一分支的任务与后续推进被丢弃。
+//
+// 已知不完备（如实声明，不作完备性承诺）：
+//   - barrier 只认收敛型并行/包容网关，嵌套分叉/汇聚与排他汇聚交错的形状可能漏过；
+//   - 循环再次经过汇聚时上一轮的 _done_ 仍会提前满足本轮（occurrence 缺口），本规则不查；
+//   - 排他分叉 → 并行汇聚这类「只激活一半入边」的死锁形状不在 R1/R2 覆盖内。
+//
+// 已核对：内置模板与 seeder 模板均无包容汇聚；并行分叉模板一律先汇聚再进 endEvent，
+// 故两条规则不打破任何已发布模板（由 TestBuiltinTemplates_Gate 锁定）。
+func (s *BPMNLintService) lintTokenSemantics(process *BPMNProcess, adjacency map[string][]string, flowTargets map[string]int, result *dto.BPMNLintResult) {
+	prefix := fmt.Sprintf("流程 %s", process.ID)
+
+	// R1：收敛型包容网关必然死锁（引擎的包容汇聚 = 等全部静态入边）。
+	for _, gw := range process.InclusiveGateways {
+		if flowTargets[gw.ID] < 2 {
+			continue // 纯分叉/直通（入度 <2）不受影响
+		}
+		result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+			Severity: "error", Category: "gateways",
+			ElementID: gw.ID, ElementName: gw.Name,
+			Message: fmt.Sprintf("%s：包容网关 %s 是汇聚节点（%d 条入边），引擎的汇聚按「全部静态入边是否完成」判断，"+
+				"而包容分叉只激活命中条件的分支——未激活分支永远不会完成，实例将永久停在该网关上。"+
+				"请改用成对的并行分叉/汇聚，或把分支展平为排他路径",
+				prefix, display(gw.Name, gw.ID), flowTargets[gw.ID]),
+		})
+	}
+
+	// R2：分叉后存在不经汇聚直达 endEvent 的路径 → 提前完成整个实例。
+	forks := map[string]forkRef{}
+	for _, g := range process.ParallelGateways {
+		if len(adjacency[g.ID]) >= 2 {
+			forks[g.ID] = forkRef{kind: "并行", name: g.Name}
+		}
+	}
+	for _, g := range process.InclusiveGateways {
+		if len(adjacency[g.ID]) >= 2 {
+			forks[g.ID] = forkRef{kind: "包容", name: g.Name}
+		}
+	}
+	if len(forks) == 0 {
+		return // 没有并行/包容分叉：排他分支每次只激活一条路径，多 endEvent 是安全的
+	}
+
+	// barrier = 收敛型并行/包容网关（入度 ≥2）：只有它们真的会等其他分支。
+	// 排他汇聚不等待（到达即继续往下走），不能当 barrier，否则会漏报提前完成。
+	barrier := map[string]bool{}
+	for _, g := range process.ParallelGateways {
+		if flowTargets[g.ID] >= 2 {
+			barrier[g.ID] = true
+		}
+	}
+	for _, g := range process.InclusiveGateways {
+		if flowTargets[g.ID] >= 2 {
+			barrier[g.ID] = true
+		}
+	}
+	endIDs := map[string]bool{}
+	for _, e := range process.EndEvents {
+		endIDs[e.ID] = true
+	}
+
+	for forkID, fork := range forks {
+		visited := make(map[string]bool, len(adjacency))
+		queue := make([]string, 0, len(adjacency[forkID]))
+		for _, next := range adjacency[forkID] {
+			if !visited[next] {
+				visited[next] = true
+				queue = append(queue, next)
+			}
+		}
+		earlyEnd := ""
+		for len(queue) > 0 {
+			current := queue[0]
+			queue = queue[1:]
+			if barrier[current] {
+				continue // 该分支在汇聚处被等待，其下游由汇聚自身的入边规则负责
+			}
+			if endIDs[current] {
+				earlyEnd = current
+				break
+			}
+			for _, next := range adjacency[current] {
+				if !visited[next] {
+					visited[next] = true
+					queue = append(queue, next)
+				}
+			}
+		}
+		if earlyEnd == "" {
+			continue
+		}
+		result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+			Severity: "error", Category: "gateways",
+			ElementID: forkID, ElementName: fork.name,
+			Message: fmt.Sprintf("%s：%s网关 %s 分叉后存在不经任何汇聚网关就直达结束事件 %s 的路径："+
+				"引擎一到达 endEvent 就把整个实例置为 completed，另一分支的任务与后续推进会被丢弃。"+
+				"请让所有分支先在并行/包容汇聚网关上会合，再进入结束事件",
+				prefix, fork.kind, display(fork.name, forkID), earlyEnd),
+		})
+	}
 }
 
 // buildGraph 构建邻接表与节点集合。

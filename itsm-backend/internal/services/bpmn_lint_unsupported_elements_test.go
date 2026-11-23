@@ -104,7 +104,10 @@ func TestLintInclusiveGateway_WithDefault_NoWarn(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, issue := range result.Issues {
-		if issue.Category == "gateways" && issue.ElementID == "IG_1" {
+		// 只针对「缺 default 分支」这条告警：夹具本身是包容分叉 + 双分支直连
+		// endEvent（无汇聚），按规则组 10（P1-06 令牌语义）应另出一条 error，
+		// 那条由 TestLintTokenSemantics_* 单独锁定，不能被本用例的断言吞掉。
+		if issue.Category == "gateways" && issue.ElementID == "IG_1" && strings.Contains(issue.Message, "default 分支") {
 			t.Fatalf("声明了 default 的包容网关不应再告警: %+v", issue)
 		}
 	}
