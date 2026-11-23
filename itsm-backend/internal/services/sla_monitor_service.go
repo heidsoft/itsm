@@ -55,6 +55,15 @@ func (s *SLAMonitorService) SetSLAStore(store *sla.Store) {
 	s.slaStore = store
 }
 
+// RecordResolutionTx 在调用方事务内记录 ticket 解决时间，供 handlers/ticket
+// 把「工单状态置 resolved」与「SLA 权威状态收口」放进同一事务。
+func (s *SLAMonitorService) RecordResolutionTx(ctx context.Context, tx *ent.Tx, tenantID, ticketID int, at time.Time) error {
+	if err := s.requireSLAStore(); err != nil {
+		return err
+	}
+	return s.slaStore.RecordResolutionInTx(ctx, tx, tenantID, "ticket", ticketID, at)
+}
+
 // requireSLAStore 校验 sla_states 读依赖已注入。
 // slaStore 是 NewSLAMonitorService 之后由 internal/bootstrap/app.go 通过 SetSLAStore 注入的依赖，
 // 漏注入会让 *sla.Store 方法在 nil receiver 上解引用 client 并 panic，直接终止 SLA watcher goroutine。

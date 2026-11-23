@@ -1665,6 +1665,13 @@ func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenan
 		}
 		return err
 	}
+	// SLA 合规必须在同一事务里收口：事件已 resolved 但 sla_states 仍 active
+	// 会让违规扫描继续盯一个已解决的事件，也让 /incidents/:id/sla 永远没有 resolvedAt。
+	if s.slaSvc != nil && s.slaSvc.SLAStore() != nil {
+		if err := s.slaSvc.SLAStore().RecordResolutionInTx(ctx, tx, tenantID, "incident", id, now); err != nil {
+			return fmt.Errorf("record incident SLA resolution: %w", err)
+		}
+	}
 	if err := createIncidentEventTx(ctx, tx, &dto.CreateIncidentEventRequest{
 		IncidentID: id, EventType: "resolution", EventName: "事件解决",
 		Description: strings.TrimSpace(resolution), Status: "active", Severity: "info",

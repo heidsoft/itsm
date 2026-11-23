@@ -377,7 +377,28 @@ func (s *Service) ResolveTicket(ctx context.Context, ticketID int, resolution st
 	if !common.IsValidTicketStatusTransition(current.Status, "resolved") {
 		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to 'resolved'", ErrTicketInvalidTransition, current.Status))
 	}
+	resolver, supportsHook := s.repo.(TxTicketResolver)
+	recorder, hasRecorder := s.slaMonitor.(TicketSLAResolutionRecorder)
+	if supportsHook && hasRecorder {
+		return resolver.ResolveTicketWithTxHook(ctx, ticketID, current.Version, tenantID, resolution,
+			slaResolutionHook(recorder, tenantID, ticketID))
+	}
+	if s.slaMonitor == nil {
+		s.logger.Warnw("工单解决未回写 SLA：组装根未注入 TicketSLAResolutionRecorder，sla_states 会停留在 active",
+			"ticket_id", ticketID, "tenant_id", tenantID)
+	}
 	return s.repo.ResolveTicket(ctx, ticketID, resolution, tenantID)
+}
+
+// slaResolutionHook 把 SLA 收口挂进工单解决事务，供 /resolve 与 PUT /status 两条入口复用。
+func slaResolutionHook(recorder TicketSLAResolutionRecorder, tenantID, ticketID int) TxTicketResolutionHook {
+	return func(ctx context.Context, tx *ent.Tx, updated *Ticket) error {
+		at := time.Now()
+		if updated.ResolvedAt != nil {
+			at = *updated.ResolvedAt
+		}
+		return recorder.RecordResolutionTx(ctx, tx, tenantID, ticketID, at)
+	}
 }
 
 // CloseTicket closes a ticket.
@@ -445,6 +466,20 @@ func (s *Service) UpdateStatus(ctx context.Context, ticketID int, status string,
 	}
 	if status == "closed" {
 		return s.closeWithWorkflowTermination(ctx, current, tenantID, userID, "工单状态变更为关闭")
+	}
+	if status == "resolved" {
+		// PUT /tickets/:id/status 是写 resolved 的第二个可达入口；必须与 /resolve
+		// 共用同一 SLA 收口事务，不能只给其中一条路径打补丁。
+		resolver, supportsHook := s.repo.(TxTicketResolver)
+		recorder, hasRecorder := s.slaMonitor.(TicketSLAResolutionRecorder)
+		if supportsHook && hasRecorder {
+			resolution := ""
+			if current.Resolution != nil {
+				resolution = *current.Resolution
+			}
+			return resolver.ResolveTicketWithTxHook(ctx, ticketID, current.Version, tenantID, resolution,
+				slaResolutionHook(recorder, tenantID, ticketID))
+		}
 	}
 	return s.repo.UpdateStatus(ctx, ticketID, status, tenantID)
 }

@@ -41,6 +41,23 @@ type TicketSLAMonitor interface {
 	ResumeSLA(ctx context.Context, tenantID int, entityType string, entityID int) error
 }
 
+// TicketSLAResolutionRecorder 在工单解决事务内回写 sla_states。
+// 独立窄接口让测试替身无需实现整个监控服务；生产装配由 SLAMonitorService 满足。
+type TicketSLAResolutionRecorder interface {
+	RecordResolutionTx(ctx context.Context, tx *ent.Tx, tenantID, ticketID int, at time.Time) error
+}
+
+// TxTicketResolver 把工单写成 resolved 并在同一事务内执行 hook。
+// 与 TxTicketCloser 对称：SLA 收口失败必须回滚状态写入，不能留下
+// 「工单已解决但 SLA 仍 active」的半截事实。
+type TxTicketResolver interface {
+	ResolveTicketWithTxHook(ctx context.Context, ticketID int, version int, tenantID int, resolution string, hook TxTicketResolutionHook) (*Ticket, error)
+}
+
+// TxTicketResolutionHook 在已提交前的工单更新事务内执行，updated 携带仓储写入的
+// 权威 ResolvedAt（而非 handler 的本地 now），确保 SLA 与工单使用同一时间戳。
+type TxTicketResolutionHook func(ctx context.Context, tx *ent.Tx, updated *Ticket) error
+
 // TicketWorkflowTerminator 在「工单进入终态」时终止关联的 BPMN 流程实例。
 //
 // 存在的理由是一条实测出来的分叉：工单有两个可达的关闭入口——详情页走

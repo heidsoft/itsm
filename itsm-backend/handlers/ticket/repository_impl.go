@@ -437,6 +437,30 @@ func (r *EntRepository) ResolveTicket(ctx context.Context, id int, resolution st
 	return r.toDomain(t), nil
 }
 
+// ResolveTicketWithTxHook 以 CAS 把工单置为 resolved，并在同一事务内执行 hook。
+// hook 失败回滚整个状态写入；SLA 收口等权威副作用必须走这里而非提交后补写。
+func (r *EntRepository) ResolveTicketWithTxHook(
+	ctx context.Context, ticketID int, version int, tenantID int, resolution string, hook TxTicketResolutionHook,
+) (*Ticket, error) {
+	updater, ok := r.repo.(ticket.TransactionalUpdater)
+	if !ok {
+		return nil, ErrTxCloserUnavailable
+	}
+	resolved := ticket.StatusResolved
+	params := &ticket.UpdateParams{Status: &resolved, Resolution: &resolution, Version: version}
+	updated, err := updater.UpdateWithTxHook(ctx, ticketID, params, tenantID,
+		func(tx *ent.Tx, t *ticket.Ticket) error {
+			if hook == nil {
+				return nil
+			}
+			return hook(ctx, tx, r.toDomain(t))
+		})
+	if err != nil {
+		return nil, err
+	}
+	return r.toDomain(updated), nil
+}
+
 func (r *EntRepository) CloseTicket(ctx context.Context, id int, tenantID int) (*Ticket, error) {
 	t, err := r.repo.UpdateStatus(ctx, id, ticket.StatusClosed, tenantID)
 	if err != nil {
