@@ -216,7 +216,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
         {capabilitiesLoading ? (
           <Skeleton active paragraph={{ rows: 6 }} />
         ) : (
-          <MenuItems items={mainMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} />
+          <MenuItems items={mainMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} collapsed={collapsed} />
         )}
       </div>
 
@@ -228,7 +228,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
             {capabilitiesLoading ? (
               <Skeleton active paragraph={{ rows: 3 }} />
             ) : (
-              <MenuItems items={adminMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} />
+              <MenuItems items={adminMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} collapsed={collapsed} />
             )}
           </div>
         </div>

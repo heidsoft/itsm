@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { clearAuthStorage } from '@/lib/auth/token-storage';
+import { useSidebarOpenKeys } from '@/lib/store/sidebar-open-keys-store';
 import { setTenant, clearTenant } from '@/lib/auth/tenant-context';
 import { matchesPermission } from '@/lib/permissions/utils';
 import type { PermissionCode } from '@/lib/permissions';
@@ -84,6 +85,11 @@ export const useAuthStore = create<AuthState>()(
 
         // 清除所有认证信息（使用统一的清理函数，包含历史键名）
         clearAuthStorage();
+
+        // 侧栏展开态是「按账号的界面记忆」，必须随登录态一起清掉：
+        // 否则同一浏览器换账号后，上一个人展开过的菜单组仍保持展开，
+        // 会让人误以为自己有那些入口（展开 ≠ 有权访问，但是强误导）。
+        useSidebarOpenKeys.getState().clear();
 
         httpClient.clearToken();
         httpClient.setTenantId(null);

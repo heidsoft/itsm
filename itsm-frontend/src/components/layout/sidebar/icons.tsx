@@ -26,6 +26,7 @@ import {
   User,
   Activity,
   Clock,
+  Timer,
   ClipboardList,
   Bot,
   MessageSquare,
@@ -114,6 +115,9 @@ export const iconMap: Record<string, React.ReactNode> = {
   User: <User style={iconStyle} />,
   Activity: <Activity style={iconStyle} />,
   Clock: <Clock style={iconStyle} />,
+  // 「超时升级」(/admin/escalation-rules) 用 Timer：它是按剩余时间触发升级的规则，
+  // 与 Clock（当前时刻/已耗时）语义不同，直接用 Clock 会让两个不同功能共用图标。
+  Timer: <Timer style={iconStyle} />,
   ClipboardList: <ClipboardList style={iconStyle} />,
   Bot: <Bot style={iconStyle} />,
   MessageSquare: <MessageSquare style={iconStyle} />,

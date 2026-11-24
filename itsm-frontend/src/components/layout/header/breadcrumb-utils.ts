@@ -136,6 +136,33 @@ function collectMenuLabels(items: ApiMenuItem[], map: Map<string, string>) {
 }
 
 /**
+ * 递归收集 path → 祖先路径数组。
+ *
+ * 为什么需要它：菜单做过业务归位，有些子页面的 URL 并不在父级路径之下
+ * （/admin/ticket-categories 挂在「工单管理」下、/admin/sla-templates 挂在
+ * 「SLA 管理」下、/ai/approval 挂在「我的待办」下，共 29 处）。若面包屑按
+ * URL 段逐段翻译，/admin/ticket-categories 会渲染成「系统管理 / 工单分类」，
+ * 与侧栏把它归在「工单管理」下自相矛盾——同一个页面在两个地方给出两个上级。
+ *
+ * 菜单树就是归属的权威源，因此优先按菜单的父子关系生成祖先链，只有不在菜单
+ * 里的路径才退回 URL 段拆分。
+ */
+function collectMenuParents(
+  items: ApiMenuItem[],
+  map: Map<string, ApiMenuItem[]>,
+  ancestors: ApiMenuItem[] = []
+) {
+  for (const item of items) {
+    if (item.path) {
+      map.set(item.path, ancestors);
+    }
+    if (item.children) {
+      collectMenuParents(item.children, map, item.path ? [...ancestors, item] : ancestors);
+    }
+  }
+}
+
+/**
  * 根据 pathname 自动生成面包屑
  * 例：/incidents/12/edit → 首页 / 事件管理 / 详情 #12 / 编辑
  */
@@ -170,12 +197,21 @@ export function buildBreadcrumb(pathname: string): BreadcrumbItem[] {
 }
 
 /**
- * Hook 版本：基于动态菜单（后端 /api/v1/auth/menus）生成面包屑。
- * 用于顶部 Header 等需要结合菜单 label 渲染面包屑的场景，
- * 内部与 Sidebar 共享 useUserMenusQuery 的 React Query 缓存。
+ * 纯函数版面包屑计算：不依赖 React，便于测试直接断言真实实现。
+ *
+ * 归属优先级：菜单树祖先链 > URL 段拆分。
+ * 当目标路径是菜单条目时，用菜单里的父子关系生成祖先（中间层可点击），
+ * 保证面包屑与侧栏对同一个页面给出同一套上级；只有不在菜单里的路径
+ *（详情页、深层子路径等）才回退到 URL 段翻译。
+ *
+ * 之所以抽成导出的纯函数而不是内联在 hook 里：此前的回归测试自己手写了一份
+ * 「面包屑算法副本」来比对菜单树，结果**真实实现失效时测试仍然全绿**
+ * （已实测：把 hook 里的祖先链分支短路成 false，副本测试照样通过）。
  */
-export function useBuildBreadcrumb(pathname: string): BreadcrumbItem[] {
-  const { data: menus } = useUserMenusQuery();
+export function resolveBreadcrumb(
+  pathname: string,
+  menus: { main: ApiMenuItem[]; admin: ApiMenuItem[] } | undefined
+): BreadcrumbItem[] {
   const items: BreadcrumbItem[] = [{ title: '首页', href: '/dashboard' }];
   if (!pathname || pathname === '/' || pathname === '/dashboard') {
     return items;
@@ -185,11 +221,48 @@ export function useBuildBreadcrumb(pathname: string): BreadcrumbItem[] {
   if (exact) return [...items, ...exact];
 
   const labelMap = new Map<string, string>();
+  const parentMap = new Map<string, ApiMenuItem[]>();
   if (menus) {
     collectMenuLabels(menus.main, labelMap);
     collectMenuLabels(menus.admin, labelMap);
+    collectMenuParents(menus.main, parentMap);
+    collectMenuParents(menus.admin, parentMap);
   }
 
+  // ① 找出与 pathname 匹配的最长菜单路径（精确命中或路径前缀）。
+  //
+  // 这里刻意只有一个分支：此前曾把「精确命中」和「深层子路径」写成两个并列
+  // 分支，二者的祖先链生成逻辑完全相同——精确命中只是「剩余段为空」的特例。
+  // 两个分支并存时，把其中一个短路掉测试也不会红（另一个会给出同样结果），
+  // 于是回归锁实际上保护不到任何一条，反向验证也拿不到真实信号。
+  let bestPrefix = '';
+  for (const key of labelMap.keys()) {
+    if ((pathname === key || pathname.startsWith(`${key}/`)) && key.length > bestPrefix.length) {
+      bestPrefix = key;
+    }
+  }
+
+  // ② 用菜单树作为归属的权威源：祖先链来自菜单父子关系，不按 URL 段猜。
+  if (bestPrefix) {
+    for (const ancestor of parentMap.get(bestPrefix) ?? []) {
+      if (!ancestor.path || ancestor.path === '/dashboard') continue;
+      items.push({ title: ancestor.name, href: ancestor.path });
+    }
+    items.push({ title: labelMap.get(bestPrefix)! });
+
+    // 菜单条目之下的深层路径（/tickets/3、/cmdb/cis/create）追加剩余段
+    const rest = pathname.slice(bestPrefix.length).split('/').filter(Boolean);
+    let acc = bestPrefix;
+    rest.forEach((segment, index) => {
+      acc += `/${segment}`;
+      const isLast = index === rest.length - 1;
+      const title = /^\d+$/.test(segment) ? `详情 #${segment}` : SEGMENT_LABELS[segment] || segment;
+      items.push(isLast ? { title } : { title, href: acc });
+    });
+    return items;
+  }
+
+  // ③ 不在菜单里的路径：退回 URL 段翻译
   const segments = pathname.split('/').filter(Boolean);
   let acc = '';
 
@@ -207,4 +280,14 @@ export function useBuildBreadcrumb(pathname: string): BreadcrumbItem[] {
   });
 
   return items;
+}
+
+/**
+ * Hook 版本：基于动态菜单（后端 /api/v1/auth/menus）生成面包屑。
+ * 用于顶部 Header 等需要结合菜单 label 渲染面包屑的场景，
+ * 内部与 Sidebar 共享 useUserMenusQuery 的 React Query 缓存。
+ */
+export function useBuildBreadcrumb(pathname: string): BreadcrumbItem[] {
+  const { data: menus } = useUserMenusQuery();
+  return resolveBreadcrumb(pathname, menus);
 }

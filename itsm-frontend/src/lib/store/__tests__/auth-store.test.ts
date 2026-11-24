@@ -139,6 +139,20 @@ describe('useAuthStore', () => {
       expect(state.currentTenant).toBeNull();
       expect(state.isAuthenticated).toBe(false);
     });
+
+    it('🔴 登出时清空侧栏展开态，避免换账号后看到上一个人的菜单展开记忆', async () => {
+      const { useAuthStore } = await import('../auth-store');
+      const { useSidebarOpenKeys } = await import('../sidebar-open-keys-store');
+
+      // 模拟上一个账号用过的展开态
+      useSidebarOpenKeys.setState({ openKeys: ['/admin-group', '/workflow-group'] });
+
+      act(() => {
+        useAuthStore.getState().logout();
+      });
+
+      expect(useSidebarOpenKeys.getState().openKeys).toEqual([]);
+    });
   });
 
   describe('updateUser', () => {
