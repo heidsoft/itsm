@@ -14,7 +14,17 @@ import (
 	"go.uber.org/zap"
 )
 
-// BPMNVariableService BPMN流程变量管理服务
+// BPMNVariableService BPMN流程变量管理服务（未接线，勿计入已交付能力）。
+//
+// 【状态说明｜codex 审计 P3-01】本服务把变量存在独立的 ProcessVariable 表，
+// 但生产引擎 CustomProcessEngine 的变量权威是 ProcessInstance.variables
+// （单个 JSON 字段，见 bpmn_process_executor.go 的 executeStep / SetVariables）。
+// 两条路径互不同步：经本服务写入的变量不会进入表达式求值，引擎写入的变量
+// 也不会出现在本服务的查询结果里。
+//
+// 当前没有任何生产调用方（仅单测引用）。它不是「已交付的流程变量能力」，
+// 后续若要启用，必须先设计双写或迁移到单一权威源，并补齐一致性测试。
+// 在此之前，请勿据此文件/接口数量评估流程变量能力的成熟度。
 type BPMNVariableService struct {
 	client *ent.Client
 	logger *zap.SugaredLogger

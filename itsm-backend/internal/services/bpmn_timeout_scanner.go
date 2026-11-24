@@ -11,6 +11,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
+	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/user"
 	"itsm-backend/service/bpmn"
@@ -454,6 +455,51 @@ func (s *TimeoutScanner) ScanStuckFinalizingTasks(ctx context.Context, tenantID 
 		recovered++
 	}
 	return recovered, nil
+}
+
+// ScanStuckInstances 检出运行时间超过阈值仍未结束的流程实例并记录告警。
+//
+// 这是引擎 DetectStuckInstances 的**生产接线**（codex 审计 P3-01）：
+// 该方法此前只有单测调用，没有任何生产调用方，按「文件/接口数量」评估
+// 会误以为卡死检测已交付。现在它由 bootstrap 的定时扫描器每轮调用，
+// 让「一般 running 实例卡死」与 finalizing 定向恢复一样有真实入口。
+//
+// 只观测不处置：卡死实例可能正等待外部事件（定时器、消息、信号）或人工，
+// 自动终止会误杀正常长流程。这里只产出结构化告警，由运维判断处置。
+func (s *TimeoutScanner) ScanStuckInstances(ctx context.Context, tenantID int, olderThan time.Duration) (int, error) {
+	if tenantID <= 0 {
+		return 0, fmt.Errorf("stuck instance scanner: invalid tenant ID")
+	}
+	if olderThan <= 0 {
+		return 0, fmt.Errorf("stuck instance scanner: invalid threshold")
+	}
+
+	cutoff := time.Now().Add(-olderThan)
+	stuck, err := s.client.ProcessInstance.Query().
+		Where(
+			processinstance.TenantID(tenantID),
+			processinstance.Status("running"),
+			processinstance.StartTimeLT(cutoff),
+		).
+		All(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("stuck instance scanner: query stuck instances: %w", err)
+	}
+
+	for _, inst := range stuck {
+		// 输出定位所需的最小事实：实例、当前活动、已运行时长。
+		// 不回传变量内容（可能含业务敏感数据）。
+		s.logger.Warnw("检测到长时间未结束的流程实例",
+			"instance_id", inst.ProcessInstanceID,
+			"definition_key", inst.ProcessDefinitionKey,
+			"current_activity_id", inst.CurrentActivityID,
+			"current_activity_name", inst.CurrentActivityName,
+			"started_at", inst.StartTime,
+			"running_for", time.Since(inst.StartTime).String(),
+			"tenant_id", tenantID,
+		)
+	}
+	return len(stuck), nil
 }
 
 // recoverFinalizingParent 恢复单个卡死的会签父任务。

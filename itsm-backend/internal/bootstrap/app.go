@@ -2138,6 +2138,9 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 	// BPMN task timeout scanner（恢复兜底）。主路径是 task_due 定时器	// （createUserTask 注册、到期由 TimerEventHandler 分发四动作）；本扫描器每 2 分钟
 	// 兜底处理无 timer 的任务（注册失败、timer 丢失、功能关闭的部署）。
 	// dispatchTimeoutAction 带 claim-once 条件更新，双路径下同一任务只生效一次。
+	// 一般 running 实例的卡死阈值：超过 24 小时仍未结束即产出告警。
+	// 只观测不处置，阈值取得宽是为避免误报正在等待外部事件/人工的长流程。
+	const bpmnStuckInstanceThreshold = 24 * time.Hour
 	safeGo("bpmn-timeout-scanner", func() {
 		scanner := service.NewTimeoutScanner(app.DBClient, app.Logger)
 		ticker := time.NewTicker(2 * time.Minute)
@@ -2174,6 +2177,17 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 					}
 					if recovered > 0 {
 						app.Logger.Infow("BPMN finalizing recovery scan completed", "tenant_id", t.ID, "recovered", recovered)
+					}
+					// 一般 running 实例的卡死检测（只观测不处置）：
+					// 引擎 DetectStuckInstances 此前无生产调用方（P3-01），
+					// 现在每轮扫描产出结构化告警，供运维定位卡在哪个活动。
+					stuck, err := scanner.ScanStuckInstances(tenantCtx, t.ID, bpmnStuckInstanceThreshold)
+					if err != nil {
+						app.Logger.Warnw("BPMN stuck instance scan failed", "error", err, "tenant_id", t.ID)
+						continue
+					}
+					if stuck > 0 {
+						app.Logger.Warnw("BPMN stuck instances detected", "tenant_id", t.ID, "count", stuck)
 					}
 				}
 			}
