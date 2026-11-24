@@ -2,13 +2,17 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/user"
 	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
@@ -28,11 +32,21 @@ func NewTimeoutScanner(client *ent.Client, logger *zap.SugaredLogger) *TimeoutSc
 // timeoutActiveStatuses 视为"未处理"的任务状态。扫描器查询与
 // claim-once 条件更新共用，保证 timer 回调与恢复兜底扫描双路径下
 // 同一任务的超时动作只生效一次。
+//
+// 这张表是扫描器与 task_due timer 回调共用的「完整活跃状态表」：
+// 漏掉 delegated 会让已转派的任务既不被 timer 分发（timer 侧用
+// slices.Contains 同一变量），也不被恢复扫描选中，超时动作静默失效
+// （codex 审计 P2-03）。
 var timeoutActiveStatuses = []string{
 	common.ProcessTaskStatusCreated,
 	common.ProcessTaskStatusAssigned,
 	common.ProcessTaskStatusStarted,
+	common.ProcessTaskStatusDelegated,
 }
+
+// errTimeoutAlreadyClaimed 表示该任务已被另一路径（timer 回调 / 恢复扫描 /
+// 并发扫描周期）处理过，调用方按「静默跳过」收敛，不计入错误。
+var errTimeoutAlreadyClaimed = errors.New("timeout action already claimed")
 
 func (s *TimeoutScanner) ScanOverdueTasks(ctx context.Context, tenantID int) (int, error) {
 	if tenantID <= 0 {
@@ -74,7 +88,7 @@ func (s *TimeoutScanner) dispatchTimeoutAction(ctx context.Context, task *ent.Pr
 		action = common.TimeoutActionNotify
 	}
 
-	taskCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+	taskCtx := s.systemAdvanceContext(ctx, tenantID)
 
 	switch action {
 	case common.TimeoutActionNotify:
@@ -90,6 +104,26 @@ func (s *TimeoutScanner) dispatchTimeoutAction(ctx context.Context, task *ent.Pr
 			"task_id", task.TaskID, "action", action)
 		return s.actionNotify(taskCtx, task, tenantID)
 	}
+}
+
+// systemAdvanceContext 构造超时兜底动作的系统推进上下文（唯一构造点）。
+//
+// 没有它，auto_approve/auto_reject 走 CompleteTask 会被任务归属校验判成
+// 「缺少执行人身份」而失败——timer 回调与恢复扫描两条路径都拿不到决策
+// （codex 审计 P2-03）。三点必须显式：
+//   - 租户键照旧；
+//   - 执行人键显式置空，避免从调用方继承某个真人身份，把系统自动决策
+//     伪造成该用户的签名；
+//   - BPMN 系统推进标记 + tenantctx 系统旁路，让特权路径在审计里可区分。
+//
+// timer 回调与扫描器都从这里取上下文，两条路径行为一致。
+func (s *TimeoutScanner) systemAdvanceContext(ctx context.Context, tenantID int) context.Context {
+	sys := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+	sys = context.WithValue(sys, bpmn.BPMNUserIDContextKey, nil)
+	sys = bpmn.WithBPMNSystemAdvance(sys)
+	return tenantctx.SystemContext(sys,
+		"bpmn:timeout-scanner",
+		"任务超时兜底动作（notify/escalate/auto_approve/auto_reject）由扫描器以系统身份执行")
 }
 
 func extractTimeoutAction(vars map[string]interface{}) string {
@@ -109,28 +143,19 @@ func extractTimeoutAction(vars map[string]interface{}) string {
 
 // actionNotify marks the task as timed out and enqueues a reminder notification.
 func (s *TimeoutScanner) actionNotify(ctx context.Context, task *ent.ProcessTask, tenantID int) error {
-	// claim-once：仅当任务仍处于活跃状态时才置为 timeout。
-	// 影响行数为 0 说明 timer 回调或恢复扫描已处理过（双路径竞态保护）。
-	claimed, err := s.client.ProcessTask.Update().
-		Where(
-			processtask.ID(task.ID),
-			processtask.StatusIn(timeoutActiveStatuses...),
-		).
-		SetStatus(common.ProcessTaskStatusTimeout).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("set timeout status: %w", err)
-	}
-	if claimed == 0 {
+	// 状态翻转与提醒入箱必须同事务（codex 审计 P2-03）：
+	// 旧实现先提交 timeout，再另开事务入箱且吞错——入箱失败后任务已不再是
+	// 活跃状态，后续扫描不再选中，这条提醒永久丢失且无人知晓。
+	err := s.claimTimeoutStatus(ctx, task, tenantID, common.ProcessTaskStatusTimeout, nil,
+		s.timeoutNotifyFunc(task, tenantID, "task_timeout_reminder",
+			fmt.Sprintf("任务「%s」已超时，请尽快处理", task.TaskName)))
+	if errors.Is(err, errTimeoutAlreadyClaimed) {
 		s.logger.Infow("timeout action: notify skipped (already claimed)",
 			"task_id", task.TaskID, "tenant_id", tenantID)
 		return nil
 	}
-
-	assigneeID, _ := parseAssigneeID(task.Assignee)
-	if assigneeID > 0 {
-		s.enqueueTimeoutNotification(ctx, task, tenantID, assigneeID, "task_timeout_reminder",
-			fmt.Sprintf("任务「%s」已超时，请尽快处理", task.TaskName))
+	if err != nil {
+		return err
 	}
 
 	s.logger.Infow("timeout action: notify",
@@ -147,28 +172,17 @@ func (s *TimeoutScanner) actionEscalate(ctx context.Context, task *ent.ProcessTa
 	vars["escalation_reason"] = "任务超时自动升级"
 	vars["escalated_time"] = time.Now().Format(time.RFC3339)
 
-	// claim-once：同 actionNotify，防止 timer 回调与恢复扫描双路径重复升级。
-	claimed, err := s.client.ProcessTask.Update().
-		Where(
-			processtask.ID(task.ID),
-			processtask.StatusIn(timeoutActiveStatuses...),
-		).
-		SetStatus(common.ProcessTaskStatusEscalated).
-		SetTaskVariables(vars).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("set escalated status: %w", err)
-	}
-	if claimed == 0 {
+	// 同 actionNotify：升级状态与提醒入箱同事务，任一失败整体回滚。
+	err := s.claimTimeoutStatus(ctx, task, tenantID, common.ProcessTaskStatusEscalated, vars,
+		s.timeoutNotifyFunc(task, tenantID, "task_escalated",
+			fmt.Sprintf("任务「%s」已超时并升级，请关注", task.TaskName)))
+	if errors.Is(err, errTimeoutAlreadyClaimed) {
 		s.logger.Infow("timeout action: escalate skipped (already claimed)",
 			"task_id", task.TaskID, "tenant_id", tenantID)
 		return nil
 	}
-
-	assigneeID, _ := parseAssigneeID(task.Assignee)
-	if assigneeID > 0 {
-		s.enqueueTimeoutNotification(ctx, task, tenantID, assigneeID, "task_escalated",
-			fmt.Sprintf("任务「%s」已超时并升级，请关注", task.TaskName))
+	if err != nil {
+		return err
 	}
 
 	s.logger.Infow("timeout action: escalate",
@@ -176,59 +190,88 @@ func (s *TimeoutScanner) actionEscalate(ctx context.Context, task *ent.ProcessTa
 	return nil
 }
 
-// actionAutoReject completes the task with rejection decision, triggering the BPMN reject flow.
-func (s *TimeoutScanner) actionAutoReject(ctx context.Context, task *ent.ProcessTask, tenantID int) error {
-	engine := NewCustomProcessEngine(s.client, s.logger)
-	vars := map[string]interface{}{
-		"approvalDecision": "reject",
-		"comment":          "任务超时自动拒绝",
-		"autoAction":       "auto_reject",
-	}
-	if err := engine.CompleteTask(ctx, task.TaskID, vars); err != nil {
-		return fmt.Errorf("auto-reject complete task: %w", err)
-	}
-
-	assigneeID, _ := parseAssigneeID(task.Assignee)
-	if assigneeID > 0 {
-		s.enqueueTimeoutNotification(ctx, task, tenantID, assigneeID, "task_auto_rejected",
-			fmt.Sprintf("任务「%s」已超时并自动拒绝", task.TaskName))
-	}
-
-	s.logger.Infow("timeout action: auto_reject",
-		"task_id", task.TaskID, "tenant_id", tenantID)
-	return nil
-}
-
-// actionAutoApprove completes the task with approval decision, triggering the BPMN approve flow.
-func (s *TimeoutScanner) actionAutoApprove(ctx context.Context, task *ent.ProcessTask, tenantID int) error {
-	engine := NewCustomProcessEngine(s.client, s.logger)
-	vars := map[string]interface{}{
-		"approvalDecision": "approve",
-		"comment":          "任务超时自动通过",
-		"autoAction":       "auto_approve",
-	}
-	if err := engine.CompleteTask(ctx, task.TaskID, vars); err != nil {
-		return fmt.Errorf("auto-approve complete task: %w", err)
-	}
-
-	assigneeID, _ := parseAssigneeID(task.Assignee)
-	if assigneeID > 0 {
-		s.enqueueTimeoutNotification(ctx, task, tenantID, assigneeID, "task_auto_approved",
-			fmt.Sprintf("任务「%s」已超时并自动通过", task.TaskName))
-	}
-
-	s.logger.Infow("timeout action: auto_approve",
-		"task_id", task.TaskID, "tenant_id", tenantID)
-	return nil
-}
-
-func (s *TimeoutScanner) enqueueTimeoutNotification(ctx context.Context, task *ent.ProcessTask, tenantID, recipientID int, notificationType, content string) {
+// claimTimeoutStatus 在单个事务内完成「claim-once 条件状态翻转 + 提醒入箱」。
+//
+// claim-once 语义不变：条件更新影响 0 行说明 timer 回调或恢复扫描已处理，
+// 返回 errTimeoutAlreadyClaimed 由调用方静默跳过。区别在于入箱失败不再留下
+// 「状态已翻转、提醒永久丢失」的半截事实——整个事务回滚，下一轮扫描重试。
+// 收件人已失效（被停用/删除）不属于可重试故障：跳过通知、保留状态翻转，
+// 否则该任务会每轮扫描都撞同一条确定性错误，永远无法收敛。
+func (s *TimeoutScanner) claimTimeoutStatus(
+	ctx context.Context,
+	task *ent.ProcessTask,
+	tenantID int,
+	targetStatus string,
+	taskVars map[string]interface{},
+	notify func(context.Context, *ent.Tx) error,
+) error {
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		s.logger.Warnw("timeout scanner: begin tx for notification failed", "error", err)
-		return
+		return fmt.Errorf("begin timeout claim tx: %w", err)
 	}
-	err = EnqueueResourceNotificationTx(ctx, tx, ResourceNotificationCommand{
+	rollback := func(cause error) error {
+		_ = tx.Rollback()
+		return cause
+	}
+
+	update := tx.ProcessTask.Update().
+		Where(
+			processtask.ID(task.ID),
+			processtask.StatusIn(timeoutActiveStatuses...),
+		).
+		SetStatus(targetStatus)
+	if taskVars != nil {
+		update = update.SetTaskVariables(taskVars)
+	}
+	claimed, err := update.Save(ctx)
+	if err != nil {
+		return rollback(fmt.Errorf("set timeout status %s: %w", targetStatus, err))
+	}
+	if claimed == 0 {
+		_ = tx.Rollback()
+		return errTimeoutAlreadyClaimed
+	}
+
+	if notify != nil {
+		if err := notify(ctx, tx); err != nil {
+			return rollback(err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit timeout claim tx: %w", err)
+	}
+	return nil
+}
+
+// timeoutNotifyFunc 返回可在事务内执行的提醒入箱闭包；无 assignee 时为空操作。
+func (s *TimeoutScanner) timeoutNotifyFunc(task *ent.ProcessTask, tenantID int, notificationType, content string) func(context.Context, *ent.Tx) error {
+	if strings.TrimSpace(task.Assignee) == "" {
+		return nil
+	}
+	return func(ctx context.Context, tx *ent.Tx) error {
+		return s.enqueueTimeoutNotificationTx(ctx, tx, task, tenantID, notificationType, content)
+	}
+}
+
+// enqueueTimeoutNotificationTx 在调用方事务内解析收件人并写入提醒投递命令。
+//
+// 收件人解析必须在事务内完成：assignee 有两种历史写法——数字用户ID 与
+// 用户名（认领/候选回落写的是 username）。旧实现只认数字前缀，于是以用户名
+// 认领的任务超时提醒全部静默丢失。解析不到可投递用户（未分配、已停用、
+// 跨租户）属于确定性数据状态，跳过通知但保留状态翻转，否则该任务会每轮
+// 扫描都撞同一条错误，永远无法收敛。
+func (s *TimeoutScanner) enqueueTimeoutNotificationTx(ctx context.Context, tx *ent.Tx, task *ent.ProcessTask, tenantID int, notificationType, content string) error {
+	recipientID, err := s.resolveTimeoutRecipient(ctx, tx, tenantID, task.Assignee)
+	if err != nil {
+		return fmt.Errorf("解析超时提醒收件人失败: %w", err)
+	}
+	if recipientID <= 0 {
+		s.logger.Warnw("timeout scanner: assignee 不是本租户有效用户，跳过超时提醒（状态照常翻转）",
+			"task_id", task.TaskID, "tenant_id", tenantID, "assignee", task.Assignee)
+		return nil
+	}
+	if err := EnqueueResourceNotificationTx(ctx, tx, ResourceNotificationCommand{
 		TenantID:         tenantID,
 		ResourceType:     "process_task",
 		ResourceID:       task.ID,
@@ -237,17 +280,121 @@ func (s *TimeoutScanner) enqueueTimeoutNotification(ctx context.Context, task *e
 		Channel:          "in_app",
 		Content:          content,
 		OccurrenceKey:    fmt.Sprintf("task_timeout:%s:%d", task.TaskID, task.DueDate.Unix()),
-	})
+	}); err != nil {
+		return fmt.Errorf("入箱超时提醒失败: %w", err)
+	}
+	return nil
+}
+
+// resolveTimeoutRecipient 把任务 assignee 解析为租户内活跃用户ID；
+// 返回 0 表示没有可投递的收件人（不视为错误）。
+func (s *TimeoutScanner) resolveTimeoutRecipient(ctx context.Context, tx *ent.Tx, tenantID int, assignee string) (int, error) {
+	assignee = strings.TrimSpace(assignee)
+	if assignee == "" || assignee == "0" {
+		return 0, nil
+	}
+	base := tx.User.Query().Where(user.TenantIDEQ(tenantID), user.ActiveEQ(true))
+	if id, err := strconv.Atoi(assignee); err == nil && id > 0 {
+		u, err := base.Where(user.IDEQ(id)).First(ctx)
+		if ent.IsNotFound(err) {
+			return 0, nil
+		}
+		if err != nil {
+			return 0, err
+		}
+		return u.ID, nil
+	}
+	u, err := base.Where(user.UsernameEQ(assignee)).First(ctx)
+	if ent.IsNotFound(err) {
+		return 0, nil
+	}
 	if err != nil {
-		_ = tx.Rollback()
-		s.logger.Warnw("timeout scanner: enqueue notification failed",
-			"task_id", task.TaskID, "error", err)
+		return 0, err
+	}
+	return u.ID, nil
+}
+
+// actionAutoReject completes the task with rejection decision, triggering the BPMN reject flow.
+//
+// 决策键必须与引擎读取口径一致：completeTaskWithClient 读的是
+// approvalAction / approvalResult / approvalComment（拒绝策略、条件网关、
+// 决策审计都只认这三个）。旧实现写 approvalDecision + comment，引擎一个都
+// 不读——自动拒绝既不触发配置的拒绝策略，也不写决策审计，依赖
+// approvalResult 的网关拿不到决定（codex 审计 P2-03）。
+func (s *TimeoutScanner) actionAutoReject(ctx context.Context, task *ent.ProcessTask, tenantID int) error {
+	engine := NewCustomProcessEngine(s.client, s.logger)
+	vars := map[string]interface{}{
+		"approvalAction":  "reject",
+		"approvalResult":  "rejected",
+		"approvalComment": "任务超时自动拒绝",
+		"autoAction":      "auto_reject",
+	}
+	// ctx 已由 dispatchTimeoutAction 标注为系统推进：归属校验放行，
+	// 决策审计按系统身份落 actor_id=0，不伪造个人签名。
+	if err := engine.CompleteTask(ctx, task.TaskID, vars); err != nil {
+		return fmt.Errorf("auto-reject complete task: %w", err)
+	}
+
+	// 决策已在 CompleteTask 的事务里提交；提醒只能随后入箱（CompleteTask
+	// 自持事务，无法并入）。失败必须可见：任务已结束，扫描不会再选中它。
+	s.notifyAutoDecision(ctx, task, tenantID, "task_auto_rejected",
+		fmt.Sprintf("任务「%s」已超时并自动拒绝", task.TaskName))
+
+	s.logger.Infow("timeout action: auto_reject",
+		"task_id", task.TaskID, "tenant_id", tenantID)
+	return nil
+}
+
+// actionAutoApprove completes the task with approval decision, triggering the BPMN approve flow.
+// 决策键与系统身份的说明见 actionAutoReject。
+func (s *TimeoutScanner) actionAutoApprove(ctx context.Context, task *ent.ProcessTask, tenantID int) error {
+	engine := NewCustomProcessEngine(s.client, s.logger)
+	vars := map[string]interface{}{
+		"approvalAction":  "approve",
+		"approvalResult":  "approved",
+		"approvalComment": "任务超时自动通过",
+		"autoAction":      "auto_approve",
+	}
+	if err := engine.CompleteTask(ctx, task.TaskID, vars); err != nil {
+		return fmt.Errorf("auto-approve complete task: %w", err)
+	}
+
+	s.notifyAutoDecision(ctx, task, tenantID, "task_auto_approved",
+		fmt.Sprintf("任务「%s」已超时并自动通过", task.TaskName))
+
+	s.logger.Infow("timeout action: auto_approve",
+		"task_id", task.TaskID, "tenant_id", tenantID)
+	return nil
+}
+
+// notifyAutoDecision 为已提交的自动决策补一条提醒；失败只记录（决策已生效，
+// 不能因为提醒失败把已完成的任务回滚），但按 Error 级别暴露丢失事实。
+func (s *TimeoutScanner) notifyAutoDecision(ctx context.Context, task *ent.ProcessTask, tenantID int, notificationType, content string) {
+	if strings.TrimSpace(task.Assignee) == "" {
 		return
 	}
-	if err := tx.Commit(); err != nil {
-		s.logger.Warnw("timeout scanner: commit notification failed",
-			"task_id", task.TaskID, "error", err)
+	if err := s.enqueueTimeoutNotification(ctx, task, tenantID, notificationType, content); err != nil {
+		s.logger.Errorw("timeout scanner: 自动决策已生效但提醒未入箱（任务已结束，扫描不再重试）",
+			"task_id", task.TaskID, "tenant_id", tenantID,
+			"assignee", task.Assignee, "notification_type", notificationType, "error", err)
 	}
+}
+
+// enqueueTimeoutNotification 独立入箱一条提醒（自动决策路径用：决策已随
+// CompleteTask 提交，无法与提醒同事务）。失败返回 error 由调用方记录。
+func (s *TimeoutScanner) enqueueTimeoutNotification(ctx context.Context, task *ent.ProcessTask, tenantID int, notificationType, content string) error {
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin notification tx: %w", err)
+	}
+	if err := s.enqueueTimeoutNotificationTx(ctx, tx, task, tenantID, notificationType, content); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit notification tx: %w", err)
+	}
+	return nil
 }
 
 // ---------------------------------------------------------------------------

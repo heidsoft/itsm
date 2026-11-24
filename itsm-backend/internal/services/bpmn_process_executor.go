@@ -502,12 +502,22 @@ func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *e
 	decision, _ := variables["approvalResult"].(string)
 	comment, _ := variables["approvalComment"].(string)
 	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
-	if actorID <= 0 {
-		return fmt.Errorf("审批决策缺少认证操作人")
-	}
 	actorName := ""
-	if actor, err := txc.User.Get(ctx, actorID); err == nil {
-		actorName = actor.Name
+	auditAction := action
+	switch {
+	case actorID > 0:
+		if actor, err := txc.User.Get(ctx, actorID); err == nil {
+			actorName = actor.Name
+		}
+	case bpmn.IsBPMNSystemAdvance(ctx) || tenantctx.IsSystemBypass(ctx):
+		// 系统推进的自动决策（超时 auto_approve/auto_reject 等）：与
+		// tryAutoApproveTask 同一口径——actor_id=0、action=system_decision，
+		// 决策值照常落 approvalResult。绝不借用某个真人身份签名，也不因为
+		// 没有操作人就丢掉这条决策事实（丢弃会让自动决策无审计可查）。
+		auditAction = "system_decision"
+		actorName = "system"
+	default:
+		return fmt.Errorf("审批决策缺少认证操作人")
 	}
 	businessType := fmt.Sprint(instance.Variables["business_type"])
 	businessID := fmt.Sprint(instance.Variables["business_id"])
@@ -516,7 +526,7 @@ func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *e
 		SetProcessInstanceKey(instance.ProcessInstanceID).SetTaskID(task.TaskID).
 		SetProcessDefinitionKey(instance.ProcessDefinitionKey).SetNodeKey(task.TaskDefinitionKey).
 		SetBusinessType(businessType).SetBusinessID(businessID).
-		SetActorID(actorID).SetActorName(actorName).SetAction(action).SetDecision(decision).
+		SetActorID(actorID).SetActorName(actorName).SetAction(auditAction).SetDecision(decision).
 		SetComment(comment).SetVariablesSnapshot(variables).SetTenantID(instance.TenantID).Save(ctx)
 	if err != nil {
 		return fmt.Errorf("记录审批决策失败: %w", err)

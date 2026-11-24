@@ -213,7 +213,7 @@ func TestTicketServiceTaskHandler_EscalateTicket(t *testing.T) {
 				SetPriority("medium").
 				Exec(ctx)
 
-			result, err := handler.escalateTicket(ctx, tt.ticketID, tt.variables)
+			result, err := handler.escalateTicket(ctx, nil, tt.ticketID, tt.variables)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -336,7 +336,7 @@ func TestTicketServiceTaskHandler_AssignTicket(t *testing.T) {
 				SetStatus("open").
 				Exec(ctx)
 
-			result, err := handler.assignTicket(ctx, tt.ticketID, tt.variables)
+			result, err := handler.assignTicket(ctx, nil, tt.ticketID, tt.variables)
 
 			if tt.expectedError {
 				assert.Error(t, err)

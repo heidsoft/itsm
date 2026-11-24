@@ -424,7 +424,13 @@ func resolveNotificationResource(variables map[string]interface{}) (string, int,
 	return "", 0, fmt.Errorf("通知缺少业务对象引用(ticket_id/change_id/service_request_id)")
 }
 
-// occurrenceKey 构造幂等键前缀，优先使用流程任务标识，保证重放不会重复发送
+// occurrenceKey 构造幂等键前缀，优先使用流程任务标识，保证重放不会重复发送。
+//
+// 生产链路上 ServiceTask 的 handler 一律以 task=nil 调用
+// （见 bpmn_service_task_command_handler.go），而实例变量里通常也没有
+// process_instance_id——旧实现因此落到 time.Now().UnixNano()，每次重放
+// 都生成新键，幂等形同虚设。命令变量自带 _idempotencyKey/_commandId，
+// 它们对同一 ServiceTask 命令的全部重试恒定，正是想要的重放身份。
 func occurrenceKey(task *ent.ProcessTask, variables map[string]interface{}, action string) string {
 	if task != nil {
 		if task.TaskID != "" {
@@ -433,6 +439,12 @@ func occurrenceKey(task *ent.ProcessTask, variables map[string]interface{}, acti
 		if task.ID > 0 {
 			return fmt.Sprintf("bpmn-task:%d:%s", task.ID, action)
 		}
+	}
+	if key := GetStringFromVars(variables, "_idempotencyKey"); key != "" {
+		return fmt.Sprintf("bpmn-cmd:%s:%s", key, action)
+	}
+	if id := GetIntFromVars(variables, "_commandId"); id > 0 {
+		return fmt.Sprintf("bpmn-cmdid:%d:%s", id, action)
 	}
 	if pi := GetIntFromVars(variables, "process_instance_id"); pi > 0 {
 		return fmt.Sprintf("bpmn-pi:%d:%s:%s", pi, GetStringFromVars(variables, "activity_id"), action)
