@@ -273,6 +273,8 @@ export default function WorkbenchPage() {
       searchValue={search}
       onSearch={setSearch}
       searchLoading={listLoading}
+      onRefresh={() => void fetchData()}
+      refreshing={listLoading}
       filters={{
         visible: filtersVisible,
         onToggle: () => setFiltersVisible(v => !v),

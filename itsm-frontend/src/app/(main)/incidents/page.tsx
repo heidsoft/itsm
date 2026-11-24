@@ -245,6 +245,8 @@ export default function IncidentsPage() {
       searchValue={filters.values.search}
       onSearch={handleSearch}
       searchLoading={query.loading}
+      onRefresh={handleRefresh}
+      refreshing={query.loading}
       filters={{
         visible: filters.visible,
         onToggle: filters.toggleVisible,

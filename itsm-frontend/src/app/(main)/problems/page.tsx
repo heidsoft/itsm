@@ -367,6 +367,11 @@ export default function ProblemListPage() {
       searchValue={searchKeyword}
       onSearch={handleSearch}
       searchLoading={listLoading}
+      onRefresh={() => {
+        void fetchProblems();
+        void fetchStats();
+      }}
+      refreshing={listLoading || statsLoading}
       filters={{
         visible: showFilters,
         onToggle: () => setShowFilters(!showFilters),

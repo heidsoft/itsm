@@ -85,6 +85,8 @@ export default function AssetsPage() {
       searchPlaceholder={t('assets.searchPlaceholder')}
       searchValue={searchValue}
       onSearch={setSearchValue}
+      onRefresh={() => void fetchStats()}
+      refreshing={loading}
       primaryAction={
         canCreateAsset
           ? {

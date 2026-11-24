@@ -633,6 +633,11 @@ function ChangesPageContent() {
       searchValue={searchKeyword}
       onSearch={handleSearch}
       searchLoading={listLoading}
+      onRefresh={() => {
+        void fetchChanges();
+        void fetchStats();
+      }}
+      refreshing={listLoading || statsLoading}
       filters={{
         visible: showFilters,
         onToggle: () => setShowFilters(!showFilters),

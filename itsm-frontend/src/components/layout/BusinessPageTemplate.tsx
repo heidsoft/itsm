@@ -131,6 +131,19 @@ export interface BusinessPageTemplateProps {
   errorDescription?: string;
   /** 错误态重试回调 */
   onRetry?: () => void;
+
+  /**
+   * 刷新回调：重新拉当前页数据，**保留**筛选条件、搜索词、分页与滚动位置。
+   *
+   * 不传则刷新按钮不渲染。此前这里硬编码 `window.location.reload()`：整页
+   * 重载会把用户设置的筛选、搜索词、当前页码、滚动位置全部清空，等于「点刷新
+   * 就从头开始」；而 incidents 等页面在 extraActions 里另有 handleRefresh，
+   * 于是同一屏出现两个都叫「刷新」但行为完全不同的入口。
+   */
+  onRefresh?: () => void;
+  /** 刷新进行中（按钮转圈并挡住重复点击） */
+  refreshing?: boolean;
+
   children?: React.ReactNode;
 
   // 分页
@@ -229,6 +242,8 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
   error = false,
   errorDescription = '加载失败，请稍后重试',
   onRetry,
+  onRefresh,
+  refreshing = false,
   children,
 
   // 分页
@@ -408,10 +423,18 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
                 </Button>
               )}
 
-              {/* 刷新按钮 */}
-              <Button icon={<RotateCcw />} onClick={() => window.location.reload()}>
-                刷新
-              </Button>
+              {/* 刷新按钮：只在调用方提供 onRefresh 时出现。
+                  绝不再退化成 window.location.reload()——整页重载会清掉用户的
+                  筛选/搜索词/页码/滚动位置，看起来像「刷新把状态弄丢了」。 */}
+              {onRefresh && (
+                <Button
+                  icon={<RotateCcw className={refreshing ? 'animate-spin' : undefined} />}
+                  onClick={onRefresh}
+                  loading={refreshing}
+                >
+                  刷新
+                </Button>
+              )}
             </Space>
           </div>
 
