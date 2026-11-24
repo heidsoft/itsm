@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/global-search-api';
 import { DESIGN } from '@/design-system/tokens';
 import styles from './Header.module.css';
+import { useRecentVisitStore } from '@/lib/store/recent-visit-store';
 
 interface GlobalSearchProps {
   open: boolean;
@@ -80,6 +81,12 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   // 此处原有一个「只 preventDefault、不 open」的 window 监听，与 Header 的注册竞争
   // 并吞掉默认行为，已移除（缺陷 O6-B）。
 
+  // 最近访问：弹窗打开且用户还没输入关键词时展示，作为可直接点击的跳转入口。
+  // 此前这块区域只写「输入关键词搜索...」，而 RecentVisitTracker 一直在记录却
+  // 没有任何消费方——写有读无的闭环缺口。
+  const recentVisits = useRecentVisitStore(state => state.visits);
+  const showRecent = open && !searchValue.trim() && recentVisits.length > 0;
+
   const handleItemClick = (item: SearchResult) => {
     const pathMap: Record<string, string> = {
       ticket: 'tickets',
@@ -90,6 +97,11 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
     };
     const basePath = pathMap[item.type] || item.type;
     router.push(`/${basePath}/${item.id}`);
+    onClose();
+  };
+
+  const handleRecentClick = (path: string) => {
+    router.push(path);
     onClose();
   };
 
@@ -148,6 +160,21 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       ) : searchResults && !isSearching ? (
         <div style={{ padding: 40, textAlign: 'center', color: DESIGN.colors.textMuted }}>
           未找到结果
+        </div>
+      ) : showRecent ? (
+        <div style={{ padding: '0 20px 12px' }}>
+          <List
+            header={<strong>最近访问</strong>}
+            dataSource={recentVisits}
+            renderItem={visit => (
+              <List.Item>
+                <List.Item.Meta
+                  title={<a onClick={() => handleRecentClick(visit.path)}>{visit.title}</a>}
+                  description={visit.path}
+                />
+              </List.Item>
+            )}
+          />
         </div>
       ) : (
         <div style={{ padding: 40, textAlign: 'center', color: DESIGN.colors.textMuted }}>
