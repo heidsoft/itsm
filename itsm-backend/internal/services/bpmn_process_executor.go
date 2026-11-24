@@ -682,16 +682,44 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, txc *ent.Client, 
 			fmt.Sprintf("节点 %s 无可用出边且非结束事件（sourceRef 与 outgoing 声明均未命中），实例已挂起", currentElementID))
 	}
 
+	// 排他网关：先求值普通条件流，default 流不参与条件求值（BPMN 语义：
+	// default 是「其他流都不成立时」的兜底，而不是一条普通候选流）。
+	defaultFlowID := e.exclusiveGatewayDefaultFlowID(process, currentElementID)
 	var targetRef string
 	for _, flow := range outgoingFlows {
+		if defaultFlowID != "" && flow.ID == defaultFlowID {
+			continue
+		}
 		if e.evaluateCondition(flow, variables) {
 			targetRef = flow.TargetRef
 			break
 		}
 	}
 
+	// 零命中：按 default 流兜底（P2-02）。
+	// BPMN 语义是「正常条件流先求值，全部不成立才走 default」，
+	// 旧实现完全不读 DefaultFlow，导致带 default 的网关在条件为假时静默失败。
 	if targetRef == "" {
-		return fmt.Errorf("没有符合条件的路径")
+		if defaultFlowID != "" {
+			if flow := e.findSequenceFlow(process, defaultFlowID); flow != nil && flow.TargetRef != "" {
+				e.logger.Infow("排他网关条件流零命中，按 default 流继续",
+					"instance", instance.ID, "gateway", currentElementID,
+					"defaultFlow", defaultFlowID, "target", flow.TargetRef)
+				targetRef = flow.TargetRef
+			} else {
+				return e.suspendOnBrokenGraph(ctx, txc, instance, currentElementID,
+					fmt.Sprintf("排他网关 %s 声明的 default 流 %s 无效（找不到该序列流或目标为空），实例已挂起",
+						currentElementID, defaultFlowID))
+			}
+		}
+	}
+
+	if targetRef == "" {
+		// 没有 default 时不能只返回 nil 让实例静默停住：显式挂起并写明原因，
+		// 保留恢复入口所需的定位信息（审计 P2-02）。
+		return e.suspendOnBrokenGraph(ctx, txc, instance, currentElementID,
+			fmt.Sprintf("节点 %s 的所有条件流均不满足且未声明 default 流，实例已挂起待人工修正变量或流程图",
+				currentElementID))
 	}
 
 	// 记录排他网关路由决策，使「走哪条分支」可审计
@@ -1910,6 +1938,16 @@ func (e *CustomProcessEngine) findExclusiveGateway(process *BPMNProcess, id stri
 	return nil
 }
 
+// exclusiveGatewayDefaultFlowID 读取排他网关声明的 default 序列流 ID（P2-02）。
+// 非网关元素返回空串；声明为空或非排他网关同样返回空串。
+func (e *CustomProcessEngine) exclusiveGatewayDefaultFlowID(process *BPMNProcess, id string) string {
+	gateway := e.findExclusiveGateway(process, id)
+	if gateway == nil {
+		return ""
+	}
+	return strings.TrimSpace(gateway.DefaultFlow)
+}
+
 func (e *CustomProcessEngine) findParallelGateway(process *BPMNProcess, id string) *BPMNParallelGateway {
 	for _, gateway := range process.ParallelGateways {
 		if gateway.ID == id {
@@ -2222,7 +2260,12 @@ func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, txc *e
 	}
 	var next []string
 	matched := false
+	// default 流不参与条件求值（BPMN 语义：default 是其他流都不成立时的兜底）。
+	defaultFlowID := strings.TrimSpace(gateway.DefaultFlow)
 	for _, flow := range e.findOutgoingFlows(process, gateway.ID) {
+		if defaultFlowID != "" && flow.ID == defaultFlowID {
+			continue
+		}
 		if e.evaluateCondition(flow, instance.Variables) {
 			matched = true
 			next = append(next, flow.TargetRef)
@@ -2231,11 +2274,32 @@ func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, txc *e
 			}
 		}
 	}
+	// 零命中：包容网关同样支持 default 流（P2-02）。旧实现只 Warn 后
+	// markElementDone，实例静默停在此处，既无原因也无恢复入口。
+	if !matched {
+		if defaultFlowID != "" {
+			flow := e.findSequenceFlow(process, defaultFlowID)
+			if flow == nil || flow.TargetRef == "" {
+				return e.suspendOnBrokenGraph(ctx, txc, instance, gateway.ID,
+					fmt.Sprintf("包容网关 %s 声明的 default 流 %s 无效（找不到该序列流或目标为空），实例已挂起",
+						gateway.ID, defaultFlowID))
+			}
+			e.logger.Infow("包容网关条件流零命中，按 default 流继续",
+				"instance", instance.ID, "gateway", gateway.ID,
+				"defaultFlow", defaultFlowID, "target", flow.TargetRef)
+			next = append(next, flow.TargetRef)
+			if err := e.dispatchGatewayOrElement(ctx, txc, instance, process, flow.TargetRef, depth); err != nil {
+				return err
+			}
+		} else {
+			// 无 default：显式挂起而非静默停在网关。
+			return e.suspendOnBrokenGraph(ctx, txc, instance, gateway.ID,
+				fmt.Sprintf("包容网关 %s 的所有条件流均不满足且未声明 default 流，实例已挂起待人工修正变量或流程图",
+					gateway.ID))
+		}
+	}
 	e.markElementDone(ctx, txc, instance, gateway.ID)
 	e.recordGatewayHistory(ctx, txc, instance, gateway.ID, "inclusive", "fork", next, instance.Variables)
-	if !matched {
-		e.logger.Warnw("包容网关无满足条件的出边，流程在此等待", "gateway", gateway.ID, "instance", instance.ID)
-	}
 	return nil
 }
 
