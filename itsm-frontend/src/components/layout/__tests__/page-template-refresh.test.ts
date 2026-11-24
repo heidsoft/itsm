@@ -21,6 +21,94 @@ const TEMPLATE = path.join(ROOT, 'src/components/layout/BusinessPageTemplate.tsx
 const read = (p: string) => fs.readFileSync(p, 'utf8');
 
 /**
+ * 从源码中截出 `<BusinessPageTemplate ... >` 这个标签的文本。
+ *
+ * 截标签而不是整份文件：整份文件里可能还有别的组件也带同名 prop
+ * （service-catalog 的 `<ServiceCatalogFilters onRefresh=...>` 就是实例），
+ * 用全文匹配会把「传给了别的组件」误判成「模板插槽已接线」（假绿）。
+ *
+ * 🔴 不能扫 `>` 找标签结束：属性值里的箭头函数 `onViewChange={view => ...}`
+ * 和比较运算符都含 `>`，会提前截断（实测把 incidents 判成「未接线」）。
+ * 正确做法 = 括号深度平衡 + 只在深度 0 且**不在字符串内**时认 `>`。
+ */
+function templateTag(src: string): string | null {
+  const start = src.indexOf('<BusinessPageTemplate');
+  if (start === -1) return null;
+  let depth = 0;
+  let quote: string | null = null;
+  for (let i = start; i < src.length; i += 1) {
+    const ch = src[i];
+    if (quote) {
+      if (ch === quote && src[i - 1] !== '\\') quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; continue; }
+    if (ch === '{') depth += 1;
+    else if (ch === '}') depth -= 1;
+    else if (ch === '>' && depth === 0) return src.slice(start, i + 1);
+  }
+  return null;
+}
+
+/**
+ * 取 `<BusinessPageTemplate ...>` 的**顶层 prop 名集合**。
+ *
+ * 为什么不能直接在标签文本里找 `onRefresh=`：incidents 的标签里有
+ *   filters={{ content: (<IncidentFilters onRefresh={handleRefresh} />) }}
+ * —— 这个 onRefresh 传给的是嵌套的筛选组件，不是模板插槽。在标签文本里
+ * 搜子串会把它当成「模板插槽接线了」（实测假绿）。必须只在 `{ }` 深度为 0
+ * 的位置识别 `name=`，嵌套对象里的同名 prop 一律不计。
+ */
+function topLevelProps(tag: string): Set<string> {
+  const names = new Set<string>();
+  let depth = 0;
+  let quote: string | null = null;
+  // 跳过开头的 "<BusinessPageTemplate"
+  for (let i = tag.indexOf('BusinessPageTemplate') + 'BusinessPageTemplate'.length; i < tag.length; i += 1) {
+    const ch = tag[i];
+    if (quote) {
+      if (ch === quote && tag[i - 1] !== '\\') quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; continue; }
+    if (ch === '{') { depth += 1; continue; }
+    if (ch === '}') { depth -= 1; continue; }
+    if (depth !== 0) continue;
+    // 顶层位置：识别 `ident=`（前面必须是空白，避免匹配到 a-b 里的片段）
+    if (ch === '=') {
+      const before = tag.slice(0, i);
+      const m = before.match(/([A-Za-z_$][\w$]*)\s*$/);
+      if (m) names.add(m[1]);
+    }
+  }
+  return names;
+}
+
+/** 扫描真实源码找出所有使用模板的业务页面，不写死清单。 */
+function discoverTemplatePages(): string[] {
+  const mainDir = path.join(ROOT, 'src/app/(main)');
+  const found: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === '__tests__' || entry.name === 'node_modules') continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) { walk(full); continue; }
+      if (entry.name !== 'page.tsx') continue;
+      if (read(full).includes('<BusinessPageTemplate')) {
+        found.push(path.relative(mainDir, full));
+      }
+    }
+  };
+  if (fs.existsSync(mainDir)) walk(mainDir);
+  return found;
+}
+
+/** 消费模板的页面（相对 `src/app/(main)` 的目录名），运行期发现而非硬编码。 */
+const TEMPLATE_PAGES = discoverTemplatePages().map((rel) =>
+  rel.replace(/^\.\//, '').replace(/\/page\.tsx$/, ''),
+);
+
+/**
  * 逐行去掉注释，避免注释里提到 reload 造成假红/假绿。
  *
  * 注意：不能用「行首是否以 * 开头」这种朴素规则——JSX 里的 `{/* ... *\/}`
@@ -86,28 +174,35 @@ describe('页面模板刷新语义', () => {
   });
 
   it('每个使用模板的页面都接了自己的增量刷新，而不是依赖模板默认行为', () => {
-    const pages = ['changes', 'problems', 'incidents', 'workbench', 'assets'];
     const missing: string[] = [];
-    for (const page of pages) {
+    for (const page of TEMPLATE_PAGES) {
       const p = path.join(ROOT, `src/app/(main)/${page}/page.tsx`);
       if (!fs.existsSync(p)) continue;
-      const src = read(p);
-      if (!src.includes('<BusinessPageTemplate')) continue;
-      if (!/onRefresh=/.test(src)) missing.push(page);
+      const tag = templateTag(read(p));
+      if (!tag) { missing.push(`${page}(未解析到模板标签)`); continue; }
+      // 必须是模板自己的顶层 prop，不能是嵌套组件里的同名 prop
+      if (!topLevelProps(tag).has('onRefresh')) missing.push(page);
     }
     expect(missing).toEqual([]);
   });
 
   it('传了 onRefresh 的页面必须同时传 refreshing（否则按钮无法转圈也无法防重复点击）', () => {
-    const pages = ['changes', 'problems', 'incidents', 'workbench', 'assets'];
     const missing: string[] = [];
-    for (const page of pages) {
+    for (const page of TEMPLATE_PAGES) {
       const p = path.join(ROOT, `src/app/(main)/${page}/page.tsx`);
       if (!fs.existsSync(p)) continue;
-      const src = read(p);
-      if (!/onRefresh=/.test(src)) continue;
-      if (!/refreshing=/.test(src)) missing.push(page);
+      const tag = templateTag(read(p));
+      if (!tag) continue;
+      const props = topLevelProps(tag);
+      if (!props.has('onRefresh')) continue;
+      if (!props.has('refreshing')) missing.push(page);
     }
     expect(missing).toEqual([]);
+  });
+
+  it('扫描面非空且与真实消费方一致（防止发现逻辑失效后真空跑全绿）', () => {
+    // 动态发现若返回空数组，上面两条会被静默跳过 → 假绿
+    expect(TEMPLATE_PAGES.length).toBeGreaterThan(0);
+    expect(TEMPLATE_PAGES).toContain('incidents');
   });
 });
