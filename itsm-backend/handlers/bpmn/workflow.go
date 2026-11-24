@@ -324,13 +324,12 @@ func (c *WorkflowHandler) ListProcessDefinitions(ctx *gin.Context) {
 	}
 	req.TenantID = tenantID
 
-	// 设置默认分页参数
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 {
-		req.PageSize = 20
-	}
+	// 页长/页码只有 common.GetPaginationFromQuery 一个所有者：缺省 1/20，
+	// 只采纳 [1,100]，越界与非数字回落缺省（与 dashboard.go 审计列表同口径）。
+	// 手写 <=0 兜底不设上界，pageSize=100000 会原样下传到 SQL LIMIT。
+	pg := common.GetPaginationFromQuery(ctx)
+	req.Page = pg.Page
+	req.PageSize = pg.PageSize
 
 	definitions, total, err := c.processEngine.ProcessDefinitionService().ListProcessDefinitions(workflowCtx, &req)
 	if err != nil {
@@ -624,13 +623,12 @@ func (c *WorkflowHandler) ListProcessInstances(ctx *gin.Context) {
 	}
 	req.TenantID = tenantID
 
-	// 设置默认分页参数
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 {
-		req.PageSize = 20
-	}
+	// 页长/页码只有 common.GetPaginationFromQuery 一个所有者：缺省 1/20，
+	// 只采纳 [1,100]，越界与非数字回落缺省（与 dashboard.go 审计列表同口径）。
+	// 手写 <=0 兜底不设上界，pageSize=100000 会原样下传到 SQL LIMIT。
+	pg := common.GetPaginationFromQuery(ctx)
+	req.Page = pg.Page
+	req.PageSize = pg.PageSize
 
 	instances, total, err := c.processEngine.ProcessInstanceService().ListProcessInstances(reqCtx, &req)
 	if err != nil {
@@ -786,13 +784,12 @@ func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 		return
 	}
 
-	// 设置默认分页参数
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 {
-		req.PageSize = 20
-	}
+	// 页长/页码只有 common.GetPaginationFromQuery 一个所有者：缺省 1/20，
+	// 只采纳 [1,100]，越界与非数字回落缺省（与 dashboard.go 审计列表同口径）。
+	// 手写 <=0 兜底不设上界，pageSize=100000 会原样下传到 SQL LIMIT。
+	pg := common.GetPaginationFromQuery(ctx)
+	req.Page = pg.Page
+	req.PageSize = pg.PageSize
 
 	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx.Request.Context(), &req)
 	if err != nil {
@@ -821,12 +818,10 @@ func (c *WorkflowHandler) ListAllTasks(ctx *gin.Context) {
 	req.TenantID = tenantID
 	req.UserID = 0
 	req.AllTasks = true
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 {
-		req.PageSize = 20
-	}
+	// 页长/页码只有 common.GetPaginationFromQuery 一个所有者（同 ListMyTasks）。
+	pg := common.GetPaginationFromQuery(ctx)
+	req.Page = pg.Page
+	req.PageSize = pg.PageSize
 
 	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx.Request.Context(), &req)
 	if err != nil {

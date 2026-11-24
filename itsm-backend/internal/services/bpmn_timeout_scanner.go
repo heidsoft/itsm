@@ -418,9 +418,12 @@ const countersignFinalizingGrace = 5 * time.Minute
 //  2. 结论仍为 pending（阈值未凑齐，说明抢占是误写）→ 回退 assigned，让投票继续；
 //  3. 结论已定 → 走与 Vote 相同的系统上下文 CompleteTask 推进父任务。
 //
-// claim-once：恢复前用条件更新把 updated_at 推进作为认领标记（乐观锁），
-// 同一任务不会被两个扫描周期并发恢复；CompleteTask 自带
-// StatusNEQ(completed/cancelled) 条件更新，重复推进天然幂等失败。
+// 并发安全的实际机制（不是 claim-once，旧注释所称「updated_at 推进作为
+// 认领标记」的 CAS 并不存在）：查询带 UpdatedAtLT(grace) 排除新近变动；
+// 恢复动作以 StatusEQ(finalizing) 条件更新作乐观锁——reverted==0 即并发者
+// 已处理，本周期放弃；推进依赖 CompleteTask 自带的
+// StatusNEQ(completed/cancelled) 条件更新，重复推进幂等失败。
+// 两个扫描周期同时恢复同一任务时，最多一个完成状态迁移，不会双写。
 func (s *TimeoutScanner) ScanStuckFinalizingTasks(ctx context.Context, tenantID int) (int, error) {
 	if tenantID <= 0 {
 		return 0, fmt.Errorf("finalizing scanner: invalid tenant ID")

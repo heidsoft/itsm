@@ -85,6 +85,10 @@ func TestInitDepartmentDefaultBindings_BindsOnlyDeployableKeys(t *testing.T) {
 	ctx := context.Background()
 
 	tenantID := 61
+	// 关联引用守卫（P2-10）要求绑定引用的部门真实存在且同租户：
+	// 合成 ID（历史夹具直接写 500）会被 fail-closed 拒绝，夹具建真部门行。
+	dept := client.Department.Create().
+		SetName("运维部").SetCode("ops-dept-61").SetTenantID(tenantID).SaveX(ctx)
 	deployment := client.ProcessDeployment.Create().
 		SetDeploymentID("DEP-DEPT-BINDINGS").SetDeploymentName("dept-bindings").SetTenantID(tenantID).SaveX(ctx)
 	for _, key := range readyCatalogKeysBaseline {
@@ -95,10 +99,10 @@ func TestInitDepartmentDefaultBindings_BindsOnlyDeployableKeys(t *testing.T) {
 	}
 
 	svc := NewProcessBindingService(client)
-	require.NoError(t, svc.InitDepartmentDefaultBindings(ctx, tenantID, 500, "operations"))
+	require.NoError(t, svc.InitDepartmentDefaultBindings(ctx, tenantID, dept.ID, "operations"))
 
 	bindings, err := client.ProcessBinding.Query().
-		Where(processbinding.TenantID(tenantID), processbinding.DepartmentID(500)).
+		Where(processbinding.TenantID(tenantID), processbinding.DepartmentID(dept.ID)).
 		All(ctx)
 	require.NoError(t, err)
 
@@ -112,9 +116,9 @@ func TestInitDepartmentDefaultBindings_BindsOnlyDeployableKeys(t *testing.T) {
 	assert.Equal(t, []string{"change_emergency_flow", "change_normal_flow", "incident_emergency_flow", "incident_emergency_flow"}, keys)
 
 	// 幂等：重复初始化不产生重复绑定。
-	require.NoError(t, svc.InitDepartmentDefaultBindings(ctx, tenantID, 500, "operations"))
+	require.NoError(t, svc.InitDepartmentDefaultBindings(ctx, tenantID, dept.ID, "operations"))
 	count, err := client.ProcessBinding.Query().
-		Where(processbinding.TenantID(tenantID), processbinding.DepartmentID(500)).
+		Where(processbinding.TenantID(tenantID), processbinding.DepartmentID(dept.ID)).
 		Count(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, len(keys), count)

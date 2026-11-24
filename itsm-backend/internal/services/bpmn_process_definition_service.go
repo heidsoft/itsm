@@ -407,10 +407,11 @@ func (s *bpmnProcessDefinitionService) ListProcessDefinitions(ctx context.Contex
 		return nil, 0, fmt.Errorf("获取流程定义总数失败: %w", err)
 	}
 
-	if req.Page > 0 && req.PageSize > 0 {
-		offset := (req.Page - 1) * req.PageSize
-		query = query.Offset(offset).Limit(req.PageSize)
-	}
+	// 分页归一化是 SQL 上界的唯一入口：service 直调方可能不设分页（0 会
+	// 跳过整个 LIMIT 分支=全量拉取）或传超大页长。缺省 1/20，超上限夹紧。
+	req.Page, req.PageSize = common.ValidatePagination(req.Page, req.PageSize)
+	offset := (req.Page - 1) * req.PageSize
+	query = query.Offset(offset).Limit(req.PageSize)
 
 	definitions, err := query.Order(ent.Desc(processdefinition.FieldCreatedAt)).All(ctx)
 	if err != nil {

@@ -1,19 +1,25 @@
 package service
 
-// test-coverage-guard: skip — InitDefaultBindings 与 StartProcess 对齐 IsLatest 语义;
-// 属种子/初始化路径,无独立服务测试,由流程绑定集成路径覆盖。
+// 覆盖：UpdateBinding/CreateBinding 的租户 fail-closed 与关联引用归属由
+// bpmn_binding_tenant_guard_test.go 直测；InitDefaultBindings（种子路径）
+// 与 StartProcess 对齐 IsLatest 语义，由流程绑定集成路径覆盖。
 
 import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/approvalchain"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/slapolicy"
+	"itsm-backend/ent/team"
 	"itsm-backend/service/scenario"
 
 	"github.com/pkg/errors"
@@ -31,6 +37,16 @@ func NewProcessBindingService(client *ent.Client) *ProcessBindingService {
 
 // CreateBinding 创建流程绑定
 func (s *ProcessBindingService) CreateBinding(ctx context.Context, binding *dto.ProcessBinding) (*dto.ProcessBinding, error) {
+	// fail-closed：租户上下文是创建凭据。<=0 直接拒绝——processbinding.tenant_id
+	// 是 Positive，缺省值最终也会在落库时失败，但错误必须在入口就表达为
+	// 「缺少租户上下文」，而不是误导性的「流程定义不存在」（P2-10）。
+	if binding.TenantID <= 0 {
+		return nil, common.NewBusinessError(common.AuthFailedCode,
+			"未授权访问：缺少有效租户上下文", "binding.TenantID <= 0")
+	}
+	if err := s.validateBindingReferences(ctx, binding.TenantID, binding); err != nil {
+		return nil, err
+	}
 	// 验证流程定义存在
 	def, err := s.client.ProcessDefinition.Query().
 		Where(
@@ -106,12 +122,24 @@ func (s *ProcessBindingService) CreateBinding(ctx context.Context, binding *dto.
 
 // UpdateBinding 更新流程绑定
 func (s *ProcessBindingService) UpdateBinding(ctx context.Context, id int, binding *dto.ProcessBinding) (*dto.ProcessBinding, error) {
+	// fail-closed：租户上下文是操作凭据。旧实现 `binding.TenantID > 0 &&`
+	// 让缺省调用（<=0）整段跳过归属比较——HTTP handler 覆盖 tenant 不能
+	// 替代 service 自身的 fail-closed，内部/缺省调用同样要挡（P2-10）。
+	if binding.TenantID <= 0 {
+		return nil, common.NewBusinessError(common.AuthFailedCode,
+			"未授权访问：缺少有效租户上下文", "binding.TenantID <= 0")
+	}
 	entity, err := s.client.ProcessBinding.Get(ctx, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "查询流程绑定失败")
 	}
-	if binding.TenantID > 0 && entity.TenantID != binding.TenantID {
-		return nil, fmt.Errorf("无权操作此流程绑定")
+	if entity.TenantID != binding.TenantID {
+		return nil, common.NewForbiddenError("无权操作此流程绑定")
+	}
+	// 关联引用先按可信租户验证归属，再允许写入：department/team/approval-chain/
+	// SLA 外键被路由与审计直接消费，指向不存在或他租户资源的绑定是静默错配。
+	if err := s.validateBindingReferences(ctx, binding.TenantID, binding); err != nil {
+		return nil, err
 	}
 
 	// 如果设置为默认，需要取消同类型其他默认绑定
@@ -185,6 +213,79 @@ func (s *ProcessBindingService) UpdateBinding(ctx context.Context, id int, bindi
 	}
 
 	return s.toBindingResponse(entity), nil
+}
+
+// validateBindingReferences 校验绑定携带的关联引用存在且归属可信租户。
+// ID 为 0/空串表示「不引用」，跳过；引用了就必须查得到且同租户——否则绑定
+// 会把部门/团队/审批链/SLA 策略指向不存在或属于其它租户的资源，而路由与
+// 审计按这些外键解释绑定时才会暴露（P2-10）。错误一律 400：这是调用方
+// 指错了资源，不是服务端故障。
+func (s *ProcessBindingService) validateBindingReferences(ctx context.Context, tenantID int, binding *dto.ProcessBinding) error {
+	if binding.DepartmentID > 0 {
+		// department 带软删但不在 RegisterSoftDeleteInterceptors 清单内，
+		// 读面靠显式 DeletedAtIsNil——校验必须同口径，已删部门不可再引用。
+		ok, err := s.client.Department.Query().
+			Where(
+				department.ID(binding.DepartmentID),
+				department.TenantID(tenantID),
+				department.DeletedAtIsNil(),
+			).
+			Exist(ctx)
+		if err != nil {
+			return errors.Wrap(err, "验证部门引用失败")
+		}
+		if !ok {
+			return common.NewValidationError(
+				fmt.Sprintf("部门 %d 不存在或不属于当前租户", binding.DepartmentID), nil)
+		}
+	}
+	if binding.TeamID > 0 {
+		ok, err := s.client.Team.Query().
+			Where(team.ID(binding.TeamID), team.TenantID(tenantID), team.DeletedAtIsNil()).
+			Exist(ctx)
+		if err != nil {
+			return errors.Wrap(err, "验证团队引用失败")
+		}
+		if !ok {
+			return common.NewValidationError(
+				fmt.Sprintf("团队 %d 不存在或不属于当前租户", binding.TeamID), nil)
+		}
+	}
+	if v := strings.TrimSpace(binding.ApprovalChainID); v != "" {
+		chainID, convErr := strconv.Atoi(v)
+		if convErr != nil || chainID <= 0 {
+			return common.NewValidationError(
+				fmt.Sprintf("审批链引用 %q 不是有效的审批链 ID", binding.ApprovalChainID), nil)
+		}
+		ok, err := s.client.ApprovalChain.Query().
+			Where(approvalchain.ID(chainID), approvalchain.TenantIDEQ(tenantID)).
+			Exist(ctx)
+		if err != nil {
+			return errors.Wrap(err, "验证审批链引用失败")
+		}
+		if !ok {
+			return common.NewValidationError(
+				fmt.Sprintf("审批链 %d 不存在或不属于当前租户", chainID), nil)
+		}
+	}
+	if v := strings.TrimSpace(binding.SLAPolicyID); v != "" {
+		slaID, convErr := strconv.Atoi(v)
+		if convErr != nil || slaID <= 0 {
+			return common.NewValidationError(
+				fmt.Sprintf("SLA 策略引用 %q 不是有效的策略 ID", binding.SLAPolicyID), nil)
+		}
+		ok, err := s.client.SLAPolicy.Query().
+			Where(slapolicy.ID(slaID), slapolicy.TenantID(tenantID)).
+			Exist(ctx)
+		if err != nil {
+			return errors.Wrap(err, "验证 SLA 策略引用失败")
+		}
+		if !ok {
+			return common.NewValidationError(
+				fmt.Sprintf("SLA 策略 %d 不存在或不属于当前租户", slaID), nil)
+		}
+	}
+	return nil
 }
 
 // DeleteBinding 删除流程绑定
