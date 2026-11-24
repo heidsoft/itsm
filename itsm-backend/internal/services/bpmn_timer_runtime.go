@@ -45,3 +45,12 @@ func timerRuntimeSnapshot() (TimerStore, *TimerScheduler) {
 	defer bpmnTimerRuntime.mu.RUnlock()
 	return bpmnTimerRuntime.store, bpmnTimerRuntime.scheduler
 }
+
+// TimerRuntimeSnapshot 导出当前进程级 timer 运行时依赖（只读）。
+//
+// 供装配层验证接线是否真的生效（bootstrap 的 timer 运行时守卫），
+// 以及运维诊断「本进程的引擎是否拿得到定时器依赖」。
+// 返回值均为 nil 表示尚未注册（装配缺失或已显式清场）。
+func TimerRuntimeSnapshot() (TimerStore, *TimerScheduler) {
+	return timerRuntimeSnapshot()
+}

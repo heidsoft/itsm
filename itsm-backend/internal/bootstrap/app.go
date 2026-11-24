@@ -849,12 +849,7 @@ func NewApplication() *Application {
 	bpmnMonitoringHandler := bpmnHandler.NewMonitoringHandler(bpmnMonitoringService)
 	// BPMN AI Generator Service & Handler (AI驱动的流程生成)
 	// Timer Store 必须在部署服务之前创建：流程部署时注册 Timer Start Event 依赖它。
-	timerStore := service.NewDBTimerStore(client, sugar)
-	// 审计 P1-07：把 timer 运行时注册为进程级依赖，使业务审批桥接/工单流程在
-	// 事务内另建的裸引擎同样拿到 store（否则中间定时事件报「未配置」回滚、
-	// 边界定时事件静默不注册）。scheduler 此刻尚未创建，先注册 store；
-	// 下面 timerScheduler 创建后会再补一次完整注册。
-	service.SetTimerRuntime(timerStore, nil)
+	timerStore := newRuntimeTimerStore(client, sugar)
 	bpmnDeploymentService := service.NewBPMNDeploymentServiceWithTimerStore(client, timerStore, sugar)
 	// 版本激活/回滚同样必须同步 start timer 时间表（P1⑤）。
 	bpmnVersionService.SetTimerStore(timerStore)
@@ -1557,9 +1552,7 @@ func NewApplication() *Application {
 		Callback: timerEventHandler.Callback(),
 	})
 
-	customProcessEngine.SetTimerServices(timerStore, timerScheduler)
-	// 补齐进程级运行时（P1-07）：此后新建的桥接/工单引擎同时拿到 store 与 scheduler。
-	service.SetTimerRuntime(timerStore, timerScheduler)
+	wireTimerRuntime(customProcessEngine, timerStore, timerScheduler)
 
 	return &Application{
 		Cfg:               cfg,
