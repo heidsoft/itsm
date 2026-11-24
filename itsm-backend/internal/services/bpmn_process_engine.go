@@ -32,6 +32,19 @@ type ProcessEngine interface {
 	TerminateProcess(ctx context.Context, processInstanceID string, reason string) error
 }
 
+// VersionedProcessStarter 是「按指定版本启动流程」的可选扩展能力（P2-07）。
+//
+// 背景：TriggerProcess 会按路由查到一个确定版本的流程定义，但 StartProcess
+// 只按 key + IsActive + IsLatest 重新选版本，导致路由指定的版本承诺被覆盖。
+//
+// 这里不改动 ProcessEngine 主接口（它被 handler 契约与 fake 实现锁定），
+// 而是定义一个窄扩展接口：调用方用类型断言探测能力，不支持时回落到旧路径。
+type VersionedProcessStarter interface {
+	// StartProcessWithVersion 按 key + 指定版本启动流程。
+	// version 为空串时语义与 StartProcess 一致（取 active + latest）。
+	StartProcessWithVersion(ctx context.Context, processDefinitionKey string, version string, businessKey string, variables map[string]interface{}) (*ent.ProcessInstance, error)
+}
+
 // ProcessDefinitionService 是 dto.ProcessDefinitionCatalog 的别名：ProcessEngine 三个访问器的返回类型
 // 必须与域内窄契约完全一致（Go 要求命名类型相同），接口定义因此收敛到 dto。
 type ProcessDefinitionService = dto.ProcessDefinitionCatalog

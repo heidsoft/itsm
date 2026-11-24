@@ -45,6 +45,12 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 	// 2. 如果没有指定流程定义，则根据业务类型查找
 	processDefKey := req.ProcessDefinitionKey
 	processDefVersion := ""
+	// 客户端显式指定的版本优先于路由给出的版本（P2-07）。
+	// 旧实现既不读 req.ProcessVersion，路由给出的版本也不会传给引擎，
+	// 于是「按版本触发」的承诺在两个入口同时失效。
+	if req.ProcessVersion > 0 {
+		processDefVersion = strconv.Itoa(req.ProcessVersion)
+	}
 	if processDefKey == "" {
 		route, err := s.processRoutingSvc.FindBestRoute(ctx, s.buildRoutingContext(req))
 		if err != nil {
@@ -52,24 +58,33 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 		}
 		if route != nil {
 			processDefKey = route.ProcessDefinitionKey
-			processDefVersion = route.ProcessDefinitionVersion
+			if processDefVersion == "" {
+				processDefVersion = route.ProcessDefinitionVersion
+			}
 		}
 	}
 	if processDefKey == "" {
 		return nil, fmt.Errorf("未找到业务类型 %s 对应的流程绑定", req.BusinessType)
 	}
 
-	// 3. 获取流程定义（仅要求 IsActive，不过滤 IsLatest 以支持触发特定版本）
+	// 3. 获取流程定义
+	// 与引擎的选版口径保持一致：指定版本时严格按版本取；未指定时取 active + latest。
+	// 否则这里查到的定义与引擎实际启动的定义可能不是同一个版本。
 	definitionQuery := s.client.ProcessDefinition.Query().Where(
 		processdefinition.TenantID(req.TenantID), processdefinition.IsActive(true),
 		processdefinition.Key(processDefKey),
 	)
 	if processDefVersion != "" {
 		definitionQuery = definitionQuery.Where(processdefinition.Version(processDefVersion))
+	} else {
+		definitionQuery = definitionQuery.Where(processdefinition.IsLatest(true))
 	}
 	definition, err := definitionQuery.First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
+			if processDefVersion != "" {
+				return nil, fmt.Errorf("流程定义 %s 的指定版本 %s 不存在或未激活", processDefKey, processDefVersion)
+			}
 			return nil, fmt.Errorf("流程定义 %s 不存在", processDefKey)
 		}
 		return nil, errors.Wrap(err, "查询流程定义失败")
@@ -82,8 +97,20 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 	variables := s.buildProcessVariables(req, definition)
 
 	// 6. 设置租户上下文并启动流程
+	// 路由查到的版本必须真正传到引擎（P2-07）：旧实现只传 key，
+	// 引擎会重新选 active+latest，路由指定的版本承诺被覆盖。
 	triggerCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, req.TenantID)
-	instance, err := s.processEngine.StartProcess(triggerCtx, processDefKey, businessKey, variables)
+	var instance *ent.ProcessInstance
+	if starter, ok := s.processEngine.(VersionedProcessStarter); ok {
+		instance, err = starter.StartProcessWithVersion(triggerCtx, processDefKey, processDefVersion, businessKey, variables)
+	} else {
+		// 引擎未实现版本化启动能力：显式说明版本未生效，不能静默按 latest 启动。
+		if processDefVersion != "" {
+			return nil, fmt.Errorf("当前流程引擎不支持按指定版本 %s 启动流程 %s，请改用默认版本路由",
+				processDefVersion, processDefKey)
+		}
+		instance, err = s.processEngine.StartProcess(triggerCtx, processDefKey, businessKey, variables)
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "启动流程失败")
 	}

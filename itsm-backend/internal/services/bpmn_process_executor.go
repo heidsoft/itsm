@@ -35,6 +35,14 @@ import (
 
 // StartProcess 启动流程实例
 func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitionKey string, businessKey string, variables map[string]interface{}) (*ent.ProcessInstance, error) {
+	return e.StartProcessWithVersion(ctx, processDefinitionKey, "", businessKey, variables)
+}
+
+// StartProcessWithVersion 按指定版本启动流程实例（P2-07）。
+//
+// version 非空时严格按该版本取定义（不再被 active+latest 覆盖），
+// version 为空时与 StartProcess 完全一致（取 active + latest）。
+func (e *CustomProcessEngine) StartProcessWithVersion(ctx context.Context, processDefinitionKey string, version string, businessKey string, variables map[string]interface{}) (*ent.ProcessInstance, error) {
 	// 租户上下文必须显式有效（>0），缺上下文时不得全局查流程定义。
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
@@ -59,15 +67,24 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 	}
 
 	// 2. 获取流程定义（固定使用当前租户过滤，不再存在"无过滤跨租户"分支）
-	definition, err := e.client.ProcessDefinition.Query().
-		Where(
-			processdefinition.Key(processDefinitionKey),
-			processdefinition.IsActive(true),
-			processdefinition.IsLatest(true),
-			processdefinition.TenantID(tenantID),
-		).
-		First(ctx)
+	// 指定版本时严格按版本取（不再叠加 IsLatest，避免路由选中的版本被 latest 覆盖）；
+	// 未指定版本时保持原语义：active + latest。
+	definitionQuery := e.client.ProcessDefinition.Query().Where(
+		processdefinition.Key(processDefinitionKey),
+		processdefinition.IsActive(true),
+		processdefinition.TenantID(tenantID),
+	)
+	version = strings.TrimSpace(version)
+	if version != "" {
+		definitionQuery = definitionQuery.Where(processdefinition.Version(version))
+	} else {
+		definitionQuery = definitionQuery.Where(processdefinition.IsLatest(true))
+	}
+	definition, err := definitionQuery.First(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) && version != "" {
+			return nil, fmt.Errorf("流程定义 %s 的指定版本 %s 不存在或未激活", processDefinitionKey, version)
+		}
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
 
