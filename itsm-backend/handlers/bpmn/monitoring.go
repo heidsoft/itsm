@@ -52,7 +52,12 @@ func (c *MonitoringHandler) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
-// tenantIDFromCtx 从 gin.Context 解析 tenantID，缺失或类型错误时调用 Fail 并返回 false
+// tenantIDFromCtx 从 gin.Context 解析 tenantID，缺失、类型错误或非正数时
+// 调用 Fail 并返回 false。
+//
+// 0 不是合法租户：旧实现只查 exists/类型，中间件写入 tenant_id=0 时放行，
+// 下游 `TenantID > 0` 才加租户谓词的查询随即退化成全租户扫描。缺租户上下文
+// 本质是认证问题，与类型错误同口径按 401 拒绝（对齐上游中间件）。
 func tenantIDFromCtx(ctx *gin.Context) (int, bool) {
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
@@ -63,6 +68,10 @@ func tenantIDFromCtx(ctx *gin.Context) (int, bool) {
 	if !ok {
 		// 租户上下文类型错误本质是认证/上下文问题，统一为 401（对齐上游中间件）。
 		common.Fail(ctx, common.AuthFailedCode, "租户ID类型错误")
+		return 0, false
+	}
+	if id <= 0 {
+		common.Fail(ctx, common.AuthFailedCode, "未授权访问")
 		return 0, false
 	}
 	return id, true

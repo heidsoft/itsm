@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
 	"testing"
 	"time"
@@ -937,8 +938,22 @@ func TestClaimTask_ValidatesCandidatesAndExistingAssignee(t *testing.T) {
 	taskService := engine.TaskService()
 	require.NoError(t, taskService.ClaimTaskByID(ctx, candidateTaskID, actorID))
 	require.NoError(t, taskService.ClaimTaskByID(ctx, groupTaskID, actorID))
-	assert.EqualError(t, taskService.ClaimTaskByID(ctx, rejectedTaskID, actorID), "you are not a candidate for this task")
-	assert.EqualError(t, taskService.ClaimTaskByID(ctx, assignedTaskID, actorID), "task already assigned")
+
+	// P2-05：认领拒绝必须是类型化 AppError（403/409），不再用裸 fmt.Errorf
+	// 兜底成 5001；按 RespondError 语义断言 HTTP 语义与安全文案。
+	rejectedErr := taskService.ClaimTaskByID(ctx, rejectedTaskID, actorID)
+	require.Error(t, rejectedErr)
+	var rejectedAppErr *common.AppError
+	require.ErrorAs(t, rejectedErr, &rejectedAppErr)
+	assert.Equal(t, http.StatusForbidden, rejectedAppErr.HTTPStatus)
+	assert.Contains(t, rejectedAppErr.Message, "您不是该任务的候选人")
+
+	assignedErr := taskService.ClaimTaskByID(ctx, assignedTaskID, actorID)
+	require.Error(t, assignedErr)
+	var assignedAppErr *common.AppError
+	require.ErrorAs(t, assignedErr, &assignedAppErr)
+	assert.Equal(t, http.StatusConflict, assignedAppErr.HTTPStatus)
+	assert.Contains(t, assignedAppErr.Message, "任务已被他人认领")
 
 	candidateTask, err := engine.client.ProcessTask.Get(ctx, candidateTaskID)
 	require.NoError(t, err)

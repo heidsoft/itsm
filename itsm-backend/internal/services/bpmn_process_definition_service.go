@@ -255,13 +255,15 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 		return nil, err
 	}
 	if strings.TrimSpace(req.BPMNXML) == "" {
-		return nil, fmt.Errorf("发布流程必须包含 BPMN XML")
+		return nil, common.NewValidationError("发布流程必须包含 BPMN XML", nil)
 	}
 	if err := validateActivatableBPMNXML(req.BPMNXML); err != nil {
 		return nil, err
 	}
 	if err := validateCandidateDefinition(req.CandidateDefinition); err != nil {
-		return nil, fmt.Errorf("候选流程策略校验失败: %w", err)
+		// 候选策略校验失败是调用方输入问题：400 语义，且具体缺失项必须进
+		// 响应文案（classifyError 只回显最外层 AppError.Message）。
+		return nil, common.NewValidationError(fmt.Sprintf("候选流程策略校验失败: %v", err), nil)
 	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
@@ -505,7 +507,10 @@ func parseSemver(v string) (int, int, int) {
 func validateActivatableBPMNXML(bpmnXML string) error {
 	result, err := NewBPMNLintService().LintBPMNXML([]byte(bpmnXML))
 	if err != nil {
-		return fmt.Errorf("BPMN 发布校验失败: %w", err)
+		// lint 失败通常是 XML 解析错误（调用方输入问题）。本函数的调用面
+		// （Update/Publish/SetActive）直接把返回值交给 RespondError，必须带
+		// 400 类型，否则会兜底成 5001；解析原因进 Message 供用户定位。
+		return common.NewValidationError(fmt.Sprintf("BPMN 发布校验失败: %v", err), nil)
 	}
 	if !result.HasErrors {
 		return nil
@@ -523,9 +528,11 @@ func validateActivatableBPMNXML(bpmnXML string) error {
 		messages = append(messages, issue.Message)
 	}
 	if len(messages) == 0 {
-		return fmt.Errorf("BPMN 发布校验失败")
+		return common.NewValidationError("BPMN 发布校验失败", nil)
 	}
-	return fmt.Errorf("BPMN 发布校验失败: %s", strings.Join(messages, "；"))
+	// 具体问题必须进 Message：classifyError 只回显最外层 AppError.Message，
+	// 放进 Err 会让用户只看到「校验失败」而不知道改哪里。
+	return common.NewValidationError(fmt.Sprintf("BPMN 发布校验失败: %s", strings.Join(messages, "；")), nil)
 }
 
 // rejectImmutableXMLChange 拦截对「已发布或已被实例引用」的流程定义的原行 XML 替换。
@@ -567,6 +574,8 @@ func rejectImmutableXMLChange(ctx context.Context, instances *ent.ProcessInstanc
 // validateCandidateDefinition is deliberately deterministic. AI output is
 // advisory; publishing requires typed form fields and unambiguous approval
 // rules, while an omitted candidate remains valid for legacy BPMN definitions.
+// 返回裸错误；唯一生产调用点 PublishProcessDefinition 负责边界类型化
+// （NewValidationError），裸错误不得越过该边界直接进 RespondError。
 func validateCandidateDefinition(candidate map[string]interface{}) error {
 	if len(candidate) == 0 {
 		return nil

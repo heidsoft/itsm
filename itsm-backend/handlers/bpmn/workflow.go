@@ -317,7 +317,7 @@ func (c *WorkflowHandler) ListProcessDefinitions(ctx *gin.Context) {
 		return
 	}
 
-	// 注入 BPMN 租户上下文（service 层 requireBPMNTenantContext fail-closed，缺失会 500）
+	// 注入 BPMN 租户上下文（service 层 requireBPMNTenantContext fail-closed，缺失会 401/2001）
 	workflowCtx, tenantID, ok := getBPMNTenantContext(ctx)
 	if !ok {
 		return

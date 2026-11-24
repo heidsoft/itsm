@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
+
 	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/dto"
@@ -178,6 +180,36 @@ func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variable
 	return engine.CompleteTask(ctx, task.TaskID, variables)
 }
 
+// csvTokenEQ 在 CSV 分隔的候选字段上做「整 token 相等」匹配，替代子串 Contains。
+//
+// candidate_users / candidate_groups 以逗号分隔存储多个值：写入侧 joinCSV 对每个值
+// TrimSpace 后用 "," 拼接（无空格），执行侧 authorizeTaskActorWithClient 用
+// strings.Split(csv, ",") + TrimSpace 逐 token 比较。查询侧若用 Contains 做子串匹配，
+// 会产生子串误命中（候选 "12" 被用户 "2" 命中），且绕过执行侧的精确口径。
+//
+// 覆盖的分隔形态（与执行侧 split+trim 语义对齐）：
+//   - 整串相等            "2"
+//   - 首 token            "2,3" / "2, 3"      （前缀 "2," 同时覆盖 "2, "）
+//   - 末 token            "1,2" / "1, 2"      （",2" 与 ", 2" 两种后缀）
+//   - 中间 token          "1,2,3" / "1, 2,3"  （",2," 与 ", 2," 两种内段）
+//
+// 空 token 返回恒假谓词：空串经 Contains 会命中所有非空行，属越权放大而非筛选。
+// LIKE 通配符（%、_）由 ent escapedLike 统一转义，token 含下划线不会误配。
+func csvTokenEQ(column, token string) predicate.ProcessTask {
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return func(s *sql.Selector) { s.Where(sql.False()) }
+	}
+	return processtask.Or(
+		sql.FieldEQ(column, token),
+		sql.FieldHasPrefix(column, token+","),
+		sql.FieldHasSuffix(column, ","+token),
+		sql.FieldHasSuffix(column, ", "+token),
+		sql.FieldContains(column, ","+token+","),
+		sql.FieldContains(column, ", "+token+","),
+	)
+}
+
 func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error) {
 	if req == nil {
 		return nil, 0, fmt.Errorf("任务列表请求不能为空")
@@ -208,25 +240,25 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 			}
 		}
 
-		// 2. OR 复合查询：assignee == me OR candidate_users 包含我 OR candidate_groups 包含我所在组
+		// 2. OR 复合查询：assignee == me OR candidate_users 精确包含我 OR candidate_groups 精确包含我所在组
 		orPreds := []predicate.ProcessTask{
 			processtask.Assignee(userIDStr),
-			processtask.CandidateUsersContains(userIDStr),
+			csvTokenEQ(processtask.FieldCandidateUsers, userIDStr),
 		}
 		// 同时以 username 形式匹配（process_task.candidate_users 中保存的是 username/email/ID 混合）
 		if u, err := s.client.User.Get(ctx, req.UserID); err == nil && u != nil {
 			username := strings.TrimSpace(u.Username)
 			if username != "" && username != userIDStr {
-				orPreds = append(orPreds, processtask.CandidateUsersContains(username))
+				orPreds = append(orPreds, csvTokenEQ(processtask.FieldCandidateUsers, username))
 			}
 			email := strings.TrimSpace(u.Email)
 			if email != "" && email != userIDStr && email != username {
-				orPreds = append(orPreds, processtask.CandidateUsersContains(email))
+				orPreds = append(orPreds, csvTokenEQ(processtask.FieldCandidateUsers, email))
 			}
 		}
 		for _, group := range strings.Split(userGroupsCSV, ",") {
 			if group = strings.TrimSpace(group); group != "" {
-				orPreds = append(orPreds, processtask.CandidateGroupsContains(group))
+				orPreds = append(orPreds, csvTokenEQ(processtask.FieldCandidateGroups, group))
 			}
 		}
 		query = query.Where(processtask.Or(orPreds...))
@@ -234,11 +266,11 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 		if req.Assignee != "" {
 			query = query.Where(processtask.Assignee(req.Assignee))
 		}
-		if req.CandidateUsers != "" {
-			query = query.Where(processtask.CandidateUsersContains(req.CandidateUsers))
+		if v := strings.TrimSpace(req.CandidateUsers); v != "" {
+			query = query.Where(csvTokenEQ(processtask.FieldCandidateUsers, v))
 		}
-		if req.CandidateGroups != "" {
-			query = query.Where(processtask.CandidateGroupsContains(req.CandidateGroups))
+		if v := strings.TrimSpace(req.CandidateGroups); v != "" {
+			query = query.Where(csvTokenEQ(processtask.FieldCandidateGroups, v))
 		}
 	}
 	if req.Status != "" {
@@ -656,7 +688,8 @@ func (s *bpmnTaskService) claimTask(
 	}
 	currentUser := strconv.Itoa(currentUserID)
 	if task.Assignee != "" && task.Assignee != "0" && task.Assignee != currentUser {
-		return fmt.Errorf("task already assigned")
+		return common.NewStateConflictError("任务已被他人认领",
+			fmt.Sprintf("assignee=%s", task.Assignee))
 	}
 	if task.Assignee == currentUser {
 		return tx.Commit()
@@ -690,7 +723,8 @@ func (s *bpmnTaskService) claimTask(
 		return fmt.Errorf("claim task: %w", err)
 	}
 	if updated != 1 {
-		return fmt.Errorf("任务已被他人认领，请刷新后重试")
+		return common.NewStateConflictError("任务已被他人认领，请刷新后重试",
+			fmt.Sprintf("task_id=%s", task.TaskID))
 	}
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("commit claim task transaction: %w", err)
@@ -737,7 +771,7 @@ func validateTaskCandidate(ctx context.Context, client *ent.Client, task *ent.Pr
 		}
 	}
 
-	return fmt.Errorf("you are not a candidate for this task")
+	return common.NewForbiddenError("您不是该任务的候选人，无法认领")
 }
 
 func (s *bpmnTaskService) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {
@@ -765,7 +799,8 @@ func (s *bpmnTaskService) CancelTask(ctx context.Context, taskID string, reason 
 		return err
 	}
 	if updated != 1 {
-		return fmt.Errorf("任务已结束，不能取消")
+		return common.NewStateConflictError("任务已结束，不能取消",
+			fmt.Sprintf("task_id=%s status=%s", task.TaskID, task.Status))
 	}
 	return nil
 }
@@ -900,7 +935,8 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 	// 终态守卫：completed/cancelled/timeout 等已结束任务不得委托，
 	// 否则引擎已关闭的节点会被复活成新待办。
 	if !isBpmnTaskOpen(task.Status) {
-		return fmt.Errorf("任务已结束，不能委托")
+		return common.NewStateConflictError("任务已结束，不能委托",
+			fmt.Sprintf("task_id=%s status=%s", task.TaskID, task.Status))
 	}
 
 	// 操作人校验：只有当前 assignee 才能委托
@@ -951,7 +987,8 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 		return err
 	}
 	if updated != 1 {
-		return fmt.Errorf("任务已结束，不能委托")
+		return common.NewStateConflictError("任务已结束，不能委托",
+			fmt.Sprintf("task_id=%s", task.TaskID))
 	}
 
 	instance, ierr := s.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
@@ -1004,7 +1041,8 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 
 	// 终态守卫：已结束的审批节点不得加签，否则会为已完成审批复活出新待办子任务。
 	if !isBpmnTaskOpen(task.Status) {
-		return fmt.Errorf("任务已结束，不能加签")
+		return common.NewStateConflictError("任务已结束，不能加签",
+			fmt.Sprintf("task_id=%s status=%s", task.TaskID, task.Status))
 	}
 
 	// 操作人校验：只有当前 assignee 才能加签
@@ -1056,7 +1094,8 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 		return fmt.Errorf("复查加签父任务状态失败: %w", perr)
 	}
 	if !parentOpen {
-		return fmt.Errorf("任务已结束，不能加签")
+		return common.NewStateConflictError("任务已结束，不能加签",
+			fmt.Sprintf("task_id=%s", task.TaskID))
 	}
 
 	newTask, err := s.client.ProcessTask.Create().

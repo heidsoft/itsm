@@ -265,7 +265,8 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 			return nil, fmt.Errorf("检查会签子任务失败: %w", err)
 		}
 		if hasSubTasks {
-			return nil, fmt.Errorf("会签父任务不得直接完成，请通过会签投票机制处理")
+			return nil, common.NewStateConflictError("会签父任务不得直接完成，请通过会签投票机制处理",
+				fmt.Sprintf("task_id=%s", task.TaskID))
 		}
 	}
 
@@ -313,7 +314,8 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 
 	// 4. 更新当前任务状态
 	if task.Status == "completed" || task.Status == "cancelled" {
-		return nil, fmt.Errorf("任务已结束，不能重复完成")
+		return nil, common.NewStateConflictError("任务已结束，不能重复完成",
+			fmt.Sprintf("task_id=%s status=%s", task.TaskID, task.Status))
 	}
 
 	updated, err := txc.ProcessTask.Update().
@@ -331,7 +333,10 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 		return nil, fmt.Errorf("更新任务状态失败: %w", err)
 	}
 	if updated != 1 {
-		return nil, fmt.Errorf("任务已被描述，请刷新后重试")
+		// CAS 0 行 = 读取快照与落库之间任务状态被并发写者改写
+		// （完成/取消/认领均可能），文案必须如实说「状态已变更」。
+		return nil, common.NewStateConflictError("任务状态已变更，请刷新后重试",
+			fmt.Sprintf("task_id=%s", task.TaskID))
 	}
 
 	e.cancelBoundaryTimers(ctx, instance, process, task.TaskDefinitionKey)
@@ -443,7 +448,9 @@ func (e *CustomProcessEngine) mergeVariablesInTx(ctx context.Context, txc *ent.C
 		Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("流程实例版本冲突（当前版本 %d），请重试", inst.Version)
+			return nil, common.NewStateConflictError(
+				fmt.Sprintf("流程实例版本冲突（当前版本 %d），请重试", inst.Version),
+				fmt.Sprintf("instance_id=%d", instanceID))
 		}
 		return nil, fmt.Errorf("更新实例变量失败: %w", err)
 	}
@@ -491,7 +498,9 @@ func updateProcessInstanceVariablesCAS(
 			return nil, fmt.Errorf("更新流程实例变量失败: %w", err)
 		}
 	}
-	return nil, fmt.Errorf("流程实例版本冲突（ID=%d），请重试", instanceID)
+	return nil, common.NewStateConflictError(
+		fmt.Sprintf("流程实例版本冲突（ID=%d），请重试", instanceID),
+		fmt.Sprintf("tenant_id=%d attempts=%d", tenantID, maxAttempts))
 }
 
 func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *ent.ProcessTask, variables map[string]interface{}) error {

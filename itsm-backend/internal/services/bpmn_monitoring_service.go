@@ -986,11 +986,13 @@ func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *Proc
 		TimeRange: req.TimeRange,
 	}
 
-	// 1. 构建基础查询
-	query := s.client.ProcessInstance.Query()
-	if req.TenantID > 0 {
-		query = query.Where(processinstance.TenantID(req.TenantID))
+	// 1. 构建基础查询。租户 fail-closed：与 ListProcessInstancesStatus 同款，
+	// 缺租户上下文时旧实现不加谓词，指标退化成全租户聚合（跨租户数据泄露到
+	// 监控页），按 401 拒绝。
+	if req.TenantID <= 0 {
+		return nil, common.NewUnauthorizedError("缺少有效租户上下文")
 	}
+	query := s.client.ProcessInstance.Query().Where(processinstance.TenantID(req.TenantID))
 	if req.ProcessDefinitionKey != "" {
 		query = query.Where(processinstance.ProcessDefinitionKey(req.ProcessDefinitionKey))
 	}
@@ -1080,11 +1082,14 @@ func (s *BPMNMonitoringService) ListProcessInstancesStatus(ctx context.Context, 
 	if query == nil {
 		return []*ProcessInstanceStatus{}, 0, nil
 	}
-
-	dbQuery := s.client.ProcessInstance.Query()
-	if query.TenantID > 0 {
-		dbQuery = dbQuery.Where(processinstance.TenantID(query.TenantID))
+	// 租户 fail-closed：旧实现 `TenantID > 0` 才加租户谓词，缺租户上下文时查询
+	// 退化成全租户扫描——监控页展示所有租户的实例，total 也跨租户统计。
+	// 缺租户上下文本质是认证问题，与 handler 层 tenantIDFromCtx 同口径返回 401。
+	if query.TenantID <= 0 {
+		return nil, 0, common.NewUnauthorizedError("缺少有效租户上下文")
 	}
+
+	dbQuery := s.client.ProcessInstance.Query().Where(processinstance.TenantID(query.TenantID))
 	if query.ProcessKey != "" {
 		dbQuery = dbQuery.Where(processinstance.ProcessDefinitionKey(query.ProcessKey))
 	}
@@ -1096,6 +1101,18 @@ func (s *BPMNMonitoringService) ListProcessInstancesStatus(ctx context.Context, 
 	}
 	if query.EndTime != nil {
 		dbQuery = dbQuery.Where(processinstance.StartTimeLTE(*query.EndTime))
+	}
+	// assignee 筛选下推：旧实现先 Count/分页、再在内存里按 currentTask.Assignee
+	// 过滤，导致 total 是过滤前的总数（前端分页 total 与实际条数不一致），且
+	// 过滤发生在分页之后，页内条数错乱。下推为 EXISTS 语义：该实例存在
+	// assigned/in_progress 且 assignee 匹配的活动任务。
+	// 原内存过滤取「第一条活动任务」的 Assignee 比较，而 First 无 ORDER BY、
+	// 顺序本就不确定（多活动任务时行为漂移）；下推把它收敛为确定语义。
+	if query.Assignee != "" {
+		dbQuery = dbQuery.Where(processinstance.HasProcessTasksWith(
+			processtask.Assignee(query.Assignee),
+			processtask.StatusIn("assigned", "in_progress"),
+		))
 	}
 
 	total, err := dbQuery.Clone().Count(ctx)
@@ -1139,25 +1156,29 @@ func (s *BPMNMonitoringService) ListProcessInstancesStatus(ctx context.Context, 
 			}
 		}
 
-		// 查询当前任务（状态 assigned/in_progress）
-		currentTask, err := s.client.ProcessTask.Query().
+		// 查询当前任务（状态 assigned/in_progress）。NotFound = 该实例没有活动
+		// 任务，属正常态，保持 CurrentTask 为空；其余错误上抛——旧实现
+		// `if err == nil` 把 DB 故障静默成「无当前任务」，监控页把查询失败
+		// 伪装成实例空闲。
+		currentTask, taskErr := s.client.ProcessTask.Query().
 			Where(processtask.ProcessInstanceID(inst.ID)).
 			Where(processtask.StatusIn("assigned", "in_progress")).
 			First(ctx)
-		if err == nil && currentTask != nil {
+		if taskErr != nil && !ent.IsNotFound(taskErr) {
+			return nil, 0, fmt.Errorf("查询实例 %s 当前任务失败: %w", inst.ProcessInstanceID, taskErr)
+		}
+		if taskErr == nil && currentTask != nil {
 			status.CurrentTask = currentTask.TaskType
 			status.Assignee = currentTask.Assignee
 		}
 
-		// 计算进度
-		if progress, err := s.calculateProcessProgress(ctx, inst.ID); err == nil {
-			status.Progress = progress
+		// 计算进度。失败即上抛：旧实现 `err == nil` 把 DB 故障静默成 0% 进度，
+		// 监控页把查询失败伪装成「流程零进度」。
+		progress, progErr := s.calculateProcessProgress(ctx, inst.ID)
+		if progErr != nil {
+			return nil, 0, fmt.Errorf("计算实例 %s 进度失败: %w", inst.ProcessInstanceID, progErr)
 		}
-
-		// assignee 过滤（在拿到 currentTask 后过滤）
-		if query.Assignee != "" && status.Assignee != query.Assignee {
-			continue
-		}
+		status.Progress = progress
 
 		statuses = append(statuses, status)
 	}

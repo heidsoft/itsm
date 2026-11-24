@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processtask"
@@ -195,13 +196,18 @@ func (e *CustomProcessEngine) SetApprovalChainResolver(resolver bpmn.ApprovalCha
 
 // requireBPMNTenantContext 从 ctx 强制提取并校验租户上下文。
 // 无租户上下文或 tenantID<=0 一律返回错误，禁止跨租户回退到全局无过滤查询。
+// P2-05：守卫必须类型化——裸 fmt.Errorf 会被 classifyError 兜底成 5001，
+// 让「缺租户上下文」在观测上表现为 5xx 毛刺；与 handler 层同条件文案
+// （未授权访问：缺少有效租户上下文）保持一致，走 AuthFailedCode→401。
 func requireBPMNTenantContext(ctx context.Context) (int, error) {
 	if ctx == nil {
-		return 0, fmt.Errorf("BPMN 缺少请求上下文")
+		return 0, common.NewBusinessError(common.AuthFailedCode,
+			"未授权访问：缺少有效租户上下文", "ctx is nil")
 	}
 	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 	if tenantID <= 0 {
-		return 0, fmt.Errorf("BPMN 缺少有效租户上下文（tenantID=%d），已 fail-closed", tenantID)
+		return 0, common.NewBusinessError(common.AuthFailedCode,
+			"未授权访问：缺少有效租户上下文", fmt.Sprintf("tenantID=%d", tenantID))
 	}
 	return tenantID, nil
 }
