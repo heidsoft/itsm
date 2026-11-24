@@ -4,6 +4,10 @@
 # 每行一个文件名（不含 *_test.go）。新增生产文件即 FAIL；存量下降后
 # 用 ./check-layering-convergence.sh --update-baseline 收紧本文件，
 # 并在 CHANGELOG [Unreleased] 记录下降数字。禁止为放行新代码上调。
+# 2026-11-24 漏账补记：bpmn_timer_runtime.go（cf627a802，codex 审计 P1-07）
+# 是进程级 timer 运行时依赖注册——正是本 Gate 错误信息要求的「跨域基础设施
+# 落 internal/」，非业务逻辑下沉；该批落地时漏随 commit 入账，本次按既有
+# 「漏账补记」惯例补记文件名（本键仍只降不升，未为任何新业务代码放宽）。
 a2ui_ticket_service.go
 ai_evaluator.go
 ai_quota.go
@@ -41,6 +45,7 @@ bpmn_task_service.go
 bpmn_template_service.go
 bpmn_tenant_service.go
 bpmn_timeout_scanner.go
+bpmn_timer_runtime.go
 bpmn_types.go
 bpmn_variable_service.go
 bpmn_version_service.go
