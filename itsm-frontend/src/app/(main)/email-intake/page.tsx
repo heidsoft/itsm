@@ -732,7 +732,7 @@ export default function EmailIntakePage() {
                     来自：{detail.messages[detail.messages.length - 1].fromAddress} ·{' '}
                     {formatTime(detail.messages[detail.messages.length - 1].receivedAt)}
                   </Paragraph>
-                  <pre className='max-h-80 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-3'>
+                  <pre className='max-h-80 overflow-auto whitespace-pre-wrap rounded bg-[var(--color-background-secondary)] p-3'>
                     {detail.messages[detail.messages.length - 1].plainText}
                   </pre>
                 </>
@@ -741,7 +741,7 @@ export default function EmailIntakePage() {
               )}
             </Card>
             <Card size='small' title='AI 与发送审计'>
-              <pre className='max-h-72 overflow-auto rounded bg-slate-50 p-3 text-xs'>
+              <pre className='max-h-72 overflow-auto rounded bg-[var(--color-background-secondary)] p-3 text-xs'>
                 {JSON.stringify(
                   { analyses: detail.analyses, outboundMessages: detail.outboundMessages },
                   null,

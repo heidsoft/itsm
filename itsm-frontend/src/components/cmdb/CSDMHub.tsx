@@ -148,7 +148,7 @@ export function CSDMHub() {
             const badge = maturityBadge(maturity, t);
             return (
             <Col key={capability.key} xs={24} md={12} xl={6}>
-              <Card size="small" className="h-full border-slate-200">
+              <Card size="small" className="h-full border-[var(--color-border-primary)]">
                 <div className="flex items-center justify-between gap-2">
                   <Title level={5} className="!mb-0">{capability.title}</Title>
                   <Tag color={badge.color}>{t(badge.key)}</Tag>

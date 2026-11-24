@@ -61,7 +61,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
                 返回
               </Button>
             )}
-            <span className="text-lg font-semibold text-gray-900">{title}</span>
+            <span className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</span>
           </div>
         </Col>
         <Col xs={24} sm={12} md={8}>
@@ -81,7 +81,9 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
         style={{
           marginBottom: 24,
           paddingBottom: 16,
-          borderBottom: '1px solid #e5e7eb',
+          // #e5e7eb 是写死的亮灰：内联 style 不受 `.dark .border-gray-*` 覆盖，
+          // 深色模式下会留下一条刺眼的浅色分隔线。改用主题变量。
+          borderBottom: '1px solid var(--color-border-primary)',
         }}
       >
         {/* 面包屑导航 */}
@@ -111,8 +113,8 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
 
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-1">{title}</h1>
-            {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+            <h1 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-1">{title}</h1>
+            {description && <p className="text-sm text-[var(--color-text-tertiary)] mt-1">{description}</p>}
           </div>
           {extra && <div>{extra}</div>}
         </div>
@@ -156,11 +158,11 @@ export const EnterpriseStatCard: React.FC<{
   <Card className={`enterprise-stat-card ${className}`}>
     <div className="text-center">
       {prefix && <div className="mb-2">{prefix}</div>}
-      <div className="text-3xl font-bold text-gray-900" style={valueStyle}>
+      <div className="text-3xl font-bold text-[var(--color-text-primary)]" style={valueStyle}>
         {value}
-        {suffix && <span className="text-lg text-gray-500 ml-1">{suffix}</span>}
+        {suffix && <span className="text-lg text-[var(--color-text-tertiary)] ml-1">{suffix}</span>}
       </div>
-      <div className="text-sm text-gray-500 mt-2">{title}</div>
+      <div className="text-sm text-[var(--color-text-tertiary)] mt-2">{title}</div>
     </div>
   </Card>
 );

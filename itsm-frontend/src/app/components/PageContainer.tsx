@@ -21,7 +21,15 @@ interface PageContainerProps {
 
 export const PageContainer: React.FC<PageContainerProps> = ({ header, extra, children }) => {
   return (
-    <div style={{ padding: '24px', background: '#fff', minHeight: '100%' }}>
+    // 背景/文字必须走 CSS 变量：写死 '#fff' 是内联 style，`globals.css` 里
+    // `.dark .bg-white` 那套类覆盖对它无效，深色模式下会留下一块白板。
+    <div
+      style={{
+        padding: '24px',
+        background: 'var(--color-background-primary)',
+        minHeight: '100%',
+      }}
+    >
       {(header?.title || header?.breadcrumb?.items) && (
         <>
           <div

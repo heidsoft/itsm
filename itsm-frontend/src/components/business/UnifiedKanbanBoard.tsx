@@ -207,7 +207,7 @@ function DefaultCard<T>({
 
         {description && <div className="text-xs text-gray-500 line-clamp-2">{description}</div>}
 
-        <div className="flex items-center justify-between text-xs text-slate-600">
+        <div className="flex items-center justify-between text-xs text-[var(--color-text-secondary)]">
           <div className="flex items-center gap-2">
             {assignee ? (
               <>

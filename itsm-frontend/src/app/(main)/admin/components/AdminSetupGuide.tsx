@@ -59,7 +59,7 @@ export function AdminSetupGuide() {
       }
       extra={<Text type="secondary">先绑定，再创建测试工单验证</Text>}
     >
-      <div className="border-b border-slate-100 bg-slate-50 px-5 py-4">
+      <div className="border-b border-[var(--color-border-primary)] bg-[var(--color-background-secondary)] px-5 py-4">
         <Title level={5} className="!mb-1">把独立配置项组装成可执行的服务</Title>
         <Text type="secondary">
           流程、SLA、分配和审批规则不会自动对所有工单生效；需要在“工单类型”中完成绑定。
@@ -86,10 +86,10 @@ export function AdminSetupGuide() {
             const Icon = step.icon;
             return (
               <Link key={step.href} href={step.href} className="group no-underline">
-                <div className="flex h-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-3 transition-colors group-hover:border-blue-300 group-hover:bg-blue-50">
+                <div className="flex h-full items-center justify-between rounded-lg border border-[var(--color-border-primary)] bg-[var(--color-surface-primary)] px-3 py-3 transition-colors group-hover:border-blue-300 group-hover:bg-blue-50">
                   <Space size={8} className="min-w-0">
                     <Icon className="h-4 w-4 shrink-0 text-slate-500 group-hover:text-blue-600" />
-                    <span className="truncate text-sm font-medium text-slate-700">{step.label}</span>
+                    <span className="truncate text-sm font-medium text-[var(--color-text-secondary)]">{step.label}</span>
                   </Space>
                   <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-600" />
                 </div>

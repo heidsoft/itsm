@@ -573,7 +573,7 @@ export default function ServiceGraphRegistryPage() {
               刷新
             </Button>
             <Button type="primary" href="/cmdb/relationships" icon={<Database className="h-4 w-4" />}>
-              去关系图谱
+              去关系管理
             </Button>
           </Space>
         }
@@ -597,7 +597,7 @@ export default function ServiceGraphRegistryPage() {
       <Card loading={loading} className="shadow-sm">
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
-            <Card size="small" className="h-full bg-slate-50">
+            <Card size="small" className="h-full bg-[var(--color-background-secondary)]">
               <Text type="secondary">最后刷新</Text>
               <div className="mt-2 text-lg font-semibold">
                 {formatDateTime(refreshAt) || '-'}
@@ -605,7 +605,7 @@ export default function ServiceGraphRegistryPage() {
             </Card>
           </Col>
           <Col xs={24} md={12}>
-            <Card size="small" className="h-full bg-slate-50">
+            <Card size="small" className="h-full bg-[var(--color-background-secondary)]">
               <Text type="secondary">注册中心说明</Text>
               <div className="mt-2">
                 先定义发现源和云服务，再把云账号与 CI、关系、对账三者关联起来，发现结果才能落到具体的配置项上。
