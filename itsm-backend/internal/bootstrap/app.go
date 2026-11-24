@@ -2178,6 +2178,15 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 					if recovered > 0 {
 						app.Logger.Infow("BPMN finalizing recovery scan completed", "tenant_id", t.ID, "recovered", recovered)
 					}
+					// 会签「投票已提交、结论已定但父任务未被认领」的崩溃窗口接续：
+					// Vote 在投票事务 commit 之后才抢占 finalizing，中间崩溃时
+					// 父任务仍 assigned/created，finalizing 扫描器不会接续（P2-01）。
+					unclaimed, err := scanner.ScanUnclaimedCountersignParents(tenantCtx, t.ID)
+					if err != nil {
+						app.Logger.Warnw("BPMN unclaimed countersign scan failed", "error", err, "tenant_id", t.ID)
+					} else if unclaimed > 0 {
+						app.Logger.Infow("BPMN unclaimed countersign recovery completed", "tenant_id", t.ID, "recovered", unclaimed)
+					}
 					// 一般 running 实例的卡死检测（只观测不处置）：
 					// 引擎 DetectStuckInstances 此前无生产调用方（P3-01），
 					// 现在每轮扫描产出结构化告警，供运维定位卡在哪个活动。

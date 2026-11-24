@@ -457,6 +457,133 @@ func (s *TimeoutScanner) ScanStuckFinalizingTasks(ctx context.Context, tenantID 
 	return recovered, nil
 }
 
+// countersignUnclaimedGrace 与 finalizing 宽限一致：刚提交的 Vote 还在事务外
+// 抢占 finalizing 的路上，不能用更短的窗口去抢。
+const countersignUnclaimedGrace = 5 * time.Minute
+
+// ScanUnclaimedCountersignParents 接续「投票已提交、结论已定，但父任务还没
+// 被认领推进」的崩溃窗口（codex 审计 P2-01）。
+//
+// Vote 的顺序是：投票事务 commit → GetCounterSignStatus → CAS 抢占 finalizing
+// → 取消余票 → CompleteTask。commit 之后、抢占之前进程崩溃，父任务仍是
+// assigned/created，原 ScanStuckFinalizingTasks 只找 finalizing，不会接续，
+// 会签永久停住。本方法按子任务实际状态重算结论：只有结论已定才介入，
+// pending 说明会签正常进行中，绝不替用户投票或抢跑。
+//
+// 与 Vote 末票共用 CAS 抢占条件（StatusIn(assigned, created)），并发下最多
+// 一方成功：Vote 抢到则本方法 claimed==0 放弃；本方法抢到则 Vote 的
+// StatusNEQ(finalizing) 抢占失败并 return nil，不会双推进。
+func (s *TimeoutScanner) ScanUnclaimedCountersignParents(ctx context.Context, tenantID int) (int, error) {
+	if tenantID <= 0 {
+		return 0, fmt.Errorf("unclaimed countersign scanner: invalid tenant ID")
+	}
+
+	cutoff := time.Now().Add(-countersignUnclaimedGrace)
+	candidates, err := s.client.ProcessTask.Query().
+		Where(
+			processtask.TenantID(tenantID),
+			processtask.ParentTaskIDIsNil(),
+			processtask.StatusIn(common.ProcessTaskStatusAssigned, common.ProcessTaskStatusCreated),
+			processtask.UpdatedAtLT(cutoff),
+		).
+		All(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("unclaimed countersign scanner: query parents: %w", err)
+	}
+
+	recovered := 0
+	for _, parent := range candidates {
+		status, err := s.countersignStatusFromDB(ctx, parent.TaskID, tenantID)
+		if err != nil {
+			s.logger.Warnw("unclaimed countersign scanner: recompute failed",
+				"task_id", parent.TaskID, "tenant_id", tenantID, "error", err)
+			continue
+		}
+		// 没有子任务＝普通用户任务，不是会签父任务；结论 pending＝正常进行中。
+		// 两者都不能介入，否则会把还在等人投票的任务提前结束。
+		if status.Total == 0 ||
+			(status.Status != "approved" && status.Status != "rejected") {
+			continue
+		}
+
+		finalVariables := map[string]interface{}{
+			"total":        status.Total,
+			"completed":    status.Completed,
+			"approved":     status.Approved,
+			"rejected":     status.Rejected,
+			"final_status": status.Status,
+		}
+		claimed, err := s.client.ProcessTask.Update().
+			Where(
+				processtask.ID(parent.ID),
+				processtask.TenantID(tenantID),
+				processtask.StatusIn(common.ProcessTaskStatusAssigned, common.ProcessTaskStatusCreated),
+			).
+			SetStatus(common.ProcessTaskStatusFinalizing).
+			SetTaskVariables(finalVariables).
+			Save(ctx)
+		if err != nil {
+			s.logger.Warnw("unclaimed countersign scanner: claim failed",
+				"task_id", parent.TaskID, "tenant_id", tenantID, "error", err)
+			continue
+		}
+		if claimed == 0 {
+			continue // 并发者（Vote 或另一扫描周期）已认领
+		}
+		if err := s.advanceCountersignParent(ctx, parent, status, tenantID); err != nil {
+			// 父任务停在 finalizing，下个周期由 ScanStuckFinalizingTasks 重试推进。
+			s.logger.Warnw("unclaimed countersign scanner: advance failed, will retry via finalizing scanner",
+				"task_id", parent.TaskID, "tenant_id", tenantID, "error", err)
+			continue
+		}
+		recovered++
+	}
+	return recovered, nil
+}
+
+// advanceCountersignParent 按已定结论推进会签父任务：取消余票 + 系统推进。
+// finalizing 恢复与未认领窗口恢复共用，保证两条恢复路径语义完全一致。
+//
+// 取消与 CompleteTask 不在同一事务（CompleteTask 自持事务），这与 Vote 末票
+// 的既有语义相同，不是本批引入的原子性承诺。取消是幂等条件更新，父任务保持
+// finalizing；若推进失败，下周期扫描器仍会重试，不会出现半推进的静默卡死。
+func (s *TimeoutScanner) advanceCountersignParent(ctx context.Context, parent *ent.ProcessTask, status *CounterSignStatus, tenantID int) error {
+	cancelled, err := s.client.ProcessTask.Update().
+		Where(
+			processtask.ParentTaskID(parent.TaskID),
+			processtask.TenantID(tenantID),
+			processtask.StatusNEQ(common.ProcessTaskStatusCompleted),
+			processtask.StatusNEQ(common.ProcessTaskStatusCancelled),
+		).
+		SetStatus(common.ProcessTaskStatusCancelled).
+		SetCompletedTime(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("取消会签剩余子任务失败: %w", err)
+	}
+
+	// 会签末票结束后推进父任务没有单一执行人身份：显式清除身份并声明系统
+	// 上下文，与 Vote 末票、超时扫描走同一条可审计的特权路径。
+	systemCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+	systemCtx = context.WithValue(systemCtx, bpmn.BPMNUserIDContextKey, nil)
+	systemCtx = tenantctx.SystemContext(
+		systemCtx,
+		"bpmn:countersign-finalizing-recovery",
+		"会签结论已定但父任务未推进（进程崩溃或推进失败），由扫描器恢复推进",
+	)
+	engine := NewCustomProcessEngine(s.client, s.logger)
+	if err := engine.CompleteTask(systemCtx, parent.TaskID, map[string]interface{}{
+		"approvalResult": status.Status,
+		"approved":       status.Status == "approved",
+	}); err != nil {
+		return fmt.Errorf("恢复推进会签父任务失败: %w", err)
+	}
+	s.logger.Infow("countersign scanner: recovered parent",
+		"task_id", parent.TaskID, "tenant_id", tenantID,
+		"final_status", status.Status, "cancelled_siblings", cancelled)
+	return nil
+}
+
 // ScanStuckInstances 检出运行时间超过阈值仍未结束的流程实例并记录告警。
 //
 // 这是引擎 DetectStuckInstances 的**生产接线**（codex 审计 P3-01）：
@@ -530,24 +657,9 @@ func (s *TimeoutScanner) recoverFinalizingParent(ctx context.Context, parent *en
 			"task_id", parent.TaskID, "tenant_id", tenantID)
 		return nil
 	case "approved", "rejected":
-		// 与 Vote 末票一致的系统上下文推进：显式声明特权路径，可审计。
-		systemCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
-		systemCtx = context.WithValue(systemCtx, bpmn.BPMNUserIDContextKey, nil)
-		systemCtx = tenantctx.SystemContext(
-			systemCtx,
-			"bpmn:countersign-finalizing-recovery",
-			"会签父任务抢占 finalizing 后未推进（进程崩溃或推进失败），由扫描器恢复推进",
-		)
-		engine := NewCustomProcessEngine(s.client, s.logger)
-		if err := engine.CompleteTask(systemCtx, parent.TaskID, map[string]interface{}{
-			"approvalResult": status.Status,
-			"approved":       status.Status == "approved",
-		}); err != nil {
-			return fmt.Errorf("恢复推进会签父任务失败: %w", err)
-		}
-		s.logger.Infow("finalizing scanner: recovered stuck countersign parent",
-			"task_id", parent.TaskID, "tenant_id", tenantID, "final_status", status.Status)
-		return nil
+		// 与 Vote 末票一致：先取消其余子任务，再以系统上下文推进父任务。
+		// 旧恢复路径直接 CompleteTask，会留下兄弟待办（codex 审计 P2-01）。
+		return s.advanceCountersignParent(ctx, parent, status, tenantID)
 	default:
 		return fmt.Errorf("未知会签状态 %q", status.Status)
 	}

@@ -1729,7 +1729,11 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 		approvalType = at
 	}
 
-	if approvalType == "serial" && req.Approved && status.Status == "pending" {
+	// 串行模式：只要结论仍为 pending 就激活下一位，与当前票是同意还是反对无关。
+	// 旧实现只在 req.Approved 时激活：三人阈值二，第一人反对后结论仍 pending
+	// （0 赞成 + 2 待投 >= 2），后两位永远停在 created 无法投票，会签静默卡死
+	// （codex 审计 P2-01）。结论已定时不走这里，由下方抢占 finalizing 收口。
+	if approvalType == "serial" && status.Status == "pending" {
 		next, err := s.client.ProcessTask.Query().Where(
 			processtask.ParentTaskID(parentTaskID),
 			processtask.TenantID(tenantID),
@@ -1741,6 +1745,13 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 				processtask.TenantID(tenantID),
 				processtask.Status("created"),
 			).SetStatus(common.ProcessTaskStatusAssigned).Save(ctx)
+		} else {
+			// pending 却没有可激活的下一位＝异常窗口，必须可见而不是静默。
+			s.logger.Warnw("串行会签结论仍 pending 但没有可激活的下一位审批人",
+				"parent_task_id", parentTaskID, "tenant_id", tenantID,
+				"total", status.Total, "completed", status.Completed,
+				"approved", status.Approved, "pending", status.Pending,
+				"query_error", err)
 		}
 	}
 
