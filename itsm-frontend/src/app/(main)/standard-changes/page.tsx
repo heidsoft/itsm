@@ -74,6 +74,10 @@ export default function StandardChangesPage() {
   const [form] = Form.useForm();
   const [instantiateModalVisible, setInstantiateModalVisible] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<StandardChange | null>(null);
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [instantiateForm] = Form.useForm();
 
   useEffect(() => {
@@ -160,6 +164,8 @@ export default function StandardChangesPage() {
   };
 
   const handleInstantiateSubmit = async () => {
+    if (submitBusy) return;
+    setSubmitBusy(true);
     if (!selectedTemplate) return;
     try {
       const values = instantiateForm.getFieldsValue();
@@ -170,10 +176,14 @@ export default function StandardChangesPage() {
     } catch (error) {
       console.error('Failed to instantiate:', error);
       message.error(t('standardChanges.instantiateFailed') || '从模板创建变更失败');
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
   const handleSubmit = async () => {
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
       const values = await form.validateFields();
       if (editingTemplate) {
@@ -193,6 +203,8 @@ export default function StandardChangesPage() {
           ? t('common.saveFailed') || '更新失败'
           : t('common.submitFailed') || '创建失败'
       );
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -391,6 +403,7 @@ export default function StandardChangesPage() {
         title={editingTemplate ? '编辑标准变更模板' : '新建标准变更模板'}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
+        confirmLoading={submitBusy}
         onOk={handleSubmit}
         width={700}
         okText={editingTemplate ? '更新' : '创建'}
@@ -490,6 +503,7 @@ export default function StandardChangesPage() {
         title={`从模板 "${selectedTemplate?.title}" 创建变更`}
         open={instantiateModalVisible}
         onCancel={() => setInstantiateModalVisible(false)}
+        confirmLoading={submitBusy}
         onOk={handleInstantiateSubmit}
         okText='创建变更'
         cancelText='取消'

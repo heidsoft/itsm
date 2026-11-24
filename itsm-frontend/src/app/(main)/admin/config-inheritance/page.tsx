@@ -23,11 +23,19 @@ import type { ColumnsType } from 'antd/es/table';
 import { GitBranch, Plus, RefreshCw, Search } from 'lucide-react';
 import type { DomainConfig, EffectiveConfig } from '@/lib/api/domain-config-api';
 import { DomainConfigApi } from '@/lib/api/domain-config-api';
+import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 
 const { Title, Text } = Typography;
 
 export default function ConfigInheritancePage() {
   const { message } = App.useApp();
+  // 读写不同码：列表与 effective 读取是 bpmn:read，保存是 bpmn:write
+  // （handlers/bpmn/process_trigger.go 的 /domain-configs 组）。本菜单的准入码
+  // 取 bpmn:read，所以只读角色（change_manager / audit_admin 等）能进页面，
+  // 保存会被后端 403。页面按真实写码收敛「新增配置」入口。
+  const { hasPermission } = usePermissions();
+  const canWrite = hasPermission(PERM.bpmn.write);
   const [configs, setConfigs] = useState<DomainConfig[]>([]);
   const [effectiveConfig, setEffectiveConfig] = useState<EffectiveConfig | null>(null);
   // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
@@ -36,6 +44,10 @@ export default function ConfigInheritancePage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewed, setPreviewed] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [form] = Form.useForm();
   const [previewForm] = Form.useForm();
 
@@ -57,6 +69,8 @@ export default function ConfigInheritancePage() {
   }, []);
 
   const handleSave = async () => {
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
       const values = await form.validateFields();
       await DomainConfigApi.save({
@@ -70,6 +84,8 @@ export default function ConfigInheritancePage() {
     } catch (error) {
       console.error(error);
       message.error(error instanceof Error ? error.message : '保存配置失败');
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -167,9 +183,11 @@ export default function ConfigInheritancePage() {
                 <Button icon={<RefreshCw size={16} />} onClick={loadConfigs} loading={listLoading}>
                   刷新
                 </Button>
-                <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>
-                  新增配置
-                </Button>
+                {canWrite && (
+                  <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>
+                    新增配置
+                  </Button>
+                )}
               </Space>
             }
           >
@@ -232,6 +250,7 @@ export default function ConfigInheritancePage() {
         title="新增/更新配置"
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
+        confirmLoading={submitBusy}
         onOk={handleSave}
         width={720}
       >

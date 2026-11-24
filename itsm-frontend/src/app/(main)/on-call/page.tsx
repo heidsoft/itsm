@@ -63,6 +63,9 @@ export default function OnCallPage() {
   const [editShiftModal, setEditShiftModal] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<OnCallSchedule | null>(null);
   const [editingShift, setEditingShift] = useState<OnCallShift | null>(null);
+  // 提交中标记：Modal 的 onOk 不会自动 loading（那是 Modal.confirm 才有的行为），
+  // 没有标记时连点两次会创建两条排班/班次。
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [scheduleForm] = Form.useForm();
   const [shiftForm] = Form.useForm();
   const [editShiftForm] = Form.useForm();
@@ -104,8 +107,12 @@ export default function OnCallPage() {
   }, []);
 
   const saveSchedule = async () => {
-    const v = await scheduleForm.validateFields();
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
+      // validateFields 必须在 try 内：校验不通过会 reject，若留在 try 外则
+      // finally 不执行，submitBusy 永久为 true，按钮从此无法再点。
+      const v = await scheduleForm.validateFields();
       await emailIntakeService.createSchedule({
         ...v,
         timezone: v.timezone || 'Asia/Shanghai',
@@ -117,12 +124,16 @@ export default function OnCallPage() {
       load();
     } catch {
       message.error('保存失败');
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
   const saveShift = async () => {
-    const v = await shiftForm.validateFields();
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
+      const v = await shiftForm.validateFields();
       const startAt = v.range[0].toISOString();
       const endAt = v.range[1].toISOString();
       await emailIntakeService.createShift({
@@ -137,12 +148,16 @@ export default function OnCallPage() {
       load();
     } catch {
       message.error('保存失败');
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
   const updateShift = async () => {
-    const v = await editShiftForm.validateFields();
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
+      const v = await editShiftForm.validateFields();
       const startAt = v.range[0].toISOString();
       const endAt = v.range[1].toISOString();
       await emailIntakeService.updateShift(editingShift!.id, {
@@ -158,6 +173,8 @@ export default function OnCallPage() {
       load();
     } catch {
       message.error('更新失败');
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -317,6 +334,7 @@ export default function OnCallPage() {
         title='新建排班'
         open={scheduleModal}
         onOk={saveSchedule}
+        confirmLoading={submitBusy}
         onCancel={() => setScheduleModal(false)}
       >
         <Form form={scheduleForm} layout='vertical'>
@@ -348,6 +366,7 @@ export default function OnCallPage() {
         title={`安排班次 - ${selectedSchedule?.name || ''}`}
         open={shiftModal}
         onOk={saveShift}
+        confirmLoading={submitBusy}
         onCancel={() => setShiftModal(false)}
       >
         <Form form={shiftForm} layout='vertical'>
@@ -372,6 +391,7 @@ export default function OnCallPage() {
         title='编辑班次'
         open={editShiftModal}
         onOk={updateShift}
+        confirmLoading={submitBusy}
         onCancel={() => {
           setEditShiftModal(false);
           editShiftForm.resetFields();

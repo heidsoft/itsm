@@ -40,6 +40,10 @@ const AutomationRulesPage: React.FC = () => {
   const [loadError, setLoadError] = useState<{ denied: boolean; detail: string } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [form] = Form.useForm();
 
   // 加载规则列表
@@ -127,6 +131,8 @@ const AutomationRulesPage: React.FC = () => {
 
   // 保存规则
   const handleSave = async () => {
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
       const values = await form.validateFields();
 
@@ -169,6 +175,8 @@ const AutomationRulesPage: React.FC = () => {
       loadRules();
     } catch (error) {
       message.error('保存失败');
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -310,6 +318,7 @@ const AutomationRulesPage: React.FC = () => {
       <Modal
         title={editingRule ? '编辑自动化规则' : '创建自动化规则'}
         open={modalVisible}
+        confirmLoading={submitBusy}
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
         okText="保存"

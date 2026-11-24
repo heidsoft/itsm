@@ -19,6 +19,10 @@ export default function SourcesPage() {
   const [listLoading, setListLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<SourceOrganization | null>(null);
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [form] = Form.useForm();
 
   const load = async () => {
@@ -31,14 +35,18 @@ export default function SourcesPage() {
   useEffect(() => { load(); }, []);
 
   const save = async () => {
-    const v = await form.validateFields();
-    const payload = {
-      ...v,
-      emailAddresses: (v.emailAddresses as string || '').split(/[,，\n]/).map(s => s.trim()).filter(Boolean),
-      emailDomains: (v.emailDomains as string || '').split(/[,，\n]/).map(s => s.trim().replace('@', '')).filter(Boolean),
-      status: 'active',
-    };
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
+      // validateFields 必须在 try 内：校验不通过会 reject，若留在 try 外则
+      // finally 不执行，submitBusy 永久为 true，按钮从此无法再点。
+      const v = await form.validateFields();
+      const payload = {
+        ...v,
+        emailAddresses: (v.emailAddresses as string || '').split(/[,，\n]/).map(s => s.trim()).filter(Boolean),
+        emailDomains: (v.emailDomains as string || '').split(/[,，\n]/).map(s => s.trim().replace('@', '')).filter(Boolean),
+        status: 'active',
+      };
       if (editing) {
         await emailIntakeService.updateSourceOrganization(editing.id, payload);
         message.success('已更新');
@@ -48,7 +56,7 @@ export default function SourcesPage() {
       }
       setModal(false); form.resetFields(); setEditing(null);
       load();
-    } catch { message.error('保存失败'); }
+    } catch { message.error('保存失败'); } finally { setSubmitBusy(false); }
   };
 
   const disable = async (id: number) => {
@@ -98,7 +106,7 @@ export default function SourcesPage() {
         <Table rowKey="id" loading={listLoading} columns={columns} dataSource={items} pagination={false} />
       </Card>
 
-      <Modal title={editing ? '编辑来源组织' : '新增来源组织'} open={modal} onOk={save} onCancel={() => setModal(false)}>
+      <Modal title={editing ? '编辑来源组织' : '新增来源组织'} open={modal} onOk={save} confirmLoading={submitBusy} onCancel={() => setModal(false)}>
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="组织名称" rules={[{ required: true }]}>
             <Input placeholder="例如：某某科技IT部门" />

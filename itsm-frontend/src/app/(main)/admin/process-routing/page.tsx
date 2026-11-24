@@ -55,6 +55,10 @@ export default function ProcessRoutingPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [processDefinitions, setProcessDefinitions] = useState<Array<{ key: string; name: string }>>([]);
   const [searchText, setSearchText] = useState('');
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [form] = Form.useForm();
 
   // 搜索：规则为全量客户端加载（ProcessBindingApi.list 无分页），本地过滤口径透明
@@ -130,6 +134,8 @@ export default function ProcessRoutingPage() {
   };
 
   const handleSave = async () => {
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
       const values = await form.validateFields();
       // 防御性剔除服务端字段：类型层面已 Omit，但 form values spread 可能
@@ -162,6 +168,8 @@ export default function ProcessRoutingPage() {
       }
       console.error('Failed to save routing rule:', error);
       message.error(error instanceof Error ? error.message : '保存路由规则失败');
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -426,6 +434,7 @@ export default function ProcessRoutingPage() {
           setSelectedRule(null);
           form.resetFields();
         }}
+        confirmLoading={submitBusy}
         onOk={handleSave}
         width={800}
       >

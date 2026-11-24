@@ -28,6 +28,10 @@ export default function CustomersPage() {
   const [branchModal, setBranchModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<ServiceCustomer | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<ServiceCustomer | null>(null);
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [customerForm] = Form.useForm();
   const [branchForm] = Form.useForm();
 
@@ -50,8 +54,12 @@ export default function CustomersPage() {
   useEffect(() => { load(); }, []);
 
   const saveCustomer = async () => {
-    const values = await customerForm.validateFields();
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
+      // validateFields 必须在 try 内：校验不通过会 reject，若留在 try 外则
+      // finally 不执行，submitBusy 永久为 true，按钮从此无法再点。
+      const values = await customerForm.validateFields();
       if (editingCustomer) {
         await emailIntakeService.updateCustomer(
           editingCustomer.id,
@@ -72,7 +80,7 @@ export default function CustomersPage() {
       customerForm.resetFields();
       setEditingCustomer(null);
       load();
-    } catch { message.error('保存失败'); }
+    } catch { message.error('保存失败'); } finally { setSubmitBusy(false); }
   };
 
   const disableCustomer = async (id: number) => {
@@ -84,8 +92,11 @@ export default function CustomersPage() {
   };
 
   const saveBranch = async () => {
-    const values = await branchForm.validateFields();
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
+      // 同上：校验与提交同放 try，避免校验失败把按钮锁死。
+      const values = await branchForm.validateFields();
       await emailIntakeService.createBranch(
         toBranchPayload(values, selectedCustomer!.id, 'active')
       );
@@ -93,7 +104,7 @@ export default function CustomersPage() {
       setBranchModal(false);
       branchForm.resetFields();
       load();
-    } catch { message.error('保存失败'); }
+    } catch { message.error('保存失败'); } finally { setSubmitBusy(false); }
   };
 
   const branchColumns = [
@@ -167,6 +178,7 @@ export default function CustomersPage() {
 
       <Modal
         title={editingCustomer ? '编辑客户' : '新增客户'} open={customerModal}
+        confirmLoading={submitBusy}
         onOk={saveCustomer} onCancel={() => setCustomerModal(false)}
       >
         <Form form={customerForm} layout="vertical">
@@ -190,6 +202,7 @@ export default function CustomersPage() {
 
       <Modal
         title={`添加分支 - ${selectedCustomer?.name || ''}`} open={branchModal}
+        confirmLoading={submitBusy}
         onOk={saveBranch} onCancel={() => setBranchModal(false)}
       >
         <Form form={branchForm} layout="vertical">

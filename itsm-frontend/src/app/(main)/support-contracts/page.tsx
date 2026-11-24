@@ -32,6 +32,10 @@ export default function ContractsPage() {
   const [form] = Form.useForm();
   const [refForm] = Form.useForm();
   const [selectedCustomer, setSelectedCustomer] = useState<number | undefined>();
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
 
   const load = async () => {
     setListLoading(true);
@@ -73,8 +77,12 @@ export default function ContractsPage() {
   };
 
   const saveContract = async () => {
-    const v = await form.validateFields();
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
+      // validateFields 必须在 try 内：校验不通过会 reject，若留在 try 外则
+      // finally 不执行，submitBusy 永久为 true，按钮从此无法再点。
+      const v = await form.validateFields();
       if (editingContract) {
         await emailIntakeService.updateContract(editingContract.id, {
           customerId: v.customerId,
@@ -98,7 +106,7 @@ export default function ContractsPage() {
       }
       setModal(false); form.resetFields(); setSelectedCustomer(undefined); setEditingContract(null);
       load();
-    } catch { message.error('保存失败'); }
+    } catch { message.error('保存失败'); } finally { setSubmitBusy(false); }
   };
 
   const terminate = async (id: number) => {
@@ -107,13 +115,16 @@ export default function ContractsPage() {
   };
 
   const saveRef = async () => {
-    const v = await refForm.validateFields();
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
+      // 同上：校验与提交同放 try，避免校验失败把按钮锁死。
+      const v = await refForm.validateFields();
       await emailIntakeService.createExternalContractReference(v);
       message.success('外部合同映射已添加');
       setRefModal(false); refForm.resetFields();
       load();
-    } catch { message.error('保存失败'); }
+    } catch { message.error('保存失败'); } finally { setSubmitBusy(false); }
   };
 
   const deleteRef = async (id: number) => {
@@ -191,7 +202,7 @@ export default function ContractsPage() {
         <Table rowKey="id" size="small" columns={refColumns} dataSource={refs} pagination={false} />
       </Card>
 
-      <Modal title={editingContract ? '编辑合同' : '新增合同'} open={modal} onOk={saveContract} onCancel={() => setModal(false)} width={520}>
+      <Modal title={editingContract ? '编辑合同' : '新增合同'} open={modal} onOk={saveContract} confirmLoading={submitBusy} onCancel={() => setModal(false)} width={520}>
         <Form form={form} layout="vertical">
           <Form.Item name="customerId" label="客户" rules={[{ required: true }]}>
             <Select placeholder="选择客户" showSearch optionFilterProp="label"
@@ -220,7 +231,7 @@ export default function ContractsPage() {
         </Form>
       </Modal>
 
-      <Modal title="添加外部合同号映射" open={refModal} onOk={saveRef} onCancel={() => setRefModal(false)}>
+      <Modal title="添加外部合同号映射" open={refModal} onOk={saveRef} confirmLoading={submitBusy} onCancel={() => setRefModal(false)}>
         <Form form={refForm} layout="vertical">
           <Form.Item name="sourceOrganizationId" label="来源组织" rules={[{ required: true }]}>
             <Select placeholder="选择来源组织" showSearch optionFilterProp="label"

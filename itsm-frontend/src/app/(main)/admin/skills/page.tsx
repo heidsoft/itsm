@@ -36,6 +36,10 @@ export default function SkillsAdminPage() {
   const [detail, setDetail] = useState<SkillEntry | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorTarget, setEditorTarget] = useState<SkillEntry | null>(null);
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
   const [form] = Form.useForm<SkillUpsertRequest>();
 
   const load = async () => {
@@ -87,6 +91,8 @@ export default function SkillsAdminPage() {
   };
 
   const submitEditor = async () => {
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
       const values = await form.validateFields();
       if (editorTarget) {
@@ -100,6 +106,8 @@ export default function SkillsAdminPage() {
       void load();
     } catch (e) {
       message.error((e as Error).message ?? t('admin.skills.saveFailed'));
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -342,6 +350,7 @@ export default function SkillsAdminPage() {
         open={editorOpen}
         title={editorTarget ? t('admin.skills.editorUpdate') : t('admin.skills.editorCreate')}
         onCancel={() => setEditorOpen(false)}
+        confirmLoading={submitBusy}
         onOk={submitEditor}
         okText={t('admin.skills.editorSubmit')}
         cancelText={t('admin.skills.editorCancel')}

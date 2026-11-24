@@ -45,6 +45,10 @@ export default function ConnectorsAdminPage() {
   const [sendTarget, setSendTarget] = useState<ConnectorConfig | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailTarget, setDetailTarget] = useState<ConnectorManifest | null>(null);
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
 
   const [form] = Form.useForm();
   const [sendForm] = Form.useForm();
@@ -79,6 +83,8 @@ export default function ConnectorsAdminPage() {
   };
 
   const submitProvision = async () => {
+    if (submitBusy) return;
+    setSubmitBusy(true);
     if (!provisionTarget) return;
     try {
       const values = await form.validateFields();
@@ -122,6 +128,8 @@ export default function ConnectorsAdminPage() {
     } catch (e) {
       if ((e as { errorFields?: unknown }).errorFields) return;
       message.error(t('connectors.provision.enableFailed', { msg: (e as Error).message }));
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -157,6 +165,8 @@ export default function ConnectorsAdminPage() {
   };
 
   const submitSend = async () => {
+    if (submitBusy) return;
+    setSubmitBusy(true);
     if (!sendTarget) return;
     try {
       const v = await sendForm.validateFields();
@@ -172,6 +182,8 @@ export default function ConnectorsAdminPage() {
     } catch (e) {
       if ((e as { errorFields?: unknown }).errorFields) return;
       message.error(t('connectors.send.failed', { msg: (e as Error).message }));
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -381,6 +393,7 @@ export default function ConnectorsAdminPage() {
         title={provisionTarget ? t('connectors.provision.enableTitle', { title: provisionTarget.title }) : t('connectors.actions.enable')}
         open={provisionOpen}
         onCancel={() => setProvisionOpen(false)}
+        confirmLoading={submitBusy}
         onOk={submitProvision}
         width={640}
         okText={t('connectors.actions.enable')}
@@ -447,6 +460,7 @@ export default function ConnectorsAdminPage() {
         title={sendTarget ? t('connectors.send.title', { name: sendTarget.name }) : t('connectors.actions.send')}
         open={sendOpen}
         onCancel={() => setSendOpen(false)}
+        confirmLoading={submitBusy}
         onOk={submitSend}
         width={600}
         okText={t('connectors.actions.send')}

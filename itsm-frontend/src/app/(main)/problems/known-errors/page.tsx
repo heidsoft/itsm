@@ -65,6 +65,10 @@ export default function KnownErrorsPage() {
   const [viewRecord, setViewRecord] = useState<KEDBResponse | null>(null);
   const [form] = Form.useForm();
   const [categories, setCategories] = useState<string[]>([]);
+  // 提交中标记：Modal 的 onOk 不会自动 loading（自动 loading 是 Modal.confirm 才有的
+  // 行为，见 antd Modal.js 的 handleOk —— 它只调用 onOk 后立刻 onClose）。
+  // 没有这个标记时连点两次会提交两次（建两条记录 / 发两次消息）。
+  const [submitBusy, setSubmitBusy] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -190,6 +194,8 @@ export default function KnownErrorsPage() {
   };
 
   const handleSubmit = async () => {
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
       const values = await form.validateFields();
       if (editingRecord) {
@@ -204,6 +210,8 @@ export default function KnownErrorsPage() {
       fetchStats();
     } catch (error) {
       message.error('操作失败');
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -455,6 +463,7 @@ export default function KnownErrorsPage() {
       <Modal
         title={editingRecord ? '编辑已知错误' : '新建已知错误'}
         open={isModalOpen}
+        confirmLoading={submitBusy}
         onOk={handleSubmit}
         onCancel={() => setIsModalOpen(false)}
         width={700}
