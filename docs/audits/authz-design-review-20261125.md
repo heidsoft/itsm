@@ -207,3 +207,4 @@ func (r *Registry) ValidateBootstrap(ctx context.Context, tenantID int) error { 
 - **修复**：工具写路径与读面共用 `datascope.ActorFromContext(ctx, tenantID)`；actor 由服务器在鉴权后写入 context，模型参数无法伪造；缺失或租户不匹配时 fail-closed，并把 `actor.UserID` / `actor.Role` 传入 `TicketService.UpdateTicket`。管理员角色仍保留租户全量写入语义；未修改权限码目录、DB schema、迁移或部署策略。
 - **回归证据**：在既有 `internal/services/tool_registry_write_tools_test.go` 中补充 `TestUpdateTicketToolEnforcesTrustedActorRowScope`，覆盖非属主拒绝（且 DB 未变更）、属主允许、缺失 actor 拒绝、异租户 actor 拒绝、管理员全量允许。先回退修复运行为红（exit 1），恢复修复运行为绿（exit 0）。测试放入既有文件而非新增顶层文件，避免抬高 docs-gate C.6.4 的 shared-services 表面基线。
 - **剩余边界（不在本次范围）**：`get_ci` / `get_ci_tickets` 等同族只读工具仍未应用 CI 行级范围（P1-1 残留面）；service 主体 `userID=0` 仍按既有系统语义跳过行级校验，属既定设计边界，改变它需要产品拍板。
+- **CI 复验（PR #131）**：Lint、Build、Fresh install、Docs C.6、API Contract 等通过；`backend-ci` 的 `Test` 因多处既存失败（database/dto/contracts/layering）为红，其中本测试文件两处既存 `Errorf` 格式参数缺失已修正（`e4bb999f`，本地 `go vet ./internal/services` exit 0）；`entgen-drift` 因上游失败被跳过，尚不可宣称通过。
