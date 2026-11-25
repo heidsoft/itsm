@@ -52,7 +52,12 @@ var bteMigratedTemplates = []string{
 // 2026-11-17（Phase B3”）：新增 ddl_ai_approval_flow.bpmn（DDL 工单 AI 审批流
 // 骨架）后按纪律同步锚点。上一版 69a25a68...（迁移前 20 模板集合），本版
 // 046aafd3...（21 模板集合）。新增模板不进部门清单/seeder 定义，不动棘轮基线。
-const bteMigratedDigest = "046aafd36ed4203e0da56082eb242e8b4b5a2c69427129b0722477800dba42e2"
+//
+// 2026-11-26 补账：a25537479（11-19 审批与流程设计基础体验包：节点去 AI 化
+// 命名、设计器中文化、批量审批）改写 7 个模板内容但漏同步本锚点。复核确认
+// 为已提交的合法产品变更（非本地漂移、无模板增删、仍 21 个），且 service/pkg/
+// 磁盘三源摘要一致仅常量滞后，按锚点纪律补账 046aafd3... → 52123ac1...。
+const bteMigratedDigest = "52123ac129db0c4d83d34f26e0f576c965c8a4684f348b0fb3626c2b08983fb8"
 
 func bteReadBackend(t *testing.T, parts ...string) string {
 	t.Helper()

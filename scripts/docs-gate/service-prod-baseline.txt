@@ -25,7 +25,6 @@ bpmn_approval_bridge_service.go
 bpmn_audit_service.go
 bpmn_compensation.go
 bpmn_deployment_service.go
-bpmn_event_service.go
 bpmn_lint_service.go
 bpmn_metrics_service.go
 bpmn_monitoring_service.go
