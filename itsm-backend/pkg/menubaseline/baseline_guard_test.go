@@ -572,3 +572,43 @@ func TestMenuBaseline_DiscoveryRegistryNaming(t *testing.T) {
 		}
 	}
 }
+
+// TestMenuBaseline_MajorIncidentNaming 锁住 /noc 的名称与页面标题一致。
+//
+// 此前该页有三个名字：菜单「NOC 作战室」、页面标题「NOC 工作台」、
+// Description「重大事件作战室」。三者指向同一页，且「作战室」是装饰性比喻，
+// 读不出这一页到底做什么。页面实际行为是按 priority=重大 过滤事件、
+// 展示处置进展与当前负责人（internal/services/incident_service_test.go 的
+// MajorIncidentFilter 用例锁此语义），故统一为「重大事件」。
+func TestMenuBaseline_MajorIncidentNaming(t *testing.T) {
+	var found bool
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if spec.Path != "/noc" {
+			continue
+		}
+		found = true
+		if spec.Name != "重大事件" {
+			t.Errorf("/noc 的菜单名是 %q，应为 %q（与页面标题一致）", spec.Name, "重大事件")
+		}
+		if strings.Contains(spec.Name, "作战室") {
+			t.Errorf("/noc 的菜单名 %q 含装饰性比喻「作战室」", spec.Name)
+		}
+		if spec.ParentPath != "/incidents" {
+			t.Errorf("/noc 的父级是 %q，应为 /incidents（事件域的运营视图）", spec.ParentPath)
+		}
+		if spec.PermissionCode != "incident:read" {
+			t.Errorf("/noc 的权限码是 %q，应保持 incident:read", spec.PermissionCode)
+		}
+	}
+	if !found {
+		t.Fatal("菜单基线缺少 /noc")
+	}
+
+	// 整个菜单词表里不得再有「作战室」——这条对新增菜单同样生效，
+	// 避免同类装饰词从别处再漏进来。
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if strings.Contains(spec.Name, "作战室") || strings.Contains(spec.Description, "作战室") {
+			t.Errorf("菜单 %s（%q）仍在文案里使用「作战室」", spec.Path, spec.Name)
+		}
+	}
+}

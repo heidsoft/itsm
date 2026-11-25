@@ -291,7 +291,7 @@ const ControlPlanePanel: React.FC<{ state: ControlPlaneState; onRefresh: () => v
       <Card size="small" style={{ borderColor: '#ffccc7' }}>
         <Space align="center">
           <Text type="danger" strong>
-            控制面状态读取失败
+            队列概况读取失败
           </Text>
           <Text type="secondary">
             {error}——这不代表队列为空，请重试或检查后端
@@ -311,7 +311,7 @@ const ControlPlanePanel: React.FC<{ state: ControlPlaneState; onRefresh: () => v
       title={
         <Space size={8}>
           <ShieldAlert size={16} color="#1677ff" />
-          <Text strong>控制面状态</Text>
+          <Text strong>队列概况</Text>
           {data && (
             <Text type="secondary" style={{ fontSize: 12 }}>
               采集于 {formatDateTime(data.gatheredAt)}

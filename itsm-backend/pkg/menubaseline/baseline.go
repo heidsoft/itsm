@@ -31,10 +31,14 @@ func MenuDefinitions() []MenuSpec {
 		// 挂为其子项后两者共用 serviceRequest capability 门控，path 不变。
 		{Name: "我的请求", Path: "/my-requests", Icon: "User", ParentPath: "/service-requests", PermissionCode: "service_request:read", SortOrder: 25, Description: "我的服务请求"},
 		{Name: "事件管理", Path: "/incidents", Icon: "AlertCircle", ParentPath: "", PermissionCode: "incident:read", SortOrder: 30, Description: "事件管理"},
-		// 命名对齐 Description「重大事件作战室」，同时消除「NOC工作台」与「我的工作台」的「台」字撞车（审计报告 3.3-①）。
+		// 名称与页面标题统一为「重大事件」。此前菜单叫「NOC 作战室」、页面标题叫
+		// 「NOC 工作台」、Description 又是第三种说法，三个名字指向同一页；「作战室」
+		// 属装饰性比喻，不能说明这一页做什么。该页的实际功能是按 priority=重大
+		// 过滤事件、看处置进展与当前负责人（incident_service_test 的
+		// MajorIncidentFilter 用例即锁此语义），故统一用「重大事件」。
 		// 2026-11-23 低风险收敛：与「事件管理」同 permission code（incident:read），
 		// 它本就是事件域的运营视图（值班/重大事件），挂为事件子项，path 不变。
-		{Name: "NOC 作战室", Path: "/noc", Icon: "Activity", ParentPath: "/incidents", PermissionCode: "incident:read", SortOrder: 35, Description: "重大事件作战室"},
+		{Name: "重大事件", Path: "/noc", Icon: "Activity", ParentPath: "/incidents", PermissionCode: "incident:read", SortOrder: 35, Description: "按重大优先级筛选的事件处置进展与当前负责人"},
 		{Name: "问题管理", Path: "/problems", Icon: "HelpCircle", ParentPath: "", PermissionCode: "problem:read", SortOrder: 40, Description: "问题管理"},
 		// 2026-11-23 低风险收敛：持续改进由问题管理驱动（问题→已知错误→改进），
 		// 与「问题管理」同 problem:read，作为其子项。门控随之收紧为 problem capability（见测试锁定）。path 不变。

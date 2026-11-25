@@ -208,7 +208,7 @@ export default function ReconciliationPage() {
           { title: '首页' },
           { title: '配置管理' },
           { title: <a onClick={() => router.push('/cmdb')}>配置项列表</a> },
-          { title: '对账中心' },
+          { title: '云资源核对' },
         ]}
       />
 
