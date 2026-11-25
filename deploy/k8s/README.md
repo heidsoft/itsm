@@ -2,7 +2,7 @@
 
 本目录提供 Docker Compose 之外的 Kubernetes 部署选项。清单为**起步脚手架**，生产落地前需按集群环境校验并调整：
 
-- 镜像标签 `ghcr.io/heidsoft/itsm-backend:1.6.9` / `itsm-frontend:1.6.9` —— 改为你的固定标签（不要用 `latest`）。
+- 镜像标签 `ghcr.io/heidsoft/itsm-backend:1.6.60` / `itsm-frontend:1.6.60` —— 改为你的固定标签（不要用 `latest`）；本目录仍是起步脚手架，不是 HA 方案。
 - `02-secrets.yaml` 为占位符，**部署前必须替换**（推荐 sealed-secrets / external-secrets / vault）。
 - PVC 的 `storageClassName` 依赖集群默认；如需指定请显式设置。
 - 若后端镜像依赖 `config.yaml`，请将 `itsm-backend/config.yaml.example` 挂载为 ConfigMap 并挂到容器 `/app/config`（或对应路径）。

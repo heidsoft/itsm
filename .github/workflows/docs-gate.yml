@@ -195,7 +195,7 @@ jobs:
             echo "[docs-gate] Advisory mode (strict=false). C.1–C.5 will not block."
             ./scripts/docs-gate/run-all.sh | tee docs-gate-report.txt
           else
-            echo "[docs-gate] Hard mode (--strict). All 6 gates block on violation."
+            echo "[docs-gate] Hard mode (--strict). All 8 gates block on violation (C.6/C.7 always; C.1-C.5 under --strict)."
             ./scripts/docs-gate/run-all.sh --strict | tee docs-gate-report.txt
           fi
 

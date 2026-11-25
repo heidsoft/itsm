@@ -1,12 +1,13 @@
 {
-  "_comment": "已登记的历史版本漂移。canonical 由发布流程决定；本文件只记录现状，防止新漂移混入。对齐完成后清空本文件并在 CI 启用 --strict。",
+  "_comment": "历史版本漂移已于 2026-11-24 对账对齐到 v1.6.60。本文件保留已解决漂移的登记用于审计追溯，不再作为新增漂移的豁免；任一表面出现新版本立即 FAIL。",
   "_recorded_at": "2026-11-22",
-  "_canonical_at_recording": "v1.6.59",
+  "_resolved_at": "2026-11-24",
+  "_canonical": "v1.6.60",
   "surfaces": {
-    ".env.prod.example VERSION": "1.6.9",
-    "backend defaultAppVersion": "1.6.19",
-    "GA readiness version": "1.6.8",
-    "frontend package version": "1.6.19",
-    "docs release baseline": "1.6.9"
+    ".env.prod.example VERSION": "1.6.60",
+    "backend defaultAppVersion": "1.6.60",
+    "GA readiness version": "1.6.60",
+    "frontend package version": "1.6.60",
+    "docs release baseline": "1.6.60"
   }
 }
