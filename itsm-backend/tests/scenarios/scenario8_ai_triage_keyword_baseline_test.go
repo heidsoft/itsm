@@ -95,10 +95,13 @@ func TestScenario8_AITriageKeywordBaseline(t *testing.T) {
 		}
 	})
 
-	t.Run("default assignee is set by category", func(t *testing.T) {
+	t.Run("no hardcoded assignee injection without a real source", func(t *testing.T) {
+		// 7804845bc 的产品决策：无 guidance/LLM 来源时 AssigneeID 保持 0 =
+		// 「无建议」；旧 defaultAssignees 硬编码（database→某固定 ID）是伪造
+		// 的跨租户错误数据。本断言锁「不注入」，防止硬编码回潮。
 		result := svc.Suggest(ctx, "MySQL 慢查询", "数据库连接池问题")
-		if result.AssigneeID == 0 {
-			t.Fatal("database 分类应设置默认 assignee")
+		if result.AssigneeID != 0 {
+			t.Fatalf("无来源时不应注入 assignee，实际 AssigneeID=%d（硬编码兜底回潮？）", result.AssigneeID)
 		}
 	})
 

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Fix**：收口上批披露的两条既有红（能力—场景对应修复第三批）——① `TestAcceptanceVersionIsNotBehindLatestRelease`：v1.6.60（2026-11-22 发布）发版时未复核能力矩阵（11-19 `30fbd665f` 治理看板批次已更新 cert pilotReason，矩阵实际变过），验收基线 `acceptanceVersion` 停在 2026.11.08；本次对账复核 28 项 registry 成熟度与 README/契约口径一致（证据即 P0-A 新增 5 项守卫测试），基线同步至 `2026.11.25`（handler.go 常量 + 商业契约 §验证说明同批）。② scenario8 `default_assignee_is_set_by_category`：`7804845bc`（11-14）删除硬编码 defaultAssignees（伪造的跨租户错误数据）时未同步该测试，旧断言仍在要求非零；按产品决策改为行为锁「无 guidance/LLM 来源时 AssigneeID 保持 0=无建议」，反向防硬编码回潮。修复后 `handlers/capability` 与 `tests/scenarios` 全包绿，docs-gate 8/8。
 - **Fix**：能力—场景对应修复两批（P0-A / P0-B + P2）——① P0-A registry→README 域归属映射守卫（15 域/28 key，成熟度不复制，反向验证红在断言）；② P0-B scenario8 正名为关键词分诊启发式基线，去除对 RAG 命中基线的虚假覆盖声明，RAG 验收仍按 AI 域 Pilot 未签字处理；③ P2 修正 `product-scope-baseline` 注释域数 14→15（仅注释，棘轮值不动）。既有红 `TestAcceptanceVersionIsNotBehindLatestRelease`（2026.11.08 < 2026-11-22）在纯 HEAD 树同款复现，非本批引入。
 
 - **Fix**：官网首页文案去营销空话（代 2026-11-23-website-deai 收口）——hero 标题与 CTA 按钮去掉 emoji（🚀⭐🌐），副标题改为事实描述（工单/变更/问题/CMDB/SLA + BPMN 2.0 引擎 + Apache 2.0）；六张功能卡删去「提升服务效率」「灵活适应各种场景」「支持企业级部署」等无信息量尾缀，各留一句可核验的能力描述；技术栈区删除「采用现代化技术架构，确保系统稳定、高性能、易扩展」空副标题。
