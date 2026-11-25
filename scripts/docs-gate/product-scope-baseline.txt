@@ -14,7 +14,7 @@
 # 格式：key=value[  # 说明]
 # 基线建立日期：2026-09-28（来源：output/product-scope-convergence-2026-09-28.md §2）
 
-preview_domains=7          # README 成熟度表中状态为「预览」的能力域数（共 14 域：7 可用 + 7 预览）
+preview_domains=7          # README 成熟度表中状态为「预览」的能力域数（共 15 域：8 可用 + 7 预览）
                            # 2026-10-22 收紧 8→7：变更管理晋升「可用」——能力契约链路 C
                            # （受控变更）五条上线门禁全部落地，最后一条「失败可回退」由
                            # 回滚清单（change_rollback_steps + /rollback-steps 逐项确认 +

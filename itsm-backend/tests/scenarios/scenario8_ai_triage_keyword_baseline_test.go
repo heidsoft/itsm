@@ -9,16 +9,17 @@ import (
 	"itsm-backend/internal/services"
 )
 
-// Scenario 8: AI 分诊准确率 + RAG 命中基线
+// Scenario 8: AI 关键词分诊启发式基线
 //
 // 覆盖：
 //   - 关键词分诊覆盖全部 8 个分类（database/network/server/application/security/storage/user_access/general）
 //   - 优先级升级：安全关键词 → critical，宕机/不可用 → high
 //   - 置信度归一化：越界值回落到 0.6
 //   - 无 LLM 时降级到关键词启发式
-//   - RAG 关键词搜索基本命中（标题匹配得分高于内容匹配）
+//
+// RAG 命中/召回质量不在本场景覆盖，见 AI 域 Pilot 承诺与 cmd/ai-eval 人工验收。
 
-func TestScenario8_AITriageRAGBaseline(t *testing.T) {
+func TestScenario8_AITriageKeywordBaseline(t *testing.T) {
 	logger := zap.NewNop()
 	svc := service.NewTriageService(nil, logger)
 	ctx := context.Background()

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Fix**：能力—场景对应修复两批（P0-A / P0-B + P2）——① P0-A registry→README 域归属映射守卫（15 域/28 key，成熟度不复制，反向验证红在断言）；② P0-B scenario8 正名为关键词分诊启发式基线，去除对 RAG 命中基线的虚假覆盖声明，RAG 验收仍按 AI 域 Pilot 未签字处理；③ P2 修正 `product-scope-baseline` 注释域数 14→15（仅注释，棘轮值不动）。既有红 `TestAcceptanceVersionIsNotBehindLatestRelease`（2026.11.08 < 2026-11-22）在纯 HEAD 树同款复现，非本批引入。
+
 - **Fix**：官网首页文案去营销空话（代 2026-11-23-website-deai 收口）——hero 标题与 CTA 按钮去掉 emoji（🚀⭐🌐），副标题改为事实描述（工单/变更/问题/CMDB/SLA + BPMN 2.0 引擎 + Apache 2.0）；六张功能卡删去「提升服务效率」「灵活适应各种场景」「支持企业级部署」等无信息量尾缀，各留一句可核验的能力描述；技术栈区删除「采用现代化技术架构，确保系统稳定、高性能、易扩展」空副标题。
 - **Fix**：产品命名与文案治理收口（代 menu-authz-audit / frontend-p0p1-batch 残留面收口）——NOC 页面同页出现「NOC 作战室 / 重大事件 / 重大事件管理」三名，统一为「重大事件」，并在 `pkg/menubaseline` 新增 `MajorIncidentNaming` 守卫锁定基线名称不回潮；CMDB 对账与关系页的面包屑、页面描述对齐当前菜单口径；AI 审批「控制面状态」改称「队列概况」（原词与实际控制面概念混淆），配套 `control-plane-panel` 测试同步；分配规则预演提示补明作用范围，避免被读成全量生效。守卫：`pkg/menubaseline` go 测试绿、`control-plane-panel` 前端 5 用例绿。
 - **Fix**：页面写操作按真实动作码收敛，菜单准入码不再被当成动作码（代 menu-authz-audit / frontend-p0p1-batch 收口）——全局标签页写按钮按 `ticket_tag:create/update/delete` 收敛（菜单准入是 `system_config:read`，audit_admin/security_admin 此前能进页面、点写一律 403）；服务目录审批按钮按 `service_request:approve` 收敛（菜单准入是 `service_request:read`，service_catalog_admin/technician/end_user 只持 read，能看到待审列表、点审批必 403）；SLA 监控的违规列表把 403（缺 `sla:read`，technician/security_admin 持 `bpmn:read` 进来的组合）与真失败分开渲染，权限拒绝显式提示、不再让用户对着「暂无违规」反复点刷新。守卫：3 个新测试（`tag-write-permission-parity` / `approve-permission-parity` / `permission-denied-split`）锁按钮收敛与拒绝态拆分。
