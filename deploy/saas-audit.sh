@@ -57,7 +57,7 @@ order by created_at desc limit $N;
 SQL
     ;;
   top-ips)
-    echo "== SaaS 访问来源 IP TOP $N（次数）=="
+    echo "== SaaS 访问来源 IP TOP ${N}（次数）=="
     awk '{print $1}' "$ACCESS_LOG" 2>/dev/null | sort | uniq -c | sort -rn | head -n "$N"
     ;;
   blocked)

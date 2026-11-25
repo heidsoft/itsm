@@ -39,7 +39,7 @@ echo "=== 1/3 gofumpt 版本一致性 ==="
 if [ -z "$CI_PIN" ]; then
   fail_msg "无法从 backend-ci.yml 解析 gofumpt pin"
 elif [ "$CI_PIN" != "$GOFUMPT_VERSION" ]; then
-  fail_msg "CI pin=$CI_PIN，本工具=$GOFUMPT_VERSION；请同步两处后再信任结果"
+  fail_msg "CI pin=${CI_PIN}，本工具=${GOFUMPT_VERSION}；请同步两处后再信任结果"
 else
   note "CI 与本地均为 gofumpt $GOFUMPT_VERSION"
 fi
