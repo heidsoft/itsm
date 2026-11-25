@@ -49,10 +49,10 @@ func TestToolRegistryWriteToolDefinitions(t *testing.T) {
 			t.Errorf("tool %s 应为写操作(ReadOnly=false)，实际 ReadOnly=true", c.name)
 		}
 		if td.Resource != c.resource {
-			t.Errorf("tool %s resource 期望 %s，实际 %s", c.name, td.Resource)
+			t.Errorf("tool %s resource 期望 %s，实际 %s", c.name, c.resource, td.Resource)
 		}
 		if td.Action != c.action {
-			t.Errorf("tool %s action 期望 %s，实际 %s", c.name, td.Action)
+			t.Errorf("tool %s action 期望 %s，实际 %s", c.name, c.action, td.Action)
 		}
 	}
 
