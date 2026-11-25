@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/internal/datascope"
 )
 
 type ToolDefinition = dto.ToolDefinition
@@ -566,9 +567,17 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		if pageSize > 100 {
 			pageSize = 100
 		}
-		// 显式 TenantID 过滤 + DeletedAtIsNil 软删除过滤，绝不跨租户/含软删工单
-		tickets, err := t.client.Ticket.Query().
-			Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
+		// 业务读面必须与 /tickets 页面同一行级范围：actor 由服务器在鉴权后
+		// 写入 context，模型参数无法伪造。缺失 actor → fail-closed（返回明确错误），
+		// 不再退回「租户全量」——此前 AI/MCP 可借工具绕过 DataScope 读他人单据。
+		actor, ok := datascope.ActorFromContext(ctx, tenantID)
+		if !ok {
+			return nil, fmt.Errorf("list_tickets: authenticated actor context is missing or tenant mismatch")
+		}
+		query := t.client.Ticket.Query().
+			Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil())
+		query = datascope.ApplyTicketFilter(query, actor.UserID, actor.DepartmentID, datascope.ForTicketReader(actor.Role))
+		tickets, err := query.
 			Order(ent.Desc(ticket.FieldCreatedAt)).
 			Offset((page - 1) * pageSize).
 			Limit(pageSize).
@@ -600,7 +609,19 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			offset = 0
 		}
 		page := offset/limit + 1
-		result, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: page, PageSize: limit, Search: search, CIType: ciType, CINumber: ciNumber})
+		// 与 CI 业务页面同一行级范围。actor 缺失 → fail-closed，禁止借工具
+		// 以 ScopeConfigured=false 的旧语义取得全租户资产。
+		actor, ok := datascope.ActorFromContext(ctx, tenantID)
+		if !ok {
+			return nil, fmt.Errorf("list_cis: authenticated actor context is missing or tenant mismatch")
+		}
+		result, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{
+			Page: page, PageSize: limit, Search: search, CIType: ciType, CINumber: ciNumber,
+			ScopeConfigured: true,
+			ScopeUserID:     actor.UserID,
+			ScopeDepartmentID: actor.DepartmentID,
+			ScopeAll:        datascope.ForCIReader(actor.Role) == datascope.DataScopeAll,
+		})
 		if err != nil {
 			return nil, err
 		}

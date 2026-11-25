@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/toolinvocation"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/internal/invocationid"
 
 	"go.uber.org/zap"
@@ -16,8 +17,10 @@ import (
 //
 // arguments 原始文本必须一并传入：主体身份保存在服务端信封里，执行前要按
 // invocation 当时的真实 principal 重判，而不是从 policy_version 间接推断。
+// 返回值 currentRole 是**当前**生效角色，供工具读面应用行级范围——不能用
+// RoleSnapshot（那是历史证据），否则降权后已批调用仍按旧角色看到全量数据。
 type ApprovedToolGuard interface {
-	RevalidateApprovedTool(ctx context.Context, tenantID, userID int, role, name, arguments, policyVersion string) (bool, string, error)
+	RevalidateApprovedTool(ctx context.Context, tenantID, userID int, role, name, arguments, policyVersion string) (allowed bool, reason, currentRole string, err error)
 }
 
 type approvedToolRunner interface {
@@ -117,10 +120,10 @@ func (e *ToolExecutor) ExecuteApprovedInvocation(ctx context.Context, invocation
 
 	// Revalidate the persisted initiating identity, never the approver's context.
 	// arguments 携带服务端主体信封，guard 据此恢复真实 principal（human/agent/service）。
-	allowed, reason := false, "approved tool guard unavailable"
+	allowed, reason, currentRole := false, "approved tool guard unavailable", ""
 	if e.guard != nil {
 		var guardErr error
-		allowed, reason, guardErr = e.guard.RevalidateApprovedTool(ctx, tenantID, inv.UserID, inv.RoleSnapshot, inv.ToolName, inv.Arguments, inv.PolicyVersion)
+		allowed, reason, currentRole, guardErr = e.guard.RevalidateApprovedTool(ctx, tenantID, inv.UserID, inv.RoleSnapshot, inv.ToolName, inv.Arguments, inv.PolicyVersion)
 		if guardErr != nil {
 			allowed, reason = false, "approved tool revalidation failed"
 		}
@@ -140,7 +143,11 @@ func (e *ToolExecutor) ExecuteApprovedInvocation(ctx context.Context, invocation
 			fmt.Errorf("tool invocation %d has invalid arguments/identity: %w", invocationID, decErr))
 	}
 
-	res, execErr := e.tools.Execute(ctx, tenantID, inv.ToolName, withInvocationUser(decoded.Args, inv.UserID))
+	// 工具读面用 guard 返回的当前角色（非快照），与请求链口径一致。
+	actorCtx := datascope.WithActor(ctx, datascope.Actor{
+		UserID: inv.UserID, Role: currentRole, TenantID: tenantID,
+	})
+	res, execErr := e.tools.Execute(actorCtx, tenantID, inv.ToolName, withInvocationUser(decoded.Args, inv.UserID))
 	return e.finalize(ctx, invocationID, tenantID, res, execErr)
 }
 

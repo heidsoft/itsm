@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/internal/datascope"
 	entticket "itsm-backend/ent/ticket"
 	ticketrepo "itsm-backend/repository/ticket"
 
@@ -63,6 +64,11 @@ func setupOntologyE2E(t *testing.T) (*ent.Client, *ToolRegistry, context.Context
 	reg := NewToolRegistry(nil, nil, cmdbSvc, client)
 	reg.SetTicketService(ticketSvc)
 
+	// 工具业务读面（list_tickets/list_cis）要求可信 actor；用管理角色保持
+	// 本 e2e 原有的「租户全量」验证意图，同时覆盖 actor 传递链路。
+	ctx = datascope.WithActor(ctx, datascope.Actor{
+		UserID: user.ID, Role: "super_admin", TenantID: tenant.ID,
+	})
 	return client, reg, ctx, tenant.ID, user.ID, hisDB.ID
 }
 

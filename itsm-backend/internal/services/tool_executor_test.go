@@ -213,7 +213,7 @@ func TestToolExecutorRevalidatesApprovedSnapshot(t *testing.T) {
 				binding := client.RolePermission.Create().SetRoleID(role.ID).SetPermissionID(permission.ID).SetTenantID(tenant.ID).SaveX(ctx)
 				client.User.UpdateOneID(user.ID).SetRole(userpkg.RoleItAdmin).SaveX(ctx)
 				snapshotRole := "revoked" // 快照是旧角色，故意与当前不同
-				allowed, _, checkErr := executor.guard.RevalidateApprovedTool(ctx, tenant.ID, user.ID, snapshotRole, inv.ToolName, inv.Arguments, def.PolicyVersion())
+				allowed, _, _, checkErr := executor.guard.RevalidateApprovedTool(ctx, tenant.ID, user.ID, snapshotRole, inv.ToolName, inv.Arguments, def.PolicyVersion())
 				require.NoError(t, checkErr)
 				require.True(t, allowed, "当前角色持权时应放行，即使快照角色已失效")
 				require.NoError(t, client.RolePermission.DeleteOneID(binding.ID).Exec(ctx))
@@ -273,6 +273,6 @@ func TestToolExecutorRevalidatesApprovedSnapshot(t *testing.T) {
 
 type failingApprovedToolGuard struct{}
 
-func (failingApprovedToolGuard) RevalidateApprovedTool(context.Context, int, int, string, string, string, string) (bool, string, error) {
-	return true, "unsafe provider detail", errors.New("private provider error")
+func (failingApprovedToolGuard) RevalidateApprovedTool(context.Context, int, int, string, string, string, string) (bool, string, string, error) {
+	return true, "unsafe provider detail", "", errors.New("private provider error")
 }

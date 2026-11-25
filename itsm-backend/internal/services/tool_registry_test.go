@@ -10,11 +10,19 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/internal/datascope"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
+
+// 业务读面 require 可信 actor；测试用管理角色保持原有「租户全量」期望。
+func toolActorCtx(tenantID int) context.Context {
+	return datascope.WithActor(context.Background(), datascope.Actor{
+		UserID: 1, Role: "super_admin", TenantID: tenantID,
+	})
+}
 
 // TestToolRegistry_NewToolRegistryAcceptsConfigurationItemService is a
 // regression guard for the refactor that replaced CMDBService with
@@ -73,7 +81,7 @@ func TestToolRegistry_ListCIsUsesConfigurationItemService(t *testing.T) {
 	registry := NewToolRegistry(nil, nil, ciSvc, client)
 
 	t.Run("translates limit and offset into page", func(t *testing.T) {
-		result, err := registry.Execute(context.Background(), 1, "list_cis", map[string]interface{}{
+		result, err := registry.Execute(toolActorCtx(1), 1, "list_cis", map[string]interface{}{
 			"limit":  float64(5),
 			"offset": float64(10),
 		})
@@ -84,7 +92,7 @@ func TestToolRegistry_ListCIsUsesConfigurationItemService(t *testing.T) {
 	})
 
 	t.Run("defaults to limit=10 offset=0 when args missing", func(t *testing.T) {
-		result, err := registry.Execute(context.Background(), 1, "list_cis", map[string]interface{}{})
+		result, err := registry.Execute(toolActorCtx(1), 1, "list_cis", map[string]interface{}{})
 		require.NoError(t, err)
 		items, ok := result.([]*dto.CIResponse)
 		require.True(t, ok)
@@ -92,7 +100,7 @@ func TestToolRegistry_ListCIsUsesConfigurationItemService(t *testing.T) {
 	})
 
 	t.Run("returns empty list for tenant with no CIs", func(t *testing.T) {
-		result, err := registry.Execute(context.Background(), 42, "list_cis", map[string]interface{}{
+		result, err := registry.Execute(toolActorCtx(42), 42, "list_cis", map[string]interface{}{
 			"limit":  float64(5),
 			"offset": float64(0),
 		})
@@ -103,7 +111,7 @@ func TestToolRegistry_ListCIsUsesConfigurationItemService(t *testing.T) {
 	})
 
 	t.Run("clamps offset past total to empty page", func(t *testing.T) {
-		result, err := registry.Execute(context.Background(), 1, "list_cis", map[string]interface{}{
+		result, err := registry.Execute(toolActorCtx(1), 1, "list_cis", map[string]interface{}{
 			"limit":  float64(10),
 			"offset": float64(1000),
 		})
@@ -221,7 +229,7 @@ func TestToolRegistry_ListTickets(t *testing.T) {
 	registry := NewToolRegistry(nil, nil, nil, client)
 
 	t.Run("returns DTO list filtered by tenant and excluding soft-deleted", func(t *testing.T) {
-		result, err := registry.Execute(ctx, 1, "list_tickets", map[string]interface{}{})
+		result, err := registry.Execute(datascope.WithActor(ctx, datascope.Actor{UserID: 1, Role: "super_admin", TenantID: 1}), 1, "list_tickets", map[string]interface{}{})
 		require.NoError(t, err)
 		items, ok := result.([]*dto.TicketResponse)
 		require.True(t, ok, "list_tickets result must be []*dto.TicketResponse, got %T", result)
@@ -235,20 +243,20 @@ func TestToolRegistry_ListTickets(t *testing.T) {
 
 	t.Run("clamps pageSize to [1,100]", func(t *testing.T) {
 		// pageSize=0 -> clamp 到 1，只返回最新 1 条
-		result, err := registry.Execute(ctx, 1, "list_tickets", map[string]interface{}{"pageSize": float64(0)})
+		result, err := registry.Execute(datascope.WithActor(ctx, datascope.Actor{UserID: 1, Role: "super_admin", TenantID: 1}), 1, "list_tickets", map[string]interface{}{"pageSize": float64(0)})
 		require.NoError(t, err)
 		items := result.([]*dto.TicketResponse)
 		assert.Len(t, items, 1, "pageSize clamped to 1")
 
 		// pageSize=1000 -> clamp 到 100，但租户 1 只有 3 条
-		result, err = registry.Execute(ctx, 1, "list_tickets", map[string]interface{}{"pageSize": float64(1000)})
+		result, err = registry.Execute(datascope.WithActor(ctx, datascope.Actor{UserID: 1, Role: "super_admin", TenantID: 1}), 1, "list_tickets", map[string]interface{}{"pageSize": float64(1000)})
 		require.NoError(t, err)
 		items = result.([]*dto.TicketResponse)
 		assert.Len(t, items, 3, "pageSize clamped to 100, only 3 exist")
 	})
 
 	t.Run("isolates other tenants", func(t *testing.T) {
-		result, err := registry.Execute(ctx, 2, "list_tickets", map[string]interface{}{})
+		result, err := registry.Execute(datascope.WithActor(ctx, datascope.Actor{UserID: 2, Role: "super_admin", TenantID: 2}), 2, "list_tickets", map[string]interface{}{})
 		require.NoError(t, err)
 		items := result.([]*dto.TicketResponse)
 		assert.Len(t, items, 1)
@@ -256,7 +264,7 @@ func TestToolRegistry_ListTickets(t *testing.T) {
 	})
 
 	t.Run("empty tenant yields empty slice", func(t *testing.T) {
-		result, err := registry.Execute(ctx, 99, "list_tickets", map[string]interface{}{})
+		result, err := registry.Execute(datascope.WithActor(ctx, datascope.Actor{UserID: 99, Role: "super_admin", TenantID: 99}), 99, "list_tickets", map[string]interface{}{})
 		require.NoError(t, err)
 		items := result.([]*dto.TicketResponse)
 		assert.Empty(t, items)

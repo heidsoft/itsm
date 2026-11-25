@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/internal/authz"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/internal/invocationid"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/metrics"
@@ -222,28 +223,28 @@ type toolDecision struct {
 // 主体错认成 agent 后被 userID=0 身份守卫拒绝——已批准的服务调用反而无法执行。
 // 信封由服务端在落库时写入，客户端/模型无法伪造；无信封的存量记录由
 // invocationid.Decode 的唯一兼容解码器处理，无法安全还原时 fail-closed。
-func (s *Service) RevalidateApprovedTool(ctx context.Context, tenantID, userID int, role, name, arguments, storedPolicyVersion string) (bool, string, error) {
+func (s *Service) RevalidateApprovedTool(ctx context.Context, tenantID, userID int, role, name, arguments, storedPolicyVersion string) (bool, string, string, error) {
 	decoded, err := invocationid.Decode(arguments, storedPolicyVersion, userID)
 	if err != nil {
-		return false, "approved tool identity invalid", err
+		return false, "approved tool identity invalid", "", err
 	}
 	// 身份新鲜度：按 invocation 的发起人重新加载当前账号状态与角色。
 	// 快照角色只作历史解释；用户被降权/停用后已排队的调用不得再执行。
 	currentRole, err := s.ResolveCurrentInitiator(ctx, tenantID, userID, decoded.Principal, role)
 	if err != nil {
-		return false, "initiator identity no longer valid", err
+		return false, "initiator identity no longer valid", "", err
 	}
 	d, err := s.evaluateToolCall(ctx, tenantID, userID, currentRole, name, decoded.Principal)
 	if err != nil {
-		return false, "approved tool revalidation unavailable", err
+		return false, "approved tool revalidation unavailable", "", err
 	}
 	if !d.Allowed {
-		return false, d.PermReason, nil
+		return false, d.PermReason, "", nil
 	}
 	if d.PolicyVersion == authz.PolicyVersionUnknown || d.PolicyVersion != storedPolicyVersion {
-		return false, "approved tool policy fingerprint changed or unavailable", nil
+		return false, "approved tool policy fingerprint changed or unavailable", "", nil
 	}
-	return true, "", nil
+	return true, "", currentRole, nil
 }
 
 // evaluateToolCall 跑完 Gate 2 + Gate 2.5，返回判定结论。
@@ -414,7 +415,12 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 	}
 
 	if !d.NeedsApproval {
-		res, execErr := s.tools.Execute(ctx, tenantID, name, args)
+		// 把鉴权后的可信 actor 写入 context：工具读面据此应用行级范围。
+		// 绝不让模型参数里的 userId / role / scopeAll 参与身份判定。
+		actorCtx := datascope.WithActor(ctx, datascope.Actor{
+			UserID: userID, Role: role, TenantID: tenantID,
+		})
+		res, execErr := s.tools.Execute(actorCtx, tenantID, name, args)
 		// 只读工具执行也记录审计（AGENTS.md: AI tool invocation must produce audit logs）
 		if execErr == nil {
 			s.recordToolAudit(ctx, tenantID, userID, role, name, args,
