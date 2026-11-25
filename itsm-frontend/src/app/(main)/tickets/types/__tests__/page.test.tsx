@@ -29,8 +29,9 @@ let permissionCodes: string[] = [];
 
 jest.mock('@/lib/hooks/use-permissions', () => ({
   usePermissions: () => ({
-    hasPermission: (resource: string, action: string) =>
-      permissionCodes.includes(`${resource}:${action}`),
+    // 契约（权限码单点化批次）：hasPermission 只收单个权限码（如 'ticket_type:manage'），
+    // 旧的 (resource, action) 双参 mock 会拼出 'x:y:undefined' 恒 false。
+    hasPermission: (code: string) => permissionCodes.includes(code),
   }),
 }));
 

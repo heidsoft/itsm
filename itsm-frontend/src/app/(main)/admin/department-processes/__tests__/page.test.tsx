@@ -86,7 +86,9 @@ describe('部门流程配置页 CRUD', () => {
     renderPage();
     await selectDepartment();
 
-    expect(await screen.findByText('change_standard_flow')).toBeInTheDocument();
+    // 流程定义列中文名优先、Key 兜底（英文工程标识用户看不懂）；Key 保留在 title 里可追溯
+    expect(await screen.findByText('标准变更流程')).toBeInTheDocument();
+    expect(screen.getByTitle('change_standard_flow')).toBeInTheDocument();
     expect(await screen.findByLabelText('编辑绑定')).toBeInTheDocument();
     expect(await screen.findByLabelText('删除绑定')).toBeInTheDocument();
     expect(await screen.findByLabelText('停用绑定')).toBeInTheDocument();

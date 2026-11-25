@@ -898,7 +898,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
   return (
     <WorkflowDesignerContext.Provider value={contextValue}>
-      <Layout className="h-screen">
+      {/* D51：根容器高度必须扣除全局 chrome（sticky Header 56 + main-content
+          上下 padding 12/16×2 + footer 48 = 128 移动 / 136 桌面）。
+          用 h-screen（100vh）会让文档比视口高约 136px，页面滚动后
+          sticky Header 遮住本页 Tabs（「版本管理」「流程配置」不可点击）。 */}
+      <Layout className="h-[calc(100vh-128px)] md:h-[calc(100vh-136px)]">
         {/* 工具栏 */}
         <WorkflowToolbar
           workflow={workflow}
@@ -921,6 +925,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
         <Content className="p-4 md:p-6 bg-gray-50 overflow-hidden">
           <Tabs
+            className="workflow-designer-tabs"
             activeKey={activeTab}
             onChange={handleTabChange}
             size="small"
@@ -929,7 +934,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                 key: 'designer',
                 label: t('workflow.designer.tabDesigner'),
                 children: (
-                  <div className="flex flex-col md:flex-row gap-2 md:gap-4 h-[calc(100vh-220px)] md:h-[calc(100vh-200px)]">
+                  <div className="flex flex-col md:flex-row gap-2 md:gap-4 h-full">
                     <div className="flex-1 min-w-0 min-h-[300px] md:min-h-0">
                       <WorkflowCanvas
                         currentXML={currentXML}
@@ -1011,7 +1016,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                   </span>
                 ),
                 children: (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-[calc(100vh-200px)] overflow-y-auto">
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full overflow-y-auto">
                     <div className="mb-4">
                       <Space>
                         <Button 
