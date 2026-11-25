@@ -37,24 +37,31 @@ type stubService struct {
 func (s *stubService) ListReleases(ctx context.Context, tenantID int, page, pageSize int, status, releaseType string, currentUserID int, currentRole string) (*dto.ReleaseListResponse, error) {
 	return s.listReleases(ctx, tenantID, page, pageSize, status, releaseType, currentUserID, currentRole)
 }
+
 func (s *stubService) CreateRelease(ctx context.Context, req *dto.CreateReleaseRequest, createdBy, tenantID int) (*dto.ReleaseResponse, error) {
 	return s.createRelease(ctx, req, createdBy, tenantID)
 }
+
 func (s *stubService) GetReleaseByID(ctx context.Context, id, tenantID int) (*dto.ReleaseResponse, error) {
 	return s.getReleaseByID(ctx, id, tenantID)
 }
+
 func (s *stubService) UpdateRelease(ctx context.Context, id, tenantID int, req *dto.UpdateReleaseRequest, actorID int, actorRole string) (*dto.ReleaseResponse, error) {
 	return s.updateRelease(ctx, id, tenantID, req, actorID, actorRole)
 }
+
 func (s *stubService) UpdateReleaseStatus(ctx context.Context, id, tenantID int, status string, actorID int, actorRole string) (*dto.ReleaseResponse, error) {
 	return s.updateReleaseStat(ctx, id, tenantID, status, actorID, actorRole)
 }
+
 func (s *stubService) ApplyReleaseApproval(ctx context.Context, id, tenantID, actorID int, action, comment string) (*dto.ReleaseResponse, error) {
 	return s.applyApproval(ctx, id, tenantID, actorID, action, comment)
 }
+
 func (s *stubService) DeleteRelease(ctx context.Context, id, tenantID int, actorID int, actorRole string) error {
 	return s.deleteRelease(ctx, id, tenantID, actorID, actorRole)
 }
+
 func (s *stubService) GetReleaseStats(ctx context.Context, tenantID int) (*dto.ReleaseStatsResponse, error) {
 	return s.getReleaseStats(ctx, tenantID)
 }

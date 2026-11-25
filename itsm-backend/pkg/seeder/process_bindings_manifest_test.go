@@ -18,7 +18,7 @@ import (
 //
 // 部门级默认绑定不自建第二份 key 清单：service/bpmn_process_binding_service.go
 // 只消费 service/scenario 的唯一目录，可用性由 internal/bpmntemplates 的
-// go:embed bpmn/*.bpmn 决定，见 service/bpmn_department_bindings_guard_test.go
+// embed 指令（bpmn/*.bpmn）决定，见 service/bpmn_department_bindings_guard_test.go
 // 的双向基线。模板目录迁移后本守卫必须同步改路径，否则读到的会是空集合。
 func TestBuiltinProcessBindingsHaveDeployableTemplates(t *testing.T) {
 	templateDir := filepath.Join("..", "..", "internal", "bpmntemplates", "bpmn")

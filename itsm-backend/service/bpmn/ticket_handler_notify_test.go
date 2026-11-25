@@ -28,10 +28,10 @@ import (
 // ============================================================================
 
 type ticketNotifyEnv struct {
-	client   *ent.Client
-	handler  *TicketServiceTaskHandler
-	ctx      context.Context
-	tenantID int
+	client    *ent.Client
+	handler   *TicketServiceTaskHandler
+	ctx       context.Context
+	tenantID  int
 	requester *ent.User
 	assignee  *ent.User
 }
@@ -287,11 +287,11 @@ func TestTicketNotify_SameIdempotencyKeyEnqueuesOnce(t *testing.T) {
 	tk := env.createTicket(t, "idem", env.requester.ID, 0)
 
 	vars := map[string]interface{}{
-		"business_id":       tk.ID,
-		"action":            "notify_requester",
-		"content":           "重试也不该重复入箱",
-		"_idempotencyKey":   "cmd-abc-123",
-		"_commandId":        float64(4242),
+		"business_id":     tk.ID,
+		"action":          "notify_requester",
+		"content":         "重试也不该重复入箱",
+		"_idempotencyKey": "cmd-abc-123",
+		"_commandId":      float64(4242),
 	}
 
 	for i := 0; i < 3; i++ {

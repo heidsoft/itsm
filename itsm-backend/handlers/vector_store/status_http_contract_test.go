@@ -31,9 +31,9 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/handlers/systemconfig"
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
+	"itsm-backend/internal/services"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

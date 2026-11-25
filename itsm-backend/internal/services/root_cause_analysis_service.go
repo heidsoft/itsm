@@ -380,16 +380,6 @@ func (s *RootCauseAnalysisService) recordSLABindFailure(ctx context.Context, ten
 	}
 }
 
-// warnw 在 logger 未注入时静默降级：本服务在生产由 bootstrap 注入 logger，
-// 但多处单测只 NewRootCauseAnalysisService(client) 就直接调业务方法，
-// 直呼 s.logger.Warnw 会在 nil 上解引用 panic，把「没有 SLA」变成测试崩溃。
-func (s *RootCauseAnalysisService) warnw(msg string, kv ...interface{}) {
-	if s.logger == nil {
-		return
-	}
-	s.logger.Warnw(msg, kv...)
-}
-
 // AnalyzeWithAI 使用AI辅助分析根因
 func (s *RootCauseAnalysisService) AnalyzeWithAI(ctx context.Context, problemID int) (*RCAContext, error) {
 	// 获取问题信息

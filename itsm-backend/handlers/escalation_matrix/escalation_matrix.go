@@ -12,8 +12,10 @@ import (
 
 // EscalationLevel / EscalationMatrix 值类型已下沉到 dto 包，此处保留别名以保持
 // 本域公开 API 与所有现行调用点的类型身份不变（含导出的 String 方法）。
-type EscalationLevel = dto.EscalationLevel
-type EscalationMatrix = dto.EscalationMatrix
+type (
+	EscalationLevel  = dto.EscalationLevel
+	EscalationMatrix = dto.EscalationMatrix
+)
 
 // DefaultEscalationMatrix 默认升级矩阵（与 SLA 模板保持一致）
 //

@@ -152,7 +152,7 @@ const docTemplate = `{
         },
         "/api/v1/analytics/export": {
             "post": {
-                "description": "导出分析数据为CSV格式",
+                "description": "导出分析数据为 CSV 或 Excel；PDF 渲染器尚未接入，显式拒绝。",
                 "consumes": [
                     "application/json"
                 ],
@@ -547,6 +547,166 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/auth/forgot-password": {
+            "post": {
+                "description": "发起密码找回。service 以 5003 明确表达「邮件服务未配置」，不会让调用方误以为邮箱填错而反复重试。公开端点。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证管理"
+                ],
+                "summary": "申请密码重置",
+                "parameters": [
+                    {
+                        "description": "找回请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ForgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "503": {
+                        "description": "邮件服务未配置(5003)"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/menus": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按当前用户角色过滤后返回可见菜单（前端 layout 动态路由数据源）。仅需认证，不按菜单细粒度权限守卫。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单与导航"
+                ],
+                "summary": "获取当前用户菜单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "description": "注册新账号。用户名被占用/自助注册未开放等业务拒绝按分类码返回，不统一压成认证失败。公开端点，无需 Bearer Token。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证管理"
+                ],
+                "summary": "用户自助注册",
+                "parameters": [
+                    {
+                        "description": "注册请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "409": {
+                        "description": "用户名已占用"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/reset-password": {
+            "post": {
+                "description": "凭重置令牌设置新密码；令牌无效/过期返回认证失败。公开端点。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证管理"
+                ],
+                "summary": "重置密码",
+                "parameters": [
+                    {
+                        "description": "重置请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PasswordResetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "令牌无效或过期"
+                    }
+                }
+            }
+        },
         "/api/v1/auth/session": {
             "get": {
                 "security": [
@@ -586,6 +746,210 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/sso/callback": {
+            "post": {
+                "description": "用授权码与 state 完成登录，建立会话（cookie）并记录登录审计；失败审计为 LOGIN_FAILED。公开端点。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "SSO 回调",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "提供方编码",
+                        "name": "provider",
+                        "in": "query"
+                    },
+                    {
+                        "description": "回调参数(code/state)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SSOCallbackRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "回调校验失败"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/sso/initiate": {
+            "post": {
+                "description": "生成授权请求并返回跳转 URL/state；provider 缺省 default。携带有效会话凭证时自动转入绑定模式，回调校验会话未变，避免「点绑定变成重新登录」。公开端点。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "发起 SSO 登录",
+                "parameters": [
+                    {
+                        "description": "SSO 发起请求（可为空）",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SSOInitiateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "提供方未启用"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/sso/providers": {
+            "get": {
+                "description": "登录页数据源：按 tenantCode 列出已启用提供方，不暴露密钥等配置细节。公开端点。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "列出启用的 SSO 提供方",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "租户编码",
+                        "name": "tenantCode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "提供方数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "查询失败"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/switch-tenant": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "为已认证用户切换当前租户，校验其属于目标租户后签发新的 access/refresh token 并写入会话 cookie；越权返回 403。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证管理"
+                ],
+                "summary": "切换租户",
+                "parameters": [
+                    {
+                        "description": "目标租户",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SwitchTenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "未认证"
+                    },
+                    "403": {
+                        "description": "不属于目标租户"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/validate-reset-token": {
+            "post": {
+                "description": "校验密码重置令牌是否有效，供前端在展示重置表单前预检。公开端点。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证管理"
+                ],
+                "summary": "校验重置令牌",
+                "parameters": [
+                    {
+                        "description": "令牌校验请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ValidateResetTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "令牌无效或过期"
                     }
                 }
             }
@@ -5904,6 +6268,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/cmdb/discovery/health": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回发现链路的部署级装配状态（buildCapability / deploymentReadiness / actorPermission / missingRequirements）。该端点不查租户账号，因此刻意不下发 tenantReadiness——算不出的字段留 Go 零值会让同一响应自相矛盾。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "发现链路健康面",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cmdb.DiscoveryHealthStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cmdb/discovery/pending-resources": {
             "get": {
                 "security": [
@@ -6087,6 +6494,75 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/discovery/results": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "jobId 缺省 = 列出本租户全部差异；给值时只列该任务的差异。参数非法是 400/1001，不得回落为「不过滤」。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云发现"
+                ],
+                "summary": "列出发现差异（逐资源 diff，待人确认）",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "发现任务ID；缺省列出本租户全部差异",
+                        "name": "jobId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码，默认 1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页长，默认 20，上限 100",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "$ref": "#/definitions/dto.DiscoveryResultResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "jobId 不是正整数",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
                         }
                     },
                     "401": {
@@ -7473,7 +7949,12 @@ const docTemplate = `{
         },
         "/api/v1/dashboard/ticket-trend": {
             "get": {
-                "description": "获取最近几天的工单趋势数据",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按天聚合最近 N 天（默认 7 天）的工单趋势：待处理/进行中/已解决/已关闭/新建，并派生已完成与待处理维度。采用 fail-closed 语义：任一维度或任一天计数查询失败时整体返回错误，绝不以 0 顶替——否则看板与服务质量报告会得出完全错误的趋势结论。",
                 "consumes": [
                     "application/json"
                 ],
@@ -7488,25 +7969,43 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "default": 7,
-                        "description": "天数",
+                        "description": "统计天数（默认 7）",
                         "name": "days",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "逐日趋势数据",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dashboard.TicketTrendData"
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.TicketTrendData"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权或租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "趋势查询失败（含任一维度计数失败）",
                         "schema": {
-                            "$ref": "#/definitions/dashboard.ErrorResponse"
+                            "$ref": "#/definitions/common.Response"
                         }
                     }
                 }
@@ -10338,6 +10837,1452 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/knowledge/articles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页列出文章，按分类可见性与时效策略过滤后计数（先过滤再分页，total 为当前访问者真正可见条数）；空列表返回 [] 而非 null。兼容旧路径 GET /api/v1/knowledge-articles。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "查询知识文章列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "分类筛选",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态筛选(draft|published)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data 含 items/total/page/pageSize/totalPages",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新建知识文章（草稿）。分类可见性在读取路径按访问者身份过滤；需要 knowledge:write 权限。兼容旧路径 POST /api/v1/knowledge-articles。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "创建知识文章",
+                "parameters": [
+                    {
+                        "description": "文章创建请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateKnowledgeArticleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 查询文章；不存在与分类不可读统一返回 404（防枚举，调用方无法探测受限文章是否存在），DB 故障返回 500。兼容旧路径 GET /api/v1/knowledge-articles/{id}。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "获取知识文章",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "404": {
+                        "description": "不存在或无权读取"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "局部更新文章字段（仅请求体中非 nil 字段生效）；前置读取与 GetArticle 同口径：不可读维持 404 防枚举，DB 故障落 500。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "更新知识文章",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "文章更新请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateKnowledgeArticleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "不存在或无权访问"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "软删除文章并同步移除向量索引；删除后不再出现在检索结果。需要 knowledge:delete 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "删除知识文章",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "不存在或无权访问"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/comments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "文章评论能力当前未落地（无存储模型），端点显式返回 503/5003(unready)，不会用空列表伪装「暂无评论」。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "查询文章评论",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "503": {
+                        "description": "能力未实现(5003)"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "文章评论能力当前未落地（无存储模型），端点显式返回 503/5003(unready)，不会返回假评论对象。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "添加文章评论",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "503": {
+                        "description": "能力未实现(5003)"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/publish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "发布前校验 review_status=approved，未通过返回 409；通过后同事务落版本快照并把线上版本指针指向它。需要 knowledge:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "发布知识文章",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "不存在或无权访问"
+                    },
+                    "409": {
+                        "description": "评审未通过"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/review": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "确认文章内容仍然适用，更新 last_reviewed_at 以解除「逾期未复核」的检索过滤；只改复核时间不触碰正文。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "记录内容复核",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "不存在或无权访问"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/review/approve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "评审人通过文章评审；操作人取鉴权上下文，不信任请求体（防冒充）。需要 knowledge:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识评审"
+                ],
+                "summary": "通过评审",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "{comment?: string}",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "非评审人"
+                    },
+                    "409": {
+                        "description": "状态机拒绝"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/review/reject": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "评审人驳回文章，必须给出理由（review comment 为空返回 400）。需要 knowledge:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识评审"
+                ],
+                "summary": "驳回评审",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "{comment: string(必填)}",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "缺少驳回理由"
+                    },
+                    "403": {
+                        "description": "非评审人"
+                    },
+                    "409": {
+                        "description": "状态机拒绝"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/review/republish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "已通过评审的内容被修改后需重新送审；状态机拒绝非法重提。需要 knowledge:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识评审"
+                ],
+                "summary": "重新送审",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "{comment?: string}",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "文章不存在"
+                    },
+                    "409": {
+                        "description": "状态机拒绝"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/review/submit": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "作者把文章提交送审；当前状态机不允许该动作时返回 409。需要 knowledge:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识评审"
+                ],
+                "summary": "提交评审",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "{comment?: string}",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "文章不存在"
+                    },
+                    "409": {
+                        "description": "状态机拒绝"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/review/withdraw": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "作者撤回已提交但未完成的评审。需要 knowledge:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识评审"
+                ],
+                "summary": "撤回送审",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "{comment?: string}",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "文章不存在"
+                    },
+                    "409": {
+                        "description": "状态机拒绝"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/reviews": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "时间倒序返回文章的评审流水（提交/通过/驳回/撤回及操作人与意见）；不可读维持 404 防枚举，DB 故障落 500。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识评审"
+                ],
+                "summary": "查询评审历史",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "分页信封",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeReviewResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "不存在或无权访问"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/unpublish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "把文章从可见面撤下并清除线上版本指针；撤回不设评审门槛（撤下永远是安全方向）。需要 knowledge:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "撤回知识文章",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "不存在或无权访问"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/versions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按版本号倒序列出文章快照；版本表无 tenant_id，租户隔离经文章归属校验实现。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识版本"
+                ],
+                "summary": "查询版本历史",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "分页信封",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "文章不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/versions/compare": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按行级 LCS 对比 from/to 两个版本的正文，返回渲染后的 diff 与变更行列表。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识版本"
+                ],
+                "summary": "对比版本差异",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "起始版本号",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "目标版本号",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{diff, changes}",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "文章或版本不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/articles/{id}/versions/{version}/restore": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "先用当前正文建新快照，再把正文覆写为指定版本内容；恢复动作同样留下新版本，历史链不断。需要 knowledge:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识版本"
+                ],
+                "summary": "恢复历史版本",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "文章ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "版本号",
+                        "name": "version",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "文章或版本不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/categories": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出当前租户可见的文章分类（受限分类按权限剔除）。兼容旧路径 GET /api/v1/knowledge-articles/categories。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "知识文章分类",
+                "responses": {
+                    "200": {
+                        "description": "分类数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/categories/restricted": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出当前租户被纳管为「仅授权角色可读」的知识分类（L0 权限边界）。需要 knowledge:write 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "查询受限分类",
+                "responses": {
+                    "200": {
+                        "description": "分类数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "将指定分类标记为受限/非受限（restricted 省略时默认 true）；纳管后该分类对未授权访问者按不可读处理。需要 knowledge:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "设置分类可见性",
+                "parameters": [
+                    {
+                        "description": "{category: string, restricted?: bool}",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{category, restricted}",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/recent": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出最近更新的文章，同样经分类可见性过滤。需要 knowledge:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "最近知识文章",
+                "responses": {
+                    "200": {
+                        "description": "文章数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/recommendations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "基于时效策略与访问者可见性返回推荐文章（Citable 的未过期内容），已纳管的受限分类不可见。需要 knowledge:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "推荐知识文章",
+                "responses": {
+                    "200": {
+                        "description": "文章数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/search": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按关键字检索并做分类级可见性过滤（L0）；pageSize 夹紧到 (0,50]，缺省 20。请求须注入访问者身份，否则受限分类一律不可见（fail-closed）。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "检索知识文章",
+                "parameters": [
+                    {
+                        "description": "{query: string(必填), category?: string, pageSize?: int}",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeSearchResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "检索失败"
+                    }
+                }
+            }
+        },
+        "/api/v1/knowledge/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "统计当前可见范围内文章总数、已发布/草稿数、浏览与点赞数及分类分布；统计读取失败 fail-closed 返回 500。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "知识管理"
+                ],
+                "summary": "知识库统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/licenses/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按当前租户汇总许可证总数与各状态数量，并计算合规率（active/total*100）。采用 fail-closed 语义：total 或任一状态计数查询失败时整体返回错误，绝不以 0 顶替——否则合规率会被伪装成「许可证全部失效」的业务结论。需要 license:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "资产管理"
+                ],
+                "summary": "获取许可证统计",
+                "responses": {
+                    "200": {
+                        "description": "统计成功，含 total/active/expired/expiringSoon/depleted/complianceRate",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.LicenseStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权或租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 license:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "统计查询失败（含任一状态维度计数失败）",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/catalog/items": {
             "get": {
                 "tags": [
@@ -10954,6 +12899,382 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/menus": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页列出当前租户菜单树。权限码 system_config:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单与导航"
+                ],
+                "summary": "列出菜单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MenuListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 system_config:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新建菜单项。权限码 system_config:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单与导航"
+                ],
+                "summary": "创建菜单",
+                "parameters": [
+                    {
+                        "description": "菜单创建请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMenuRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 system_config:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "菜单标识已存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/menus/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "导出当前租户菜单配置为可导入的结构化 JSON。权限码 system_config:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单与导航"
+                ],
+                "summary": "导出菜单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 system_config:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/menus/init": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "幂等初始化平台默认菜单树；已存在的不重复写入。权限码 system_config:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单与导航"
+                ],
+                "summary": "初始化默认菜单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 system_config:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/menus/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 读取菜单项。权限码 system_config:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单与导航"
+                ],
+                "summary": "获取菜单详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "菜单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 system_config:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "菜单不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 更新菜单项。权限码 system_config:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单与导航"
+                ],
+                "summary": "更新菜单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "菜单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "菜单更新请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateMenuRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 system_config:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "菜单不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 删除菜单项。权限码 system_config:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单与导航"
+                ],
+                "summary": "删除菜单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "菜单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 system_config:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "菜单不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/notification-deliveries": {
             "get": {
                 "tags": [
@@ -11558,6 +13879,402 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出当前租户可见的权限定义。权限码 permission:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "列出权限定义",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PermissionListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 permission:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新建权限码定义；复用 role:write 权限守卫。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "创建权限定义",
+                "parameters": [
+                    {
+                        "description": "权限创建请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreatePermissionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PermissionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "权限码已存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/permissions/init": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "幂等初始化平台默认权限码目录；已存在的不重复写入。权限码 role:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "初始化默认权限",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/permissions/meta": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回权限码目录的分组/资源等元数据，供前端渲染权限选择树。权限码 permission:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "获取权限目录元数据",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 permission:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/permissions/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 读取权限定义。权限码 permission:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "获取权限详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "权限ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PermissionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 permission:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "权限不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 更新权限定义（含运行期策略：风险等级/主体授权/审批强度），改完即时生效。权限码 role:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "更新权限定义",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "权限ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限更新请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdatePermissionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "权限不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 删除权限定义；仍被角色引用的权限可能被拒绝。权限码 role:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "删除权限定义",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "权限ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "权限不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "仍被角色引用",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -13131,6 +15848,768 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/releases": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页获取发布列表，支持按状态与类型过滤。行级数据权限：管理角色可见全租户，其他角色仅可见本人创建或负责的发布；actor 缺失时 fail-closed 返回空集。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "获取发布列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "按状态过滤（draft/scheduled/in-progress/completed/cancelled/failed/rolled_back）",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "按发布类型过滤（major/minor/patch/hotfix）",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ReleaseListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "创建发布单，初始状态为 draft。发布编号由服务端按 ID 派生（REL-YYYYMMDD-NNNNNN），不接受客户端传入；关联变更与负责人必须属于同一租户，否则 400。生产配置启用 outbox 时，业务写入与流程启动命令同事务落库，保证「发布已建、审批流必起」。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "创建发布",
+                "parameters": [
+                    {
+                        "description": "创建发布请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateReleaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ReleaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/releases/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按租户统计发布总数与各状态数量（draft/scheduled/in-progress/completed/cancelled/failed/rolled_back）。统计口径 fail-closed：任一计数查询失败即返回 500，绝不把 DB 错误吞成 0 而呈现假健康看板。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "获取发布统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ReleaseStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "统计查询失败",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/releases/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 获取发布详情，含创建人与负责人姓名投影。跨租户或不存在的发布统一 404，不暴露 ID 可枚举信号。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "获取发布详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "发布ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ReleaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "部分更新发布字段（指针字段区分未传与传零值）。行级写权限：仅创建人、负责人或管理员可改，其他角色 403；跨租户/不存在返回 404。关联的变更与负责人须属同一租户。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "更新发布",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "发布ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新发布请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateReleaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ReleaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "行级权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "物理删除发布。DELETE 幂等：已删除/不存在/跨租户均视为成功（200），不误报 5001。行级删守卫仍生效——查得到但非创建人/负责人/管理员时返回 403。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "删除发布",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "发布ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "行级权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/releases/{id}/approve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "批准草稿/失败态发布并进入 scheduled（失败态审批即重新排期）。请求体可选：空 body 表示无审批意见。校验审批人须为本租户有效用户且非发布创建人；先在事务内完成 BPMN 待办任务再推进业务状态，无关联待办则 409，不产生「流程已批、业务未批」的分叉。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "批准发布",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "发布ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "审批请求（可选 comment 审批意见）",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ReleaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "审批人无效",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "状态不允许审批 / 自审批 / 无 BPMN 待办 / 并发冲突",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/releases/{id}/reject": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "拒绝草稿/失败态发布，状态置为 cancelled。拒绝原因必填（空原因 400，先于 service 调用拦截，避免无理由拒绝进入审计链）。与批准共用审批人校验与 BPMN 待办桥接。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "拒绝发布",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "发布ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "拒绝请求（必填 reason 拒绝原因）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ReleaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "缺少拒绝原因或请求体非法",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "审批人无效",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "状态不允许审批 / 自审批 / 无 BPMN 待办 / 并发冲突",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/releases/{id}/rollback": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "将 in-progress / failed 发布推进为 rolled_back。回滚原因必填。经状态机白名单校验，非法流转（如终态发布再回滚）返回 409（业务码 4090）而非 500；行级写守卫仍生效（非创建人/负责人/管理员回滚他人发布返回 403）。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "回滚发布",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "发布ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "回滚请求（必填 reason 回滚原因）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ReleaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "缺少回滚原因或请求体非法",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "行级权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "非法状态流转或并发冲突（业务码 4090）",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/releases/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按状态机白名单推进发布状态：draft→cancelled；scheduled→in-progress/cancelled；in-progress→completed/failed/rolled_back/cancelled；completed/cancelled/rolled_back/failed 为终态。排期（draft→scheduled）属审批等效动作，必须走 /approve，不能经本接口绕过 release:approve 门禁。非法流转返回 409（业务码 4090），并发 CAS 冲突也返回 409。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "发布管理"
+                ],
+                "summary": "更新发布状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "发布ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "状态更新请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReleaseStatusUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ReleaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "行级权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "非法状态流转或并发冲突（业务码 4090）",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/reports/service-quality": {
             "get": {
                 "security": [
@@ -13187,6 +16666,1350 @@ const docTemplate = `{
                     },
                     "503": {
                         "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页列出当前租户角色，按权限码 role:read 守卫。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "列出角色",
+                "responses": {
+                    "200": {
+                        "description": "data 含 items/total/page/pageSize",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "在当前租户新建角色；名称需租户内唯一。权限码 role:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "创建角色",
+                "parameters": [
+                    {
+                        "description": "角色创建请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.RoleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "角色已存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 读取当前租户角色详情。权限码 role:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "获取角色详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.RoleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "角色不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 更新当前租户角色。权限码 role:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "更新角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "角色更新请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "角色不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 删除当前租户角色。权限码 role:delete，内置角色通常禁止删除。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "删除角色",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:delete 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "角色不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "内置角色或仍被引用",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{id}/permissions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "整体替换角色的权限码集合；提交的是全量列表而非增量。权限码 role:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色与权限管理"
+                ],
+                "summary": "为角色分配权限",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "权限分配请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AssignPermissionsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 role:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "角色不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/service-catalogs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页查询服务目录（分类/状态/关键字/CI 类型/云服务过滤），页长由平台统一夹紧到 (0,100]。空列表返回 []。兼容路径 GET /api/v1/service-catalog 与 /api/v1/service-catalog-services。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务目录"
+                ],
+                "summary": "查询服务目录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "分类",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data 含 items/total/page/pageSize",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "租户上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新建服务目录，需要 service_catalog:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务目录"
+                ],
+                "summary": "创建服务目录",
+                "parameters": [
+                    {
+                        "description": "服务目录请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateServiceCatalogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ServiceCatalogResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/service-catalogs/search": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按关键字搜索服务目录，结果与列表同口径分页。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务目录"
+                ],
+                "summary": "搜索服务目录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "分页信封",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/service-catalogs/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按分类/状态聚合服务目录数量，供工作台卡片展示。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务目录"
+                ],
+                "summary": "服务目录统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/service-catalogs/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 查询服务目录，真不存在返回 404。兼容路径 GET /api/v1/service-catalog-services/{id}。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务目录"
+                ],
+                "summary": "获取服务目录详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "服务目录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ServiceCatalogResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "401": {
+                        "description": "租户上下文缺失"
+                    },
+                    "404": {
+                        "description": "不存在或跨租户"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "局部更新服务目录字段，需要 service_catalog:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务目录"
+                ],
+                "summary": "更新服务目录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "服务目录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateServiceCatalogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ServiceCatalogResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    },
+                    "404": {
+                        "description": "不存在或跨租户"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除服务目录，需要 service_catalog:delete 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务目录"
+                ],
+                "summary": "删除服务目录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "服务目录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    },
+                    "404": {
+                        "description": "不存在或跨租户"
+                    }
+                }
+            }
+        },
+        "/api/v1/service-requests": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页获取服务请求列表，支持状态/关键字/目录等过滤。行级数据权限：管理角色可见全租户，其余角色仅可见本人发起或分配的请求。/me 别名同样走本 handler，按认证身份收紧到「我的请求」。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务请求"
+                ],
+                "summary": "获取服务请求列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "按状态过滤",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字（标题/编号）",
+                        "name": "keyword",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "基于服务目录创建服务请求，初始状态为 submitted。若目录要求审批则同步解析审批链并起审批流；合规确认（complianceAck）与公网 IP 白名单按目录规则校验。读回失败时退回创建返回的权威实体，不返回 data:null 的假成功。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务请求"
+                ],
+                "summary": "创建服务请求",
+                "parameters": [
+                    {
+                        "description": "创建服务请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateServiceRequestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ServiceRequestResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或合规校验失败",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "服务目录不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/service-requests/approvals/pending": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回当前认证审批人的待办收件箱。不接受任何查询过滤条件：状态范围由审批记录的 pending 决定，审批人身份取认证上下文；分页参数由 HTTP 入口夹紧。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务请求"
+                ],
+                "summary": "获取我的待审服务请求",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ServiceRequestResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/service-requests/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 获取服务请求详情及审批列表。行级可见性：同租户内非相关人员也返回 404（不泄漏存在性）；跨租户统一 404。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务请求"
+                ],
+                "summary": "获取服务请求详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "服务请求ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ServiceRequestResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "部分更新服务请求字段，仅 submitted 状态可编辑，且仅发起人或管理员可改。合规确认与公网 IP 白名单按创建时同等规则校验（写路径一致性）。写提交后读回失败时退回 Update 返回的权威实体，不返回 data:null 的假成功。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务请求"
+                ],
+                "summary": "更新服务请求",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "服务请求ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateServiceRequestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ServiceRequestResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数或合规校验失败",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "非发起人或管理员",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "非 submitted 状态或版本冲突",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除服务请求。DELETE 幂等：已删除/不存在/跨租户均视为成功，不误报服务器错误。行级写守卫仍生效——非发起人或管理员删除他人请求返回 403。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务请求"
+                ],
+                "summary": "删除服务请求",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "服务请求ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "非发起人或管理员",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/service-requests/{id}/approval": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "对服务请求执行同意/拒绝（approve/reject）。审批人须为租户内有效用户且不得自审；本级为会签时需满足法定人数才自动进入下一级。BPMN 待办任务与业务状态在同一事务内推进，无关联待办或并发冲突返回 409。两个路由别名（/approval 与 /approvals）共用本 handler。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务请求"
+                ],
+                "summary": "审批服务请求",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "服务请求ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "审批动作（action: approve/reject，comment 意见）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ServiceRequestApprovalActionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ServiceRequestResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或审批意见缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "审批人无权限或自审",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "状态冲突/并发冲突/无 BPMN 待办",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/service-requests/{id}/approvals": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按请求 ID 返回该租户内服务请求的审批步骤列表（审批人、状态、意见、时间）。跨租户/不存在的请求返回 404，不暴露 ID 可枚举信号。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务请求"
+                ],
+                "summary": "获取服务请求审批历史",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "服务请求ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ServiceRequestApprovalResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -13264,6 +18087,1762 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/service-requests/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "推进服务请求状态。不得经本接口绕过审批门禁：审批等效的状态跃迁由 /approval 端点负责（需 service_request:approve 权限）；本端点仅处理普通状态推进。并发版本冲突按 409 返回。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "服务请求"
+                ],
+                "summary": "更新服务请求状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "服务请求ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "状态更新请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateServiceRequestStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ServiceRequestResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "非法状态流转或并发冲突",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/alert-history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页列出告警历史，支持过滤；页长由平台统一夹紧（坏值回落默认而非整表读取）。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "列出SLA告警历史",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.SLAAlertHistoryResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/alert-rules": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出当前租户的SLA告警规则，可按 sla_definition_id 过滤。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "列出SLA告警规则",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.SLAAlertRuleResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "为当前租户的SLA定义创建告警规则（阈值百分比、告警级别、通知渠道）。引用的SLA定义跨租户时拒绝。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "创建SLA告警规则",
+                "parameters": [
+                    {
+                        "description": "告警规则",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateSLAAlertRuleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SLAAlertRuleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或跨租户引用",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/alert-rules/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 查询告警规则。仅 NotFoundError→404；DB 故障→500。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "获取SLA告警规则",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "告警规则ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SLAAlertRuleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "规则不存在或跨租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "局部更新告警规则。前置读取跨租户/不存在→404，DB 故障→500。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "更新SLA告警规则",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "告警规则ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新字段",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSLAAlertRuleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SLAAlertRuleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "规则不存在或跨租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 删除当前租户的告警规则。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "删除SLA告警规则",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "告警规则ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "规则不存在或跨租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/check-compliance/{ticketId}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "基于工单首次响应/解决时间与SLA截止时间判定合规，返回含 actual_response_minutes 的完整结果；判定出的违规会落库，合规则不写违规。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "检查单个工单的SLA合规性",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "ticketId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data 为 SLAComplianceResult",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效工单ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/compliance-report": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按日期范围（RFC3339 或 YYYY-MM-DD）汇总合规率与平均响应/解决时长；非法日期返回 400。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "获取SLA合规报告",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "开始日期",
+                        "name": "startDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束日期",
+                        "name": "endDate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SLAComplianceReport"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "日期格式非法",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/definitions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页列出当前租户的SLA定义，页长由平台统一夹紧。兼容 /sla 与 /sla/policies。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "列出SLA定义",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data 含 items/total/page/pageSize/totalPages",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新建一条SLA定义（响应/解决时限、服务类型、优先级、营业时间与升级规则）。需要 sla:write 权限；租户上下文缺失返回 401。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "创建SLA定义",
+                "parameters": [
+                    {
+                        "description": "SLA定义",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateSLADefinitionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SLADefinitionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/definitions/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 查询当前租户的SLA定义。仅 ent.NotFoundError 映射为 404；DB 故障等后端错误返回 500，不伪装成「定义不存在」。兼容旧路径 /sla/policies/:id。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "获取SLA定义详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SLA定义ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SLADefinitionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "定义不存在或跨租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 局部更新SLA定义（仅提交过的字段生效）。前置读取仅 NotFoundError→404，DB 故障→500。兼容旧路径 /sla/policies/:id。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "更新SLA定义",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SLA定义ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新字段",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSLADefinitionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SLADefinitionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "定义不存在或跨租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 删除当前租户的SLA定义；不存在或跨租户返回 404，DB 故障返回 500。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "删除SLA定义",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SLA定义ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "定义不存在或跨租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/metrics": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "sla_metrics 表当前无采集写入方，读它只会返回空列表造成「已采集且无异常」的假象，故本端点显式返回 501 声明能力边界。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "获取SLA指标",
+                "responses": {
+                    "501": {
+                        "description": "指标采集未接入",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/monitoring": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按强制时间窗口（startTime/endTime 为 RFC3339，缺省由服务层套用默认 30 天）返回监控指标快照。无请求体合法；无样本时如实报告 0，不做假成功。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "获取SLA监控大屏指标",
+                "parameters": [
+                    {
+                        "description": "统计窗口（空体用默认）",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SLAMonitoringRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SLAMonitoringDashboard"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "时间格式非法",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/performance": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 serviceType / priority 聚合窗口内绩效，供监控大屏表格使用；serviceType、priority 为可选预过滤（限制统计种群，非结果二次筛选）。仅 camelCase 契约。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "SLA绩效分维度聚合",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "聚合维度：serviceType 或 priority",
+                        "name": "dimension",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "服务类型预过滤",
+                        "name": "serviceType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "优先级预过滤",
+                        "name": "priority",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data 含逐维绩效行与命中扫描上限标记",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "维度非法",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "汇总当前租户的SLA定义、违规与合规统计。工单统计查询失败时整体报错，不以 0 顶替；样本为 0 时如实报告 0。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "获取SLA统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SLAStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "统计查询失败",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/templates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出开箱即用的预置 SLA 模板（只读），需要 sla:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA模板"
+                ],
+                "summary": "列出 SLA 模板",
+                "responses": {
+                    "200": {
+                        "description": "模板数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/templates/{key}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按模板 key 查询预置 SLA 模板详情。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA模板"
+                ],
+                "summary": "获取 SLA 模板",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "模板key",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    },
+                    "404": {
+                        "description": "模板不存在"
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/templates/{key}/install": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "把预置模板安装为当前租户的 SLA 定义；重复安装按幂等语义处理。需要 sla:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA模板"
+                ],
+                "summary": "安装 SLA 模板",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "模板key",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    },
+                    "404": {
+                        "description": "模板不存在"
+                    },
+                    "409": {
+                        "description": "已安装或冲突"
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/violations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页列出当前租户的SLA违规，支持 resolved 等状态过滤；页长由平台统一夹紧。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "列出SLA违规记录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data 为标准分页信封",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sla/violations/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "将违规标记为已/未处理并记录处理说明；跨租户不可写，DB 故障返回 500。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SLA管理"
+                ],
+                "summary": "处理SLA违规",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "违规ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "处理状态与说明",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSLAViolationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sso/bind": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "为当前已认证用户绑定外部 SSO 身份；user_id 取鉴权上下文，不信任请求体。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "绑定 SSO 身份",
+                "parameters": [
+                    {
+                        "description": "绑定请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SSOBindRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "未认证"
+                    },
+                    "409": {
+                        "description": "已被绑定"
+                    }
+                }
+            }
+        },
+        "/api/v1/sso/identities": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出当前用户已绑定的外部身份（不包含凭据）。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "列出我的 SSO 身份",
+                "responses": {
+                    "200": {
+                        "description": "身份数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "未认证"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/sso/providers": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "租户内 SSO 配置管理面，需要 sso:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "列出 SSO 提供方配置",
+                "responses": {
+                    "200": {
+                        "description": "提供方配置数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "未认证"
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新建租户级 SSO 提供方配置，需要 sso:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "创建 SSO 提供方",
+                "parameters": [
+                    {
+                        "description": "提供方配置",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SSOCreateProviderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SSOProviderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    }
+                }
+            }
+        },
+        "/api/v1/sso/providers/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 查询单个提供方配置，需要 sso:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "获取 SSO 提供方配置",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "提供方ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SSOProviderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    },
+                    "404": {
+                        "description": "提供方不存在"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "局部更新提供方配置，需要 sso:write 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "更新 SSO 提供方",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "提供方ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "提供方配置",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SSOUpdateProviderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SSOProviderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    },
+                    "404": {
+                        "description": "提供方不存在"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除租户级 SSO 提供方配置，需要 sso:write 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "删除 SSO 提供方",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "提供方ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "403": {
+                        "description": "权限不足"
+                    },
+                    "404": {
+                        "description": "提供方不存在"
+                    }
+                }
+            }
+        },
+        "/api/v1/sso/unbind": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "解除当前用户的外部 SSO 身份绑定。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "单点登录"
+                ],
+                "summary": "解绑 SSO 身份",
+                "parameters": [
+                    {
+                        "description": "解绑请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SSOUnbindRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "未认证"
+                    }
+                }
+            }
+        },
+        "/api/v1/system-configs/settings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "从 JWT 上下文解析当前租户并返回其设置快照（含套餐/层级/计费标识）。权限码 tenant:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "获取当前租户设置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 tenant:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "租户不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "从 JWT 上下文解析当前租户并更新设置。状态字段被拒绝（必须走 /tenants/:id/status 以保留系统租户锁定防护）。权限码 tenant:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "更新当前租户设置",
+                "parameters": [
+                    {
+                        "description": "租户设置更新请求（不含 status）",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateTenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或携带 status 字段",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 tenant:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/system/vector-store": {
             "get": {
                 "description": "获取向量存储配置视图与能力状态",
@@ -13300,6 +19879,2344 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenants": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页列出可见租户。平台超管可读全量，其余按自身租户范围收敛；兼容 /admin/tenants 旧路径。权限码 tenant:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "列出租户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TenantListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 tenant:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新建租户；编码需符合 字母数字开头+字母数字下划线连字符 约束。权限码 tenant:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "创建租户",
+                "parameters": [
+                    {
+                        "description": "租户创建请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateTenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TenantResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或编码非法",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 tenant:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "租户编码已存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenants/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 读取租户详情。非平台超管只能读自身租户。权限码 tenant:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "获取租户详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TenantResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "越权或缺少 tenant:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "租户不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 更新租户信息。非平台超管只能改自身租户。权限码 tenant:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "更新租户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "租户更新请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateTenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TenantResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "越权或缺少 tenant:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "租户不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "软删除租户；仍有用户时拒绝删除（409）。系统默认租户禁止删除。权限码 tenant:write。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "删除租户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "越权或缺少 tenant:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "租户不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "仍有用户或系统默认租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenants/{id}/initialization": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "只读验证租户产品基线各组件的安装状态与 outbox 命令状态，不写任何数据。权限码 tenant:read。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "获取租户初始化状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 tenant:read 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenants/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "变更租户状态。白名单仅 active/suspended/expired；deleted 必须走 DELETE 以保留「仍有用户拒绝删除」守卫。系统默认租户禁止锁定为 suspended/expired，返回 409。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "更新租户状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "含 status 字段",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID或非法状态",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "越权或缺少 tenant:write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "租户不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "系统默认租户禁止锁定",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "后端故障",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页查询工单，非管理角色自动收窄到本人创建或指派给自己的记录（行级 DataScope）；筛选条件见 ListTicketsRequest。返回标准信封 data.items/total/page/pageSize/totalPages。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "查询工单列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态筛选",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "优先级筛选",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data 含 items/total/page/pageSize/totalPages",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新建工单：校验分类/类型/模板/指派人租户归属，创建成功后返回完整工单 DTO。需要 ticket:create 权限；租户或用户上下文缺失返回 401。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "创建工单",
+                "parameters": [
+                    {
+                        "description": "工单创建请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/assign": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "批量把多个工单指派给同一处理人。该 handler 当前未注册路由，仅为兼容旧前端契约保留。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "批量指派工单",
+                "parameters": [
+                    {
+                        "description": "批量指派请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketAssignmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/assignee/{assignee_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按处理人 ID 列出其工单。该 handler 当前未注册路由，仅为兼容旧前端契约保留；实际查询请走 GET /tickets?assigneeId=。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "按处理人查询工单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "处理人ID",
+                        "name": "assignee_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "工单数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/batch-delete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 列表批量软删工单；任一记录越权即整批拒绝（fail-closed），返回实际删除条数。需要 ticket:delete 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "批量删除工单",
+                "parameters": [
+                    {
+                        "description": "工单ID列表",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BatchDeleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data.deletedCount",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "越权"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/export": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按筛选条件导出工单为 CSV 或 Excel（由 format 指定）；响应为二进制流并带 Content-Disposition 下载头，非 JSON 信封。需要 ticket:export 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "导出工单",
+                "parameters": [
+                    {
+                        "description": "导出请求（format=csv|excel）",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketExportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CSV/Excel 二进制流",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "越权"
+                    },
+                    "500": {
+                        "description": "导出失败"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/import": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "工单批量导入。当前能力未实现且未注册路由，调用返回显式 5003（未就绪），不会伪装成功。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "导入工单",
+                "parameters": [
+                    {
+                        "description": "导入请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketImportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功占位（当前不可达）",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    },
+                    "503": {
+                        "description": "能力未实现(5003)"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/overdue": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出当前可见范围内响应/解决时限已超期的工单，用于超期看板与催办。需要 ticket:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "查询超期工单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "分页信封",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/search": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按关键字/条件跨工单检索，结果与列表同口径做行级权限过滤。需要 ticket:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "搜索工单",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "搜索关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "分页信封",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "统计当前可见范围内的工单计数器、超期、分布与趋势。dateFrom/dateTo 成对提供时按创建时间窗口收窄；都不传保持全量口径（工作台卡片依赖）。统计读取失败 fail-closed，不返回半截零值。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "工单统计",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "起始日期（与 dateTo 成对）",
+                        "name": "dateFrom",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束日期（与 dateFrom 成对）",
+                        "name": "dateTo",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "时间窗口参数错误"
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/templates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "分页列出当前租户的工单模板。需要 ticket_template:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单模板"
+                ],
+                "summary": "查询工单模板",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "页长",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "分页信封",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新建工单模板（字段定义、默认值、适用分类）。需要 ticket_template:create 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单模板"
+                ],
+                "summary": "创建工单模板",
+                "parameters": [
+                    {
+                        "description": "模板定义",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/templates/categories": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出工单模板可用的分类集合。需要 ticket_template:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单模板"
+                ],
+                "summary": "工单模板分类",
+                "responses": {
+                    "200": {
+                        "description": "分类数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/templates/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 查询工单模板详情。需要 ticket_template:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单模板"
+                ],
+                "summary": "获取工单模板",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "模板ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "模板不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "局部更新工单模板定义。需要 ticket_template:update 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单模板"
+                ],
+                "summary": "更新工单模板",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "模板ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "模板定义",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "模板不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除工单模板。需要 ticket_template:delete 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单模板"
+                ],
+                "summary": "删除工单模板",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "模板ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "模板不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/templates/{id}/copy": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "基于现有模板复制一份新模板，可覆盖名称。需要 ticket_template:create 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单模板"
+                ],
+                "summary": "复制工单模板",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "源模板ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "复制请求（可选 name）",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "模板不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/templates/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "启用/停用工单模板；停用后创建工单时不可再引用。需要 ticket_template:update 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单模板"
+                ],
+                "summary": "切换工单模板状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "模板ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "状态请求 {status: string}",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "模板不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 ID 或业务工单号（TKT-YYYYMM-XXXXXX）查询当前租户工单；数字走 ID，非数字回退工单号。读取失败按统一分类返回 500，不把 DB 故障伪装成 404。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "获取工单详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "工单ID或业务工单号",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "401": {
+                        "description": "上下文缺失"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "局部更新工单字段（仅请求体中非 nil 字段生效）；写前按行级权限校验，越权返回 403。需要 ticket:update 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "更新工单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "工单更新请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "越权"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除当前租户工单；仅创建人/指派人或管理员可操作，越权返回 403。需要 ticket:delete 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "删除工单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "403": {
+                        "description": "越权"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/assign": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "把工单指派给指定处理人；校验目标用户属于当前租户且活跃，越权返回 403。需要 ticket:assign 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "指派工单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "指派请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AssignTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "越权"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/close": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "将工单置为已关闭；关闭前校验工单工作流已终止，仍有运行实例时拒绝关闭（409）。需要 ticket:update 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "关闭工单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "关闭请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CloseTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "409": {
+                        "description": "工作流未终止"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/escalate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "将工单升级到更高优先级/处理层级；升级动作受升级策略约束。需要 ticket:escalate 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "升级工单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "升级请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.EscalateTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "403": {
+                        "description": "越权"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按时间倒序返回工单的状态流转与操作留痕（创建、指派、状态变更、评论等）。需要 ticket:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "工单活动历史",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "活动记录数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/resolve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "将工单置为已解决并记录解决方案；状态机门禁未满足返回 422。需要 ticket:update 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "解决工单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "解决请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ResolveTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "422": {
+                        "description": "门禁未满足"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/sla": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回工单的 SLA 合规明细：响应/解决时限、已耗时、合规率与采样数。需要 ticket:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "工单SLA信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketSLAComplianceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/sla/pause": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "暂停工单 SLA 计时；必须给出暂停原因。用于等待外部依赖期间的计时豁免。需要 ticket:update 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单SLA"
+                ],
+                "summary": "暂停工单SLA",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "暂停请求 {reason: string}",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data.slaStatus=paused",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/sla/resume": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "恢复已暂停的工单 SLA 计时。需要 ticket:update 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单SLA"
+                ],
+                "summary": "恢复工单SLA",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "data.slaStatus=active",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "409": {
+                        "description": "未处于暂停态"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按状态机推进工单状态（如 open→in_progress→resolved→closed）；非法跃迁返回 409，门禁未满足返回 422。需要 ticket:update 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单管理"
+                ],
+                "summary": "流转工单状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "状态请求 {status: string}",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或无效ID"
+                    },
+                    "409": {
+                        "description": "非法状态跃迁"
+                    },
+                    "422": {
+                        "description": "门禁未满足"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/subtasks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出指定工单下的全部子任务（按创建顺序）。需要 ticket:read 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单子任务"
+                ],
+                "summary": "查询子任务",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "父工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "子任务数组",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "为指定工单新建子任务；父工单必须存在且属于当前租户。需要 ticket:create 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单子任务"
+                ],
+                "summary": "创建子任务",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "父工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "子任务请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateSubtaskRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "子任务对象",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "工单不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/subtasks/{subtask_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除指定子任务。需要 ticket:delete 权限。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单子任务"
+                ],
+                "summary": "删除子任务",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "父工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "子任务ID",
+                        "name": "subtask_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "无效ID"
+                    },
+                    "404": {
+                        "description": "子任务不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新指定子任务（标题/状态/处理人）；路由为 PATCH。需要 ticket:update 权限。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "工单子任务"
+                ],
+                "summary": "更新子任务",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "父工单ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "子任务ID",
+                        "name": "subtask_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "子任务更新请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "子任务对象",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误"
+                    },
+                    "404": {
+                        "description": "子任务不存在"
+                    },
+                    "500": {
+                        "description": "后端故障"
                     }
                 }
             }
@@ -14071,6 +22988,32 @@ const docTemplate = `{
                 }
             }
         },
+        "cmdb.DiscoveryHealthStatus": {
+            "type": "object",
+            "properties": {
+                "actorPermission": {
+                    "type": "boolean"
+                },
+                "buildCapability": {
+                    "type": "boolean"
+                },
+                "deploymentReadiness": {
+                    "type": "boolean"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "missingRequirements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
         "common.ListResponse": {
             "type": "object",
             "properties": {
@@ -14567,6 +23510,28 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.AssignPermissionsRequest": {
+            "type": "object",
+            "required": [
+                "permissionIds"
+            ],
+            "properties": {
+                "permissionIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "dto.AssignTicketRequest": {
+            "type": "object",
+            "properties": {
+                "assigneeId": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.AssociatedItemResponse": {
             "type": "object",
             "properties": {
@@ -14702,6 +23667,20 @@ const docTemplate = `{
                 "ids": {
                     "type": "array",
                     "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "dto.BatchDeleteRequest": {
+            "type": "object",
+            "required": [
+                "ticketIds"
+            ],
+            "properties": {
+                "ticketIds": {
+                    "type": "array",
                     "items": {
                         "type": "integer"
                     }
@@ -15332,11 +24311,17 @@ const docTemplate = `{
                 "cloudZone": {
                     "type": "string"
                 },
+                "confirmedBy": {
+                    "type": "integer"
+                },
                 "createdAt": {
                     "type": "string"
                 },
                 "criticality": {
                     "type": "string"
+                },
+                "departmentId": {
+                    "type": "integer"
                 },
                 "description": {
                     "type": "string"
@@ -15361,6 +24346,10 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/dto.CIRelationshipResponse"
                     }
+                },
+                "lastConfirmedAt": {
+                    "description": "LastConfirmedAt 数据认证新鲜度：治理看板与列表「确认」列的数据来源。",
+                    "type": "string"
                 },
                 "lastDiscovered": {
                     "description": "LastDiscovered 用指针表达「从未被发现」：time.Time 的 omitempty 不生效，\n零值会被序列化成 0001-01-01T00:00:00Z，调用方无法区分「没发现过」和\n「真的在这一天发现过」。",
@@ -15387,6 +24376,10 @@ const docTemplate = `{
                 },
                 "ownedBy": {
                     "type": "string"
+                },
+                "ownerId": {
+                    "description": "OwnerID/DepartmentID 回读：编辑页要能回填负责人选择器，也便于前端\n就地判断「这条资产是否已归属」（未归属=公共资产，普通角色也可见）。",
+                    "type": "integer"
                 },
                 "serialNumber": {
                     "type": "string"
@@ -15896,6 +24889,19 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CategoryStats": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "description": "文章数量",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "分类名称",
+                    "type": "string"
+                }
+            }
+        },
         "dto.ChangeImpact": {
             "type": "string",
             "enum": [
@@ -16336,6 +25342,23 @@ const docTemplate = `{
             "properties": {
                 "resolution": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.CloseTicketRequest": {
+            "type": "object",
+            "properties": {
+                "closeNotes": {
+                    "type": "string"
+                },
+                "closeReason": {
+                    "type": "string"
+                },
+                "feedback": {
+                    "type": "string"
+                },
+                "ticketId": {
+                    "type": "integer"
                 }
             }
         },
@@ -16948,6 +25971,9 @@ const docTemplate = `{
                         "critical"
                     ]
                 },
+                "departmentId": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -16989,6 +26015,10 @@ const docTemplate = `{
                 },
                 "ownedBy": {
                     "type": "string"
+                },
+                "ownerId": {
+                    "description": "OwnerID 拥有者用户ID：行级权限（DataScope）的唯一判定载体。\nOwnedBy 自由文本是历史字段，只用于展示与存量兼容，不参与权限判定。\n二者可同时给出：服务层以 OwnerID 为准，并把 OwnedBy 覆盖成该用户的显示名。",
+                    "type": "integer"
                 },
                 "serialNumber": {
                     "type": "string"
@@ -17532,6 +26562,122 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateKnowledgeArticleRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "content",
+                "title"
+            ],
+            "properties": {
+                "authorityLevel": {
+                    "description": "知识可引用性 L2：权威性。0=普通 10=部门推荐 20=官方标准 30=唯一真相源。",
+                    "type": "integer",
+                    "maximum": 30,
+                    "minimum": 0
+                },
+                "category": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 10000,
+                    "minLength": 1
+                },
+                "reviewIntervalDays": {
+                    "type": "integer",
+                    "maximum": 3650,
+                    "minimum": 0
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "validFrom": {
+                    "description": "知识可引用性 L1：时效性。均为可选，留空表示「长期有效、不设复核」。",
+                    "type": "string"
+                },
+                "validUntil": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateMenuRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "path"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "isEnabled": {
+                    "type": "boolean"
+                },
+                "isVisible": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "permissionCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CreatePermissionRequest": {
+            "type": "object",
+            "required": [
+                "action",
+                "code",
+                "name",
+                "resource"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "policy": {
+                    "description": "Policy 可选：不传时由后端按 action 语义派生安全初值（AI 零权限）。\n传了则走 ValidatePolicy 闭集校验，非法配置直接拒绝入库。",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.PermissionPolicyPayload"
+                        }
+                    ]
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.CreateProblemCommentRequest": {
             "type": "object",
             "required": [
@@ -17599,6 +26745,535 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 200,
                     "minLength": 2
+                }
+            }
+        },
+        "dto.CreateReleaseRequest": {
+            "type": "object",
+            "required": [
+                "releaseNumber",
+                "title"
+            ],
+            "properties": {
+                "affectedComponents": {
+                    "description": "受影响的组件",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "affectedSystems": {
+                    "description": "受影响的系统",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "changeId": {
+                    "description": "关联变更ID",
+                    "type": "integer"
+                },
+                "deploymentSteps": {
+                    "description": "部署步骤",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "description": "发布描述",
+                    "type": "string"
+                },
+                "environment": {
+                    "description": "目标环境",
+                    "type": "string",
+                    "enum": [
+                        "dev",
+                        "staging",
+                        "production"
+                    ]
+                },
+                "isEmergency": {
+                    "description": "是否紧急发布",
+                    "type": "boolean"
+                },
+                "ownerId": {
+                    "description": "负责人ID",
+                    "type": "integer"
+                },
+                "plannedEndDate": {
+                    "description": "计划结束时间",
+                    "type": "string"
+                },
+                "plannedReleaseDate": {
+                    "description": "计划发布日期",
+                    "type": "string"
+                },
+                "plannedStartDate": {
+                    "description": "计划开始时间",
+                    "type": "string"
+                },
+                "releaseNotes": {
+                    "description": "发布说明",
+                    "type": "string"
+                },
+                "releaseNumber": {
+                    "description": "发布编号",
+                    "type": "string"
+                },
+                "requiresApproval": {
+                    "description": "是否需要审批",
+                    "type": "boolean"
+                },
+                "rollbackProcedure": {
+                    "description": "回滚程序",
+                    "type": "string"
+                },
+                "severity": {
+                    "description": "严重程度",
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
+                },
+                "tags": {
+                    "description": "标签",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "description": "发布标题",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "发布类型",
+                    "type": "string",
+                    "enum": [
+                        "major",
+                        "minor",
+                        "patch",
+                        "hotfix"
+                    ]
+                },
+                "validationCriteria": {
+                    "description": "验证标准",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateRoleRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "code": {
+                    "description": "Optional - auto-generated if empty",
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "isSystem": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateSLAAlertRuleRequest": {
+            "type": "object"
+        },
+        "dto.CreateSLADefinitionRequest": {
+            "type": "object"
+        },
+        "dto.CreateServiceCatalogRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "name"
+            ],
+            "properties": {
+                "approvalLevel": {
+                    "description": "0 是合法值：审批级别 0 表示「未配置」。此前 min=1 让新建目录无法停留在未配置。",
+                    "type": "integer",
+                    "maximum": 3,
+                    "minimum": 0
+                },
+                "approvers": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "availableRegions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "availableSpecs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "category": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "ciTypeId": {
+                    "type": "integer"
+                },
+                "cloudServiceId": {
+                    "type": "integer"
+                },
+                "deliveryTime": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "formSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "icon": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "price": {
+                    "type": "number"
+                },
+                "requiresApproval": {
+                    "type": "boolean"
+                },
+                "serviceType": {
+                    "type": "string",
+                    "enum": [
+                        "vm",
+                        "rds",
+                        "oss",
+                        "network",
+                        "storage",
+                        "security",
+                        "custom"
+                    ]
+                },
+                "slaResolutionTime": {
+                    "type": "integer"
+                },
+                "slaResponseTime": {
+                    "type": "integer"
+                },
+                "sortOrder": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "enabled",
+                        "disabled"
+                    ]
+                },
+                "unit": {
+                    "type": "string",
+                    "enum": [
+                        "月",
+                        "次",
+                        "用户"
+                    ]
+                }
+            }
+        },
+        "dto.CreateServiceRequestRequest": {
+            "type": "object",
+            "properties": {
+                "catalogId": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "complianceAck": {
+                    "type": "boolean"
+                },
+                "costCenter": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "dataClassification": {
+                    "type": "string",
+                    "enum": [
+                        "public",
+                        "internal",
+                        "confidential",
+                        "restricted"
+                    ]
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "formData": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "needsPublicIp": {
+                    "type": "boolean"
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "sourceIpWhitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "dto.CreateSubtaskRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "assigneeId": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "formFields": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical",
+                        "urgent"
+                    ]
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "incident",
+                        "service_request",
+                        "change",
+                        "ticket",
+                        "problem",
+                        "improvement"
+                    ]
+                }
+            }
+        },
+        "dto.CreateTenantRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "name",
+                "type"
+            ],
+            "properties": {
+                "billingEnabled": {
+                    "type": "boolean"
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "costCenterCode": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "legalEntityCode": {
+                    "type": "string"
+                },
+                "mspProviderId": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "ownerContact": {
+                    "type": "string"
+                },
+                "parentTenantId": {
+                    "type": "integer"
+                },
+                "planCode": {
+                    "type": "string"
+                },
+                "quota": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "serviceTier": {
+                    "type": "string"
+                },
+                "settings": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "suspended",
+                        "expired",
+                        "deleted"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "standard",
+                        "internal",
+                        "saas_customer",
+                        "msp_provider",
+                        "msp_customer",
+                        "msp",
+                        "customer"
+                    ]
+                }
+            }
+        },
+        "dto.CreateTicketRequest": {
+            "type": "object",
+            "required": [
+                "priority",
+                "title"
+            ],
+            "properties": {
+                "assigneeId": {
+                    "type": "integer"
+                },
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "category": {
+                    "description": "分类名称（可选，前端传入）",
+                    "type": "string"
+                },
+                "categoryId": {
+                    "description": "分类ID（优先使用）",
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000
+                },
+                "formFields": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "parentTicketId": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical",
+                        "urgent"
+                    ]
+                },
+                "requesterId": {
+                    "description": "从认证上下文中获取，前端可不传",
+                    "type": "integer"
+                },
+                "tagIds": {
+                    "description": "标签ID列表",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "templateId": {
+                    "description": "模板ID",
+                    "type": "integer"
+                },
+                "ticketTypeId": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 2
+                },
+                "type": {
+                    "description": "工单类型",
+                    "type": "string",
+                    "enum": [
+                        "incident",
+                        "service_request",
+                        "change",
+                        "ticket",
+                        "problem",
+                        "improvement"
+                    ]
+                },
+                "typeId": {
+                    "description": "legacy configured type code",
+                    "type": "string"
+                },
+                "workflowDefinitionKey": {
+                    "description": "工作流定义Key（可选，优先级高于自动选择）",
+                    "type": "string"
                 }
             }
         },
@@ -17787,6 +27462,88 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.DiscoveryResultResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "afterHash": {
+                    "type": "string"
+                },
+                "beforeHash": {
+                    "type": "string"
+                },
+                "ciId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "diff": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "errorCode": {
+                    "type": "string"
+                },
+                "errorMessage": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "identityVersion": {
+                    "type": "integer"
+                },
+                "jobId": {
+                    "type": "integer"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "resourceId": {
+                    "type": "string"
+                },
+                "resourceIdentity": {
+                    "type": "string"
+                },
+                "resourceSnapshot": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "resourceType": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type is optional; will be set from CIType if not provided",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.EscalateMajorIncidentRequest": {
             "type": "object",
             "required": [
@@ -17810,6 +27567,20 @@ const docTemplate = `{
                     ]
                 }
             }
+        },
+        "dto.EscalateTicketRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.EscalationLevelConfig": {
+            "type": "object"
         },
         "dto.ExportCIRequest": {
             "type": "object",
@@ -17882,6 +27653,20 @@ const docTemplate = `{
                 "truncated": {
                     "description": "命中上限：文件可能未包含全部符合条件的数据",
                     "type": "boolean"
+                }
+            }
+        },
+        "dto.ForgotPasswordRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "tenantCode": {
+                    "type": "string"
                 }
             }
         },
@@ -18010,17 +27795,99 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.GovernanceCertification": {
+            "type": "object",
+            "properties": {
+                "freshConfirmed": {
+                    "type": "integer"
+                },
+                "freshThresholdDays": {
+                    "type": "integer"
+                },
+                "freshnessPct": {
+                    "type": "number"
+                },
+                "neverConfirmed": {
+                    "type": "integer"
+                },
+                "staleConfirmed": {
+                    "type": "integer"
+                },
+                "verified": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.GovernanceDuplicate": {
+            "type": "object",
+            "properties": {
+                "ciIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "ciNumbers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "key": {
+                    "description": "Key 是归一化后的判重键（形如 ` + "`" + `cloud:aliyun:i-xxx` + "`" + `）。",
+                    "type": "string"
+                },
+                "reason": {
+                    "description": "Reason 是判重键的语义标签（cloud_identity / asset_tag / serial_name）。",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GovernanceMissingAttribute": {
+            "type": "object",
+            "properties": {
+                "applicable": {
+                    "type": "integer"
+                },
+                "attribute": {
+                    "type": "string"
+                },
+                "ciTypeId": {
+                    "type": "integer"
+                },
+                "missing": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.GovernanceQuality": {
             "type": "object",
             "properties": {
                 "active": {
                     "type": "integer"
                 },
+                "assessable": {
+                    "description": "Assessable 是「该 CI 类型存在必填属性定义」的 CI 数，即完整率的有效分母。\n全新租户没有属性定义时 Assessable=0：此时 CompletenessPct 恒为 0 而不是 100，\n否则「一条必填都没配」会被报成「数据完美」。",
+                    "type": "integer"
+                },
+                "attributeDefinedTypes": {
+                    "description": "AttributeDefinedTypes 是本次评估中用到的「有必填属性定义」的 CI 类型数，\n便于调用方区分「完整率低」与「根本没配属性定义」。",
+                    "type": "integer"
+                },
                 "completenessPct": {
+                    "description": "CompletenessPct 的属性级完整率，只在 Assessable 内有意义。",
                     "type": "number"
                 },
                 "incomplete": {
+                    "description": "Incomplete 是「必填属性未齐」的 CI 数，判据来自该 CI 类型的属性定义\n（CIAttributeValidator.RequiredAttributes），不按固定字段清单硬编码。\n没有任何必填属性定义的类型不产生 incomplete——那不是「都填齐了」。",
                     "type": "integer"
+                },
+                "missingByAttribute": {
+                    "description": "MissingByAttribute 汇总最缺的必填属性，按缺失次数降序。\n完整率只说明「有多不齐」，这个列表说明「该补哪个字段」。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.GovernanceMissingAttribute"
+                    }
                 },
                 "orphan": {
                     "type": "integer"
@@ -18039,6 +27906,9 @@ const docTemplate = `{
         "dto.GovernanceReportResponse": {
             "type": "object",
             "properties": {
+                "certification": {
+                    "$ref": "#/definitions/dto.GovernanceCertification"
+                },
                 "cis": {
                     "type": "integer"
                 },
@@ -18050,6 +27920,21 @@ const docTemplate = `{
                     "additionalProperties": {
                         "type": "integer"
                     }
+                },
+                "duplicateCiCount": {
+                    "description": "DuplicateCICount 是参与重复组的 CI 条数（同一组 2 条记 2）。",
+                    "type": "integer"
+                },
+                "duplicateGroups": {
+                    "description": "DuplicateGroups 是 CI 之间的重复聚类结果（此前 duplicate 分桶只统计\n「同一批发现结果里同一资源出现两次」，从不做 CI 间比对，恒为 0）。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.GovernanceDuplicate"
+                    }
+                },
+                "duplicateRatePct": {
+                    "description": "DuplicateRatePct = DuplicateCICount / AssessableCI 的比例，用于对标\nServiceNow 的 duplicate rate \u003c 2% 目标。",
+                    "type": "number"
                 },
                 "quality": {
                     "$ref": "#/definitions/dto.GovernanceQuality"
@@ -18118,6 +28003,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "memberCount": {
                     "type": "integer"
                 },
                 "name": {
@@ -18792,6 +28680,154 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.KnowledgeReviewResponse": {
+            "type": "object",
+            "properties": {
+                "articleId": {
+                    "type": "integer"
+                },
+                "articleTitle": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "reviewedAt": {
+                    "type": "string"
+                },
+                "reviewerId": {
+                    "type": "integer"
+                },
+                "reviewerName": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.KnowledgeSearchItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isPublished": {
+                    "type": "boolean"
+                },
+                "relevanceScore": {
+                    "type": "number"
+                },
+                "snippet": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.KnowledgeSearchResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.KnowledgeSearchItem"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "truncated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.KnowledgeStatsResponse": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "description": "按分类统计",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CategoryStats"
+                    }
+                },
+                "draft": {
+                    "description": "草稿数",
+                    "type": "integer"
+                },
+                "published": {
+                    "description": "已发布文章数",
+                    "type": "integer"
+                },
+                "rating": {
+                    "description": "平均评分 (基于点赞数)",
+                    "type": "number"
+                },
+                "total": {
+                    "description": "总文章数",
+                    "type": "integer"
+                },
+                "views": {
+                    "description": "总浏览次数",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.LicenseStatsResponse": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "description": "有效",
+                    "type": "integer"
+                },
+                "complianceRate": {
+                    "description": "合规率",
+                    "type": "number"
+                },
+                "depleted": {
+                    "description": "已耗尽",
+                    "type": "integer"
+                },
+                "expired": {
+                    "description": "已过期",
+                    "type": "integer"
+                },
+                "expiringSoon": {
+                    "description": "即将过期",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "总数",
+                    "type": "integer"
+                }
+            }
+        },
         "dto.ListProblemCommentsResponse": {
             "type": "object",
             "properties": {
@@ -18964,6 +29000,108 @@ const docTemplate = `{
                 },
                 "totalPages": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.ListTicketsRequest": {
+            "type": "object",
+            "properties": {
+                "assigneeId": {
+                    "description": "处理人ID（可选）",
+                    "type": "integer"
+                },
+                "category": {
+                    "description": "分类名称",
+                    "type": "string"
+                },
+                "categoryId": {
+                    "description": "分类ID（优先）",
+                    "type": "integer"
+                },
+                "dateFrom": {
+                    "description": "创建时间起始",
+                    "type": "string"
+                },
+                "dateTo": {
+                    "description": "创建时间截止",
+                    "type": "string"
+                },
+                "isOverdue": {
+                    "type": "boolean"
+                },
+                "keyword": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "parentTicketId": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical",
+                        "urgent"
+                    ]
+                },
+                "requesterId": {
+                    "description": "创建人ID（可选）",
+                    "type": "integer"
+                },
+                "sortBy": {
+                    "type": "string",
+                    "enum": [
+                        "created_at",
+                        "updated_at",
+                        "title",
+                        "status",
+                        "priority",
+                        "ticket_number"
+                    ]
+                },
+                "sortOrder": {
+                    "type": "string",
+                    "enum": [
+                        "asc",
+                        "desc"
+                    ]
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "new",
+                        "open",
+                        "assigned",
+                        "in_progress",
+                        "pending",
+                        "resolved",
+                        "closed",
+                        "cancelled",
+                        "approved",
+                        "rejected"
+                    ]
+                },
+                "templateId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "工单类型筛选",
+                    "type": "string",
+                    "enum": [
+                        "incident",
+                        "service_request",
+                        "change",
+                        "ticket",
+                        "problem",
+                        "improvement"
+                    ]
                 }
             }
         },
@@ -19160,6 +29298,73 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MenuDTO": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MenuDTO"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isEnabled": {
+                    "type": "boolean"
+                },
+                "isVisible": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "permissionCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer"
+                },
+                "tenantId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MenuListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MenuDTO"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.MultiCloudResourceData": {
             "type": "object",
             "properties": {
@@ -19220,6 +29425,31 @@ const docTemplate = `{
                 },
                 "totalPages": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.PasswordResetRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "passwordConfirm",
+                "token"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 12
+                },
+                "passwordConfirm": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -19316,6 +29546,160 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PermissionInfo": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PermissionListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PermissionResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PermissionPolicyPayload": {
+            "type": "object",
+            "required": [
+                "allowedPrincipals",
+                "category",
+                "riskLevel"
+            ],
+            "properties": {
+                "allowedPrincipals": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "category": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "i18nKey": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "minApprovals": {
+                    "type": "integer"
+                },
+                "requiresApproval": {
+                    "type": "boolean"
+                },
+                "riskLevel": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PermissionResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "allowedPrincipals": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "category": {
+                    "description": "展示元数据（前端按这些字段渲染，不再硬编码）",
+                    "type": "string"
+                },
+                "categoryLabel": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "configured": {
+                    "description": "Configured=false 表示这行还是历史纯文本描述、策略是派生初值，\n管理页据此提示管理员显式确认一次（派生初值恒为 AI 零权限）。",
+                    "type": "boolean"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "i18nKey": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "isSystem": {
+                    "type": "boolean"
+                },
+                "minApprovals": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "requiresApproval": {
+                    "type": "boolean"
+                },
+                "resource": {
+                    "type": "string"
+                },
+                "riskLevel": {
+                    "description": "运行期策略",
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -19743,6 +30127,40 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "company": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                }
+            }
+        },
         "dto.RelationshipStrength": {
             "type": "string",
             "enum": [
@@ -19784,6 +30202,263 @@ const docTemplate = `{
                 },
                 "type": {
                     "$ref": "#/definitions/dto.CIRelationshipType"
+                }
+            }
+        },
+        "dto.ReleaseListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "description": "发布列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ReleaseResponse"
+                    }
+                },
+                "page": {
+                    "description": "当前页",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页数量",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "总数",
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "description": "总页数",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ReleaseResponse": {
+            "type": "object",
+            "properties": {
+                "actualReleaseDate": {
+                    "description": "实际发布日期",
+                    "type": "string"
+                },
+                "affectedComponents": {
+                    "description": "受影响的组件",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "affectedSystems": {
+                    "description": "受影响的系统",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "changeId": {
+                    "description": "关联变更ID",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "createdBy": {
+                    "description": "创建人ID",
+                    "type": "integer"
+                },
+                "createdByName": {
+                    "description": "创建人姓名",
+                    "type": "string"
+                },
+                "deploymentSteps": {
+                    "description": "部署步骤",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "description": "发布描述",
+                    "type": "string"
+                },
+                "environment": {
+                    "description": "目标环境",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "发布ID",
+                    "type": "integer"
+                },
+                "isEmergency": {
+                    "description": "是否紧急发布",
+                    "type": "boolean"
+                },
+                "ownerId": {
+                    "description": "负责人ID",
+                    "type": "integer"
+                },
+                "ownerName": {
+                    "description": "负责人姓名",
+                    "type": "string"
+                },
+                "plannedEndDate": {
+                    "description": "计划结束时间",
+                    "type": "string"
+                },
+                "plannedReleaseDate": {
+                    "description": "计划发布日期",
+                    "type": "string"
+                },
+                "plannedStartDate": {
+                    "description": "计划开始时间",
+                    "type": "string"
+                },
+                "releaseNotes": {
+                    "description": "发布说明",
+                    "type": "string"
+                },
+                "releaseNumber": {
+                    "description": "发布编号",
+                    "type": "string"
+                },
+                "requiresApproval": {
+                    "description": "是否需要审批",
+                    "type": "boolean"
+                },
+                "rollbackProcedure": {
+                    "description": "回滚程序",
+                    "type": "string"
+                },
+                "severity": {
+                    "description": "严重程度",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                },
+                "tags": {
+                    "description": "标签",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tenantId": {
+                    "description": "租户ID",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "发布标题",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "发布类型",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "validationCriteria": {
+                    "description": "验证标准",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ReleaseStatsResponse": {
+            "type": "object",
+            "properties": {
+                "cancelled": {
+                    "description": "已取消",
+                    "type": "integer"
+                },
+                "completed": {
+                    "description": "已完成",
+                    "type": "integer"
+                },
+                "draft": {
+                    "description": "草稿",
+                    "type": "integer"
+                },
+                "failed": {
+                    "description": "失败",
+                    "type": "integer"
+                },
+                "inProgress": {
+                    "description": "进行中",
+                    "type": "integer"
+                },
+                "rolledBack": {
+                    "description": "已回滚",
+                    "type": "integer"
+                },
+                "scheduled": {
+                    "description": "已计划",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "总数",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ReleaseStatus": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "scheduled",
+                "in-progress",
+                "completed",
+                "cancelled",
+                "failed",
+                "rolled_back"
+            ],
+            "x-enum-comments": {
+                "ReleaseStatusCancelled": "已取消",
+                "ReleaseStatusCompleted": "已完成",
+                "ReleaseStatusDraft": "草稿",
+                "ReleaseStatusFailed": "失败",
+                "ReleaseStatusInProgress": "进行中",
+                "ReleaseStatusRolledBack": "已回滚",
+                "ReleaseStatusScheduled": "已计划"
+            },
+            "x-enum-descriptions": [
+                "草稿",
+                "已计划",
+                "进行中",
+                "已完成",
+                "已取消",
+                "失败",
+                "已回滚"
+            ],
+            "x-enum-varnames": [
+                "ReleaseStatusDraft",
+                "ReleaseStatusScheduled",
+                "ReleaseStatusInProgress",
+                "ReleaseStatusCompleted",
+                "ReleaseStatusCancelled",
+                "ReleaseStatusFailed",
+                "ReleaseStatusRolledBack"
+            ]
+        },
+        "dto.ReleaseStatusUpdateRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "comment": {
+                    "description": "状态变更说明",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "新状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ReleaseStatus"
+                        }
+                    ]
                 }
             }
         },
@@ -19876,6 +30551,28 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ResolveTicketRequest": {
+            "type": "object",
+            "properties": {
+                "resolution": {
+                    "description": "解决方案（可选，兼容前端发送 solution）",
+                    "type": "string"
+                },
+                "resolutionCategory": {
+                    "type": "string"
+                },
+                "solution": {
+                    "description": "兼容前端字段名",
+                    "type": "string"
+                },
+                "ticketId": {
+                    "type": "integer"
+                },
+                "workNotes": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ResourceHealthData": {
             "type": "object",
             "properties": {
@@ -19899,6 +30596,49 @@ const docTemplate = `{
                 "version": {
                     "type": "integer",
                     "minimum": 1
+                }
+            }
+        },
+        "dto.RoleResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "dataScope": {
+                    "description": "all/department/owner",
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isSystem": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PermissionInfo"
+                    }
+                },
+                "status": {
+                    "description": "active/inactive，启用状态的唯一线上契约",
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
@@ -19975,6 +30715,159 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SLAAlertHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "actualPercentage": {
+                    "type": "number",
+                    "example": 96.5
+                },
+                "alertLevel": {
+                    "type": "string",
+                    "example": "severe"
+                },
+                "alertRuleId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "alertRuleName": {
+                    "type": "string",
+                    "example": "P1工单-严重预警"
+                },
+                "cooldownMinutes": {
+                    "type": "integer",
+                    "example": 15
+                },
+                "cooldownRemainingSeconds": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "escalationLevel": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "notificationSent": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "resolvedAt": {
+                    "type": "string"
+                },
+                "suppressedByCooldown": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "thresholdPercentage": {
+                    "type": "integer",
+                    "example": 95
+                },
+                "ticketId": {
+                    "type": "integer",
+                    "example": 1001
+                },
+                "ticketNumber": {
+                    "type": "string",
+                    "example": "T-2024-001"
+                },
+                "ticketTitle": {
+                    "type": "string",
+                    "example": "数据库连接超时"
+                }
+            }
+        },
+        "dto.SLAAlertRuleResponse": {
+            "type": "object",
+            "properties": {
+                "alertLevel": {
+                    "type": "string",
+                    "example": "severe"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "escalationEnabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "escalationLevels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.EscalationLevelConfig"
+                    }
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "isActive": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "P1工单-严重预警"
+                },
+                "notificationChannels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"email\"",
+                        "\"sms\"",
+                        "\"in_app\"]"
+                    ]
+                },
+                "slaDefinitionId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tenantId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "thresholdPercentage": {
+                    "type": "integer",
+                    "example": 95
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "dto.SLABusinessHours": {
+            "type": "object",
+            "properties": {
+                "alwaysOn": {
+                    "type": "boolean"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "timeZone": {
+                    "type": "string"
+                },
+                "workDays": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "dto.SLAComplianceData": {
             "type": "object",
             "properties": {
@@ -20001,6 +30894,532 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SLAComplianceReport": {
+            "type": "object",
+            "properties": {
+                "avgResolutionTime": {
+                    "type": "number",
+                    "example": 180.5
+                },
+                "avgResponseTime": {
+                    "type": "number",
+                    "example": 28.5
+                },
+                "complianceRate": {
+                    "type": "number",
+                    "example": 95
+                },
+                "metSla": {
+                    "type": "integer",
+                    "example": 95
+                },
+                "reportPeriod": {
+                    "$ref": "#/definitions/dto.SLAReportPeriod"
+                },
+                "totalTickets": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "violatedSla": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "dto.SLADeadline": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "type": "string"
+                },
+                "slaPolicy": {
+                    "type": "string"
+                },
+                "ticketId": {
+                    "type": "integer"
+                },
+                "ticketTitle": {
+                    "type": "string"
+                },
+                "timeLeft": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SLADefinitionResponse": {
+            "type": "object",
+            "properties": {
+                "businessHours": {
+                    "$ref": "#/definitions/dto.SLABusinessHours"
+                },
+                "conditions": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "标准IT服务的SLA定义"
+                },
+                "escalationLevels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SLAEscalationLevel"
+                    }
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "isActive": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "标准服务SLA"
+                },
+                "priority": {
+                    "type": "string",
+                    "example": "medium"
+                },
+                "resolutionTime": {
+                    "type": "integer",
+                    "example": 240
+                },
+                "responseTime": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "serviceType": {
+                    "type": "string",
+                    "example": "standard"
+                },
+                "tenantId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "dto.SLAEscalationLevel": {
+            "type": "object",
+            "properties": {
+                "level": {
+                    "type": "integer"
+                },
+                "notifyRoles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "thresholdMinutes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.SLAMonitoringDashboard": {
+            "type": "object",
+            "properties": {
+                "atRiskTickets": {
+                    "type": "integer"
+                },
+                "breachedTickets": {
+                    "type": "integer"
+                },
+                "complianceRate": {
+                    "type": "number"
+                },
+                "slaByPriority": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number",
+                        "format": "float64"
+                    }
+                },
+                "topViolations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SLAViolationItem"
+                    }
+                },
+                "totalTickets": {
+                    "type": "integer"
+                },
+                "trendData": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SLATrendPoint"
+                    }
+                },
+                "upcomingDeadlines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SLADeadline"
+                    }
+                },
+                "violationRate": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.SLAMonitoringRequest": {
+            "type": "object",
+            "properties": {
+                "endTime": {
+                    "type": "string",
+                    "example": "2024-01-31T23:59:59Z"
+                },
+                "startTime": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "dto.SLAReportPeriod": {
+            "type": "object",
+            "properties": {
+                "endDate": {
+                    "type": "string",
+                    "example": "2024-01-31T23:59:59Z"
+                },
+                "startDate": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "dto.SLAStatsResponse": {
+            "type": "object",
+            "properties": {
+                "activeDefinitions": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "openViolations": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "overallComplianceRate": {
+                    "type": "number",
+                    "example": 92.5
+                },
+                "totalDefinitions": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "totalViolations": {
+                    "type": "integer",
+                    "example": 37
+                }
+            }
+        },
+        "dto.SLATrendPoint": {
+            "type": "object",
+            "properties": {
+                "complianceRate": {
+                    "type": "number"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "ticketCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.SLAViolationItem": {
+            "type": "object",
+            "properties": {
+                "delayMinutes": {
+                    "type": "integer"
+                },
+                "slaPolicy": {
+                    "type": "string"
+                },
+                "ticketId": {
+                    "type": "integer"
+                },
+                "ticketTitle": {
+                    "type": "string"
+                },
+                "violatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SSOBindRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "provider",
+                "state"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SSOCallbackRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "state"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SSOCreateProviderRequest": {
+            "type": "object",
+            "required": [
+                "clientId",
+                "code",
+                "issuer",
+                "name",
+                "redirectUri"
+            ],
+            "properties": {
+                "allowedEmailDomains": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "authorizationEndpoint": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "autoProvision": {
+                    "type": "boolean"
+                },
+                "clientId": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "clientSecret": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "defaultRole": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "issuer": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "jwksUri": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "protocol": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "redirectUri": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "scopes": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "tokenEndpoint": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "userinfoEndpoint": {
+                    "type": "string",
+                    "maxLength": 1000
+                }
+            }
+        },
+        "dto.SSOInitiateRequest": {
+            "type": "object",
+            "properties": {
+                "provider": {
+                    "type": "string"
+                },
+                "tenantCode": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SSOProviderResponse": {
+            "type": "object",
+            "properties": {
+                "allowedEmailDomains": {
+                    "type": "string"
+                },
+                "authorizationEndpoint": {
+                    "type": "string"
+                },
+                "autoProvision": {
+                    "type": "boolean"
+                },
+                "clientId": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "defaultRole": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "hasClientSecret": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issuer": {
+                    "type": "string"
+                },
+                "jwksUri": {
+                    "type": "string"
+                },
+                "lastError": {
+                    "type": "string"
+                },
+                "lastHealthCheckAt": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "redirectUri": {
+                    "type": "string"
+                },
+                "scopes": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "tokenEndpoint": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userinfoEndpoint": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SSOUnbindRequest": {
+            "type": "object",
+            "required": [
+                "provider"
+            ],
+            "properties": {
+                "provider": {
+                    "type": "string",
+                    "maxLength": 50
+                }
+            }
+        },
+        "dto.SSOUpdateProviderRequest": {
+            "type": "object",
+            "properties": {
+                "allowedEmailDomains": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "authorizationEndpoint": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "autoProvision": {
+                    "type": "boolean"
+                },
+                "clientId": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "clientSecret": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "defaultRole": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "issuer": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "jwksUri": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "redirectUri": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "scopes": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "tokenEndpoint": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "userinfoEndpoint": {
+                    "type": "string",
+                    "maxLength": 1000
+                }
+            }
+        },
         "dto.SatisfactionData": {
             "type": "object",
             "properties": {
@@ -20012,6 +31431,99 @@ const docTemplate = `{
                 },
                 "responses": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.ServiceCatalogResponse": {
+            "type": "object",
+            "properties": {
+                "approvalLevel": {
+                    "type": "integer"
+                },
+                "approvers": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "availableRegions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "availableSpecs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "category": {
+                    "type": "string"
+                },
+                "ciTypeId": {
+                    "type": "integer"
+                },
+                "cloudServiceId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deliveryTime": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "formSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "requiresApproval": {
+                    "type": "boolean"
+                },
+                "serviceType": {
+                    "type": "string"
+                },
+                "slaId": {
+                    "type": "integer"
+                },
+                "slaName": {
+                    "type": "string"
+                },
+                "slaResolutionTime": {
+                    "type": "integer"
+                },
+                "slaResponseTime": {
+                    "type": "integer"
+                },
+                "sortOrder": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
@@ -20104,6 +31616,193 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ServiceRequestApprovalActionRequest": {
+            "type": "object",
+            "required": [
+                "action"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "approve",
+                        "reject"
+                    ]
+                },
+                "comment": {
+                    "type": "string",
+                    "maxLength": 2000
+                }
+            }
+        },
+        "dto.ServiceRequestApprovalResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "approverId": {
+                    "type": "integer"
+                },
+                "approverName": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "delegatedToId": {
+                    "description": "转交审批人ID",
+                    "type": "integer"
+                },
+                "dueAt": {
+                    "description": "到期时间",
+                    "type": "string"
+                },
+                "escalationReason": {
+                    "description": "升级原因",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isEscalated": {
+                    "description": "是否已升级",
+                    "type": "boolean"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "processedAt": {
+                    "type": "string"
+                },
+                "serviceRequestId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "step": {
+                    "type": "string"
+                },
+                "timeoutHours": {
+                    "description": "V1 新增字段",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ServiceRequestResponse": {
+            "type": "object",
+            "properties": {
+                "approvals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ServiceRequestApprovalResponse"
+                    }
+                },
+                "approvedAt": {
+                    "type": "string"
+                },
+                "canApprove": {
+                    "description": "CanApprove 表示「当前登录用户」是否具备当前审批节点的审批资格。\n\n为什么必须由后端下发：前端此前只按请求状态（submitted/manager_approved/...）\n渲染「通过/拒绝」按钮，任何能打开详情页的人（包括发起人本人、以及不在该节点\n审批人集合内的管理员）都会看到按钮，点下去必然失败——不是 403 就是 500。\n前端无法自行推断资格：审批人集合存在审批行的 node.approver_ids 里，\n而该字段此前根本不在响应中下发（approverName 只在审批之后才有值）。\n\n语义：false 表示当前用户不在当前级审批人集合内，或该请求已不在审批阶段。",
+                    "type": "boolean"
+                },
+                "catalog": {
+                    "$ref": "#/definitions/dto.ServiceCatalogResponse"
+                },
+                "catalogId": {
+                    "type": "integer"
+                },
+                "ciId": {
+                    "type": "integer"
+                },
+                "completedAt": {
+                    "type": "string"
+                },
+                "completionNote": {
+                    "type": "string"
+                },
+                "complianceAck": {
+                    "type": "boolean"
+                },
+                "costCenter": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "currentLevel": {
+                    "type": "integer"
+                },
+                "dataClassification": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "formData": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "formFields": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "lastError": {
+                    "type": "string"
+                },
+                "needsPublicIp": {
+                    "type": "boolean"
+                },
+                "processorId": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "requestNumber": {
+                    "type": "string"
+                },
+                "requester": {
+                    "$ref": "#/definitions/dto.UserResponse"
+                },
+                "requesterId": {
+                    "type": "integer"
+                },
+                "sourceIpWhitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "startedAt": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "ticketNumber": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "totalLevels": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.ServiceRequestSLAResponse": {
             "type": "object",
             "properties": {
@@ -20158,6 +31857,220 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SwitchTenantRequest": {
+            "type": "object",
+            "required": [
+                "tenantId"
+            ],
+            "properties": {
+                "tenantId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TenantListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TenantResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TenantResponse": {
+            "type": "object",
+            "properties": {
+                "billingEnabled": {
+                    "type": "boolean"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "costCenterCode": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "legalEntityCode": {
+                    "type": "string"
+                },
+                "mspProviderId": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownerContact": {
+                    "type": "string"
+                },
+                "parentTenantId": {
+                    "type": "integer"
+                },
+                "planCode": {
+                    "type": "string"
+                },
+                "quota": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "serviceTier": {
+                    "type": "string"
+                },
+                "settings": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "status": {
+                    "type": "string"
+                },
+                "ticketCount": {
+                    "type": "integer"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userCount": {
+                    "description": "UserCount / TicketCount 是「资源使用」读数（缺陷 O8）。\n\n用指针 + omitempty 而不是 int 值：列表端点会按租户聚合填充，而\n单租户详情 / 创建 / 更新响应并不做聚合。声明成 int 会在这些场景\n输出伪造的 0（前端 ` + "`" + `record.userCount || 0` + "`" + ` 就会把「未计算」显示成\n「0 个用户」——正是此前 Default Tenant 显示 0 用户 0 工单的口径错误）。\nnil = 本响应未做聚合，前端应显示「—」而不是 0。",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TicketAssignmentRequest": {
+            "type": "object",
+            "required": [
+                "assigneeId",
+                "ticketIds"
+            ],
+            "properties": {
+                "assigneeId": {
+                    "type": "integer"
+                },
+                "notifyAssignee": {
+                    "type": "boolean"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "ticketIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "dto.TicketDailyTrendPoint": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "resolved": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TicketExportRequest": {
+            "type": "object",
+            "required": [
+                "format"
+            ],
+            "properties": {
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filters": {
+                    "$ref": "#/definitions/dto.ListTicketsRequest"
+                },
+                "format": {
+                    "type": "string",
+                    "enum": [
+                        "csv",
+                        "excel"
+                    ]
+                },
+                "options": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "dto.TicketImportRequest": {
+            "type": "object",
+            "required": [
+                "file",
+                "format"
+            ],
+            "properties": {
+                "file": {
+                    "type": "string"
+                },
+                "format": {
+                    "type": "string",
+                    "enum": [
+                        "csv",
+                        "excel"
+                    ]
+                },
+                "options": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "validate": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.TicketPriorityCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TicketPriorityGroup": {
             "type": "object",
             "properties": {
@@ -20165,6 +32078,227 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "priority": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "assigneeId": {
+                    "type": "integer"
+                },
+                "assigneeName": {
+                    "type": "string"
+                },
+                "categoryId": {
+                    "type": "integer"
+                },
+                "closedAt": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "departmentId": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "firstResponseAt": {
+                    "type": "string"
+                },
+                "formFields": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "parentTicketId": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "requesterId": {
+                    "type": "integer"
+                },
+                "requesterName": {
+                    "description": "显示名由服务端按当前租户投影（handlers/ticket attachUserNames）。\n历史上这里挂的是 requester/assignee 对象却从未赋值，前端因此把已派工单\n渲染成「未分配」；姓名以外的用户字段不在这个 DTO 里返回。",
+                    "type": "string"
+                },
+                "resolution": {
+                    "type": "string"
+                },
+                "resolutionCategory": {
+                    "type": "string"
+                },
+                "resolvedAt": {
+                    "type": "string"
+                },
+                "slaResolutionDeadline": {
+                    "type": "string"
+                },
+                "slaResponseDeadline": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "templateId": {
+                    "type": "integer"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "ticketNumber": {
+                    "type": "string"
+                },
+                "ticketTypeCode": {
+                    "type": "string"
+                },
+                "ticketTypeId": {
+                    "type": "integer"
+                },
+                "ticketTypeName": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TicketSLAComplianceResponse": {
+            "type": "object",
+            "properties": {
+                "avgResolutionHours": {
+                    "type": "number"
+                },
+                "avgResponseMinutes": {
+                    "type": "number"
+                },
+                "complianceRate": {
+                    "type": "number"
+                },
+                "sampledTickets": {
+                    "type": "integer"
+                },
+                "scope": {
+                    "description": "Scope 固定为 tenant：SLA 达标率按租户全量计算，不跟随登录者的数据范围。",
+                    "type": "string"
+                },
+                "violatedTickets": {
+                    "type": "integer"
+                },
+                "windowDays": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TicketStatsResponse": {
+            "type": "object",
+            "properties": {
+                "byPriority": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketPriorityCount"
+                    }
+                },
+                "byStatus": {
+                    "description": "ByStatus/ByPriority 是与计数器同一范围、同一窗口的分组计数，\n只含真实存在的取值；报表分布必须用它，禁止改成前端拉一页数据自己数\n（页长外的工作量会被静默截断）。紧急/关键这类单点 KPI 也从这里取，\n不再另立 urgent/critical 标量字段，避免同一数字出现两套口径。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketStatusCount"
+                    }
+                },
+                "closed": {
+                    "type": "integer"
+                },
+                "dailyTrend": {
+                    "description": "DailyTrend 仅在带窗口的请求里返回；缺省表示本次未取趋势，\n不是「窗口内没有工单」——两者在前端必须能区分。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketDailyTrendPoint"
+                    }
+                },
+                "highPriority": {
+                    "type": "integer"
+                },
+                "inProgress": {
+                    "type": "integer"
+                },
+                "open": {
+                    "type": "integer"
+                },
+                "overdue": {
+                    "type": "integer"
+                },
+                "pending": {
+                    "type": "integer"
+                },
+                "resolved": {
+                    "type": "integer"
+                },
+                "scope": {
+                    "description": "Scope 是本次统计跟随的行级数据范围，词表与 datascope 一致：\nall（租户全量）/ department / owner（本人创建或受理）。",
+                    "type": "string"
+                },
+                "sla": {
+                    "description": "SLA 是窗口内的 SLA 达标读数（租户口径，见 sla.scope）。缺省表示\nSLA 计时服务未接入或读数失败，属于「没取到」，前端不得渲染成 0%。",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.TicketSLAComplianceResponse"
+                        }
+                    ]
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "window": {
+                    "description": "Window 回显实际生效的时间窗口；请求未带日期时缺省，表示不限窗口。\n页面必须显示它，否则「最近 30 天」和「全部」在屏幕上长得一样。",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.TicketStatsWindowResponse"
+                        }
+                    ]
+                }
+            }
+        },
+        "dto.TicketStatsWindowResponse": {
+            "type": "object",
+            "properties": {
+                "dateFrom": {
+                    "type": "string"
+                },
+                "dateTo": {
+                    "type": "string"
+                },
+                "days": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TicketStatusCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "status": {
                     "type": "string"
                 }
             }
@@ -20177,6 +32311,54 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.TicketTemplate": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "formFields": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "description": "指针用于区分「未传」与「显式 false」：创建时显式停用不能被默认成启用。",
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workflowSteps": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
                 }
             }
         },
@@ -20520,6 +32702,9 @@ const docTemplate = `{
                         "critical"
                     ]
                 },
+                "departmentId": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -20553,6 +32738,10 @@ const docTemplate = `{
                 },
                 "ownedBy": {
                     "type": "string"
+                },
+                "ownerId": {
+                    "description": "OwnerID/DepartmentID 用指针区分「没传」与「显式清空」：\n普通 int 的零值无法表达「把负责人清空」，只能表达「不改」，\n而负责人恰恰是最需要能撤销的字段（人一离职，资产必须能释放回公共池）。\nnil=不改；指向 0=清空为未归属；指向 \u003e0=指派到该用户/部门。",
+                    "type": "integer"
                 },
                 "serialNumber": {
                     "type": "string"
@@ -20935,6 +33124,96 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateKnowledgeArticleRequest": {
+            "type": "object",
+            "properties": {
+                "authorityLevel": {
+                    "description": "知识可引用性 L2：权威性。",
+                    "type": "integer",
+                    "maximum": 30,
+                    "minimum": 0
+                },
+                "category": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "reviewIntervalDays": {
+                    "type": "integer",
+                    "maximum": 3650,
+                    "minimum": 0
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "validFrom": {
+                    "description": "知识可引用性 L1：时效性。指针语义即「不传=保持不变」。\n传 nil 指针本身在部分更新里就是「不改」，要解除时效需显式传空字符串等哨兵，\n当前版本请通过复核接口与创建时的声明管理时效，暂不支持把已设时效改回永久。",
+                    "type": "string"
+                },
+                "validUntil": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateMenuRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "isEnabled": {
+                    "type": "boolean"
+                },
+                "isVisible": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "permissionCode": {
+                    "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdatePermissionRequest": {
+            "type": "object",
+            "required": [
+                "policy"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "policy": {
+                    "$ref": "#/definitions/dto.PermissionPolicyPayload"
+                }
+            }
+        },
         "dto.UpdateProblemRequest": {
             "type": "object",
             "properties": {
@@ -21000,6 +33279,526 @@ const docTemplate = `{
             "properties": {
                 "rootCause": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.UpdateReleaseRequest": {
+            "type": "object",
+            "properties": {
+                "actualReleaseDate": {
+                    "description": "实际发布日期",
+                    "type": "string"
+                },
+                "affectedComponents": {
+                    "description": "受影响的组件",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "affectedSystems": {
+                    "description": "受影响的系统",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "changeId": {
+                    "description": "关联变更ID",
+                    "type": "integer"
+                },
+                "deploymentSteps": {
+                    "description": "部署步骤",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "description": "发布描述",
+                    "type": "string"
+                },
+                "environment": {
+                    "description": "目标环境",
+                    "type": "string",
+                    "enum": [
+                        "dev",
+                        "staging",
+                        "production"
+                    ]
+                },
+                "isEmergency": {
+                    "description": "是否紧急发布",
+                    "type": "boolean"
+                },
+                "ownerId": {
+                    "description": "负责人ID",
+                    "type": "integer"
+                },
+                "plannedEndDate": {
+                    "description": "计划结束时间",
+                    "type": "string"
+                },
+                "plannedReleaseDate": {
+                    "description": "计划发布日期",
+                    "type": "string"
+                },
+                "plannedStartDate": {
+                    "description": "计划开始时间",
+                    "type": "string"
+                },
+                "releaseNotes": {
+                    "description": "发布说明",
+                    "type": "string"
+                },
+                "requiresApproval": {
+                    "description": "是否需要审批",
+                    "type": "boolean"
+                },
+                "rollbackProcedure": {
+                    "description": "回滚程序",
+                    "type": "string"
+                },
+                "severity": {
+                    "description": "严重程度",
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
+                },
+                "tags": {
+                    "description": "标签",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "description": "发布标题",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "发布类型",
+                    "type": "string",
+                    "enum": [
+                        "major",
+                        "minor",
+                        "patch",
+                        "hotfix"
+                    ]
+                },
+                "validationCriteria": {
+                    "description": "验证标准",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateRoleRequest": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "description": "Status 是启用状态的唯一线上契约（active/inactive），落库到 role.is_active。\n曾并存同义字段 isActive，但 service 只读 isActive 导致前端发送的 status 被静默丢弃，\n角色启用/禁用开关表现为「更新成功却毫无变化」，故删除双轨字段。",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateSLAAlertRuleRequest": {
+            "type": "object",
+            "properties": {
+                "alertLevel": {
+                    "type": "string"
+                },
+                "escalationEnabled": {
+                    "type": "boolean"
+                },
+                "escalationLevels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.EscalationLevelConfig"
+                    }
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notificationChannels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "thresholdPercentage": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateSLADefinitionRequest": {
+            "type": "object",
+            "properties": {
+                "businessHours": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "conditions": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "description": {
+                    "type": "string"
+                },
+                "escalationRules": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "resolutionTime": {
+                    "type": "integer"
+                },
+                "responseTime": {
+                    "type": "integer"
+                },
+                "serviceType": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateSLAViolationRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "isResolved": {
+                    "type": "boolean"
+                },
+                "resolutionNotes": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateServiceCatalogRequest": {
+            "type": "object",
+            "properties": {
+                "approvalLevel": {
+                    "type": "integer"
+                },
+                "approvers": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "availableRegions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "availableSpecs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "category": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "ciTypeId": {
+                    "type": "integer"
+                },
+                "cloudServiceId": {
+                    "type": "integer"
+                },
+                "deliveryTime": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "formSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "icon": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "price": {
+                    "type": "number"
+                },
+                "requiresApproval": {
+                    "type": "boolean"
+                },
+                "serviceType": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "slaResolutionTime": {
+                    "type": "integer"
+                },
+                "slaResponseTime": {
+                    "type": "integer"
+                },
+                "sortOrder": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "unit": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "dto.UpdateServiceRequestRequest": {
+            "type": "object",
+            "properties": {
+                "complianceAck": {
+                    "type": "boolean"
+                },
+                "costCenter": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "dataClassification": {
+                    "type": "string",
+                    "enum": [
+                        "public",
+                        "internal",
+                        "confidential",
+                        "restricted"
+                    ]
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "formData": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "needsPublicIp": {
+                    "type": "boolean"
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "sourceIpWhitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "dto.UpdateServiceRequestStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateTenantRequest": {
+            "type": "object",
+            "properties": {
+                "billingEnabled": {
+                    "type": "boolean"
+                },
+                "costCenterCode": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "legalEntityCode": {
+                    "type": "string"
+                },
+                "mspProviderId": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "ownerContact": {
+                    "type": "string"
+                },
+                "parentTenantId": {
+                    "type": "integer"
+                },
+                "planCode": {
+                    "type": "string"
+                },
+                "quota": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "serviceTier": {
+                    "type": "string"
+                },
+                "settings": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "suspended",
+                        "expired",
+                        "deleted"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "standard",
+                        "internal",
+                        "saas_customer",
+                        "msp_provider",
+                        "msp_customer",
+                        "msp",
+                        "customer"
+                    ]
+                }
+            }
+        },
+        "dto.UpdateTicketRequest": {
+            "type": "object",
+            "properties": {
+                "assigneeId": {
+                    "type": "integer"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "categoryId": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000
+                },
+                "formFields": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical",
+                        "urgent"
+                    ]
+                },
+                "requesterId": {
+                    "description": "创建人ID",
+                    "type": "integer"
+                },
+                "resolution": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "new",
+                        "open",
+                        "assigned",
+                        "in_progress",
+                        "pending",
+                        "resolved",
+                        "closed",
+                        "cancelled",
+                        "approved",
+                        "rejected"
+                    ]
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 2
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "incident",
+                        "service_request",
+                        "change",
+                        "ticket",
+                        "problem",
+                        "improvement"
+                    ]
+                },
+                "userId": {
+                    "description": "操作用户ID (后端自动填充)",
+                    "type": "integer"
+                },
+                "version": {
+                    "description": "版本号（乐观锁）",
+                    "type": "integer"
                 }
             }
         },
@@ -21151,6 +33950,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ValidateResetTokenRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "token"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "token": {
                     "type": "string"
                 }
             }
@@ -21365,7 +34179,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.6.19",
+	Version:          "1.6.60",
 	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},

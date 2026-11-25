@@ -90,8 +90,12 @@ describe('AI 控制面概览面板', () => {
     await renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('控制面状态读取失败')).toBeInTheDocument();
+      // 文案随产品语言治理调整：标题从引擎词「控制面状态」改为业务语义
+      // 「队列概况」。断言与新文案同源，并反向锁住旧词不得复活。
+      expect(screen.getByText('队列概况读取失败')).toBeInTheDocument();
     });
+    // 旧引擎词不得回到用户可见文案里。
+    expect(screen.queryByText('控制面状态读取失败')).not.toBeInTheDocument();
     // 关键反向断言：错误态下绝不能出现「合计 0 条」这类会被读成「队列干净」的文案。
     expect(screen.queryByText(/合计 0 条/)).not.toBeInTheDocument();
     // 并且必须说明「这不代表队列为空」，否则用户只会看到失败二字。

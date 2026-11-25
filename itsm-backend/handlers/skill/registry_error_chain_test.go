@@ -19,8 +19,10 @@ func (s *deniedToolErrorSkill) Code() string   { return s.code }
 func (s *deniedToolErrorSkill) Name() string   { return s.code }
 func (s *deniedToolErrorSkill) Tags() []string { return nil }
 func (s *deniedToolErrorSkill) Manifest() dto.SkillManifest {
-	return dto.SkillManifest{Name: s.code, Version: "v1", Category: "pilot",
-		RequiredPermissions: []string{"ai:read"}}
+	return dto.SkillManifest{
+		Name: s.code, Version: "v1", Category: "pilot",
+		RequiredPermissions: []string{"ai:read"},
+	}
 }
 func (s *deniedToolErrorSkill) GetMetrics() dto.SkillMetrics { return dto.SkillMetrics{} }
 func (s *deniedToolErrorSkill) Validate(_ interface{}) error { return nil }

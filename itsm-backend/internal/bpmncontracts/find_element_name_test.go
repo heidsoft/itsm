@@ -105,8 +105,8 @@ func TestFindElementNameCoversEveryNodeType(t *testing.T) {
 // TestFindElementNameReturnsEmptyForUnknownOrUnnamed 验证回退口径。
 func TestFindElementNameReturnsEmptyForUnknownOrUnnamed(t *testing.T) {
 	process := &BPMNProcess{
-		ID:          "Process_1",
-		ServiceTasks: []*BPMNServiceTask{{ID: "Activity_NoName"}},
+		ID:            "Process_1",
+		ServiceTasks:  []*BPMNServiceTask{{ID: "Activity_NoName"}},
 		SequenceFlows: []*BPMNSequenceFlow{{ID: "Flow_1"}},
 		DataObjects:   []*BPMNDataObject{{ID: "Data_1", Name: "数据"}},
 	}
@@ -169,10 +169,10 @@ func TestFindElementNameFromRealProdXML(t *testing.T) {
 	}
 	// 其余节点类型同样可解析
 	for id, want := range map[string]string{
-		"StartEvent_1":            "事件报告",
+		"StartEvent_1":             "事件报告",
 		"Activity_ManagerApproval": "主管审批",
-		"Gateway_Resolved":        "问题已定位?",
-		"EndEvent_1":              "事件完成",
+		"Gateway_Resolved":         "问题已定位?",
+		"EndEvent_1":               "事件完成",
 	} {
 		if got := process.FindElementName(id); got != want {
 			t.Fatalf("%s 应为 %q，got %q", id, want, got)

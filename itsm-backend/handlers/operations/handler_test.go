@@ -12,8 +12,8 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/internal/commandbus"
-	"itsm-backend/middleware"
 	toolsexec "itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"

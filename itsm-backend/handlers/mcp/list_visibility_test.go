@@ -62,8 +62,10 @@ func TestToolsCall_VisibilityDoesNotAuthorizeExecution(t *testing.T) {
 		exec := &fakeExecutor{result: "ok"}
 		svc, err := mcp.NewService(mcp.Options{Catalog: &fakeCatalog{}, Executor: exec, Visibility: visibility})
 		require.NoError(t, err)
-		resp := svc.Handle(context.Background(), &mcp.Request{JSONRPC: "2.0", ID: json.RawMessage("1"), Method: mcp.MethodToolsCall,
-			Params: json.RawMessage(`{"name":"ticket_read"}`)}, mcp.Caller{TenantID: 42, Role: "reader", Principal: "human"})
+		resp := svc.Handle(context.Background(), &mcp.Request{
+			JSONRPC: "2.0", ID: json.RawMessage("1"), Method: mcp.MethodToolsCall,
+			Params: json.RawMessage(`{"name":"ticket_read"}`),
+		}, mcp.Caller{TenantID: 42, Role: "reader", Principal: "human"})
 		require.Nil(t, resp.Error)
 		require.True(t, exec.called)
 		require.Equal(t, "ticket_read", exec.calledWith)

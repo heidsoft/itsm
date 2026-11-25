@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/internal/services"
 	"itsm-backend/middleware"
 	ticketrepo "itsm-backend/repository/ticket"
-	"itsm-backend/internal/services"
 	"itsm-backend/service/sla"
 )
 

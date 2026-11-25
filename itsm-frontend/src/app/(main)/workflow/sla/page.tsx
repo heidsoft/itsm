@@ -21,6 +21,7 @@ import { AlertTriangle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 
 import type { SLAViolation, ProcessMetrics } from '@/lib/api/bpmn-dashboard-api';
 import BPMNDashboardApi from '@/lib/api/bpmn-dashboard-api';
+import { isPermissionDeniedError } from '@/lib/api/http-client';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useI18n } from '@/lib/i18n';
 import { WorkflowApi } from '@/lib/api/workflow-api';
@@ -36,6 +37,11 @@ export default function SLAMonitoringPage() {
   const [violations, setViolations] = useState<SLAViolation[]>([]);
   // 违规列表加载失败必须与「暂无违规」区分：2026-10-14 修复前失败被渲染成成功态空列表
   const [violationsError, setViolationsError] = useState(false);
+  // 失败要分两种：无权限（本菜单的准入码是 bpmn:read，而违规数据在
+  // /api/v1/sla/violations 上要求 sla:read——technician / security_admin 这类
+  // 角色持 bpmn:read 不持 sla:read）与真失败。前者重试多少次都不会好，
+  // 提示里必须说清是权限问题，否则用户只会反复点「刷新」。
+  const [violationsDenied, setViolationsDenied] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState<string>('');
   const [processes, setProcesses] = useState<{ key: string; name: string }[]>([]);
   const [processMetrics, setProcessMetrics] = useState<ProcessMetrics | null>(null);
@@ -68,10 +74,12 @@ export default function SLAMonitoringPage() {
       const data = await BPMNDashboardApi.getSLAViolations(tenantId);
       setViolations(data);
       setViolationsError(false);
+      setViolationsDenied(false);
     } catch (error) {
       console.error('Failed to fetch violations:', error);
       setViolations([]);
       setViolationsError(true);
+      setViolationsDenied(isPermissionDeniedError(error));
     } finally {
       setListLoading(false);
     }
@@ -292,9 +300,13 @@ export default function SLAMonitoringPage() {
       >
         {violationsError ? (
           <Alert
-            title='SLA 违规数据加载失败'
-            description='请稍后重试；失败不等于没有违规，请勿据此判断系统健康。'
-            type='error'
+            title={violationsDenied ? '没有查看 SLA 违规的权限' : 'SLA 违规数据加载失败'}
+            description={
+              violationsDenied
+                ? '这一页在这里看流程指标，而违规数据来自 SLA 域，需要 sla:read。请联系管理员为你的角色开通该权限；重试不会解决。'
+                : '请稍后重试；失败不等于没有违规，请勿据此判断系统健康。'
+            }
+            type={violationsDenied ? 'warning' : 'error'}
             showIcon
           />
         ) : violations.length === 0 ? (

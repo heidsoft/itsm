@@ -134,11 +134,6 @@ func neutralizeSpreadsheetFormula(value string) string {
 	return value
 }
 
-func escapePDFText(value string) string {
-	r := strings.NewReplacer("\\", "\\\\", "(", "\\(", ")", "\\)", "\r", " ", "\n", " ")
-	return r.Replace(value)
-}
-
 // ExportPredictionToExcel 导出预测报告为Excel
 func (s *ReportExportService) ExportPredictionToExcel(ctx context.Context, prediction *dto.TrendPredictionResponse) ([]byte, string, error) {
 	f := excelize.NewFile()

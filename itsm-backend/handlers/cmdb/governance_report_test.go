@@ -50,15 +50,21 @@ func TestService_GetGovernanceReport(t *testing.T) {
 		//   - CI-4：**无云引用的手工 CI**，类型 10，必填属性齐
 		//          → 进治理基数（完整性/重复率），但不进对账基数
 		everything := []*ConfigurationItem{
-			{ID: 1, CINumber: "CI-1", CITypeID: 10, CloudResourceRefID: 11,
+			{
+				ID: 1, CINumber: "CI-1", CITypeID: 10, CloudResourceRefID: 11,
 				LifecycleStatus: common.CILifecycleStatusOnline, CloudSyncTime: &recent,
-				Attributes: map[string]interface{}{"serial_number": "SN-1", "vendor": "Dell"}},
-			{ID: 2, CINumber: "CI-2", CITypeID: 10, CloudResourceRefID: 99,
+				Attributes: map[string]interface{}{"serial_number": "SN-1", "vendor": "Dell"},
+			},
+			{
+				ID: 2, CINumber: "CI-2", CITypeID: 10, CloudResourceRefID: 99,
 				LifecycleStatus: common.CILifecycleStatusOnline, CloudSyncTime: &stale,
-				Attributes: map[string]interface{}{"serial_number": "SN-2"}},
-			{ID: 4, CINumber: "CI-4", CITypeID: 10,
+				Attributes: map[string]interface{}{"serial_number": "SN-2"},
+			},
+			{
+				ID: 4, CINumber: "CI-4", CITypeID: 10,
 				LifecycleStatus: common.CILifecycleStatusOnline,
-				Attributes:      map[string]interface{}{"serial_number": "SN-4", "vendor": "HP"}},
+				Attributes:      map[string]interface{}{"serial_number": "SN-4", "vendor": "HP"},
+			},
 		}
 		// 对账基数：仓储只返回带云引用的 CI（模拟真实 ListCIsForReconciliation）
 		reconcileOnly := []*ConfigurationItem{everything[0], everything[1]}
@@ -119,10 +125,14 @@ func TestService_GetGovernanceReport(t *testing.T) {
 		freshConfirm := now.Add(-20 * 24 * time.Hour)  // 90 天阈值内
 		staleConfirm := now.Add(-200 * 24 * time.Hour) // 超 90 天
 		everything := []*ConfigurationItem{
-			{ID: 1, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
-				LastConfirmedAt: &freshConfirm}, // 新鲜
-			{ID: 2, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
-				LastConfirmedAt: &staleConfirm}, // 确认过但过期
+			{
+				ID: 1, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
+				LastConfirmedAt: &freshConfirm,
+			}, // 新鲜
+			{
+				ID: 2, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
+				LastConfirmedAt: &staleConfirm,
+			}, // 确认过但过期
 			{ID: 3, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline},   // 从未确认
 			{ID: 4, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusScrapped}, // 退役不进分母
 		}
@@ -159,8 +169,10 @@ func TestService_GetGovernanceReport(t *testing.T) {
 		// 全新租户：CI 建了、字段也填了，但没配任何必填属性定义。
 		// 旧实现会报 100% 完整率；正确行为是「不可评估」。
 		everything := []*ConfigurationItem{
-			{ID: 1, CINumber: "CI-1", CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
-				Attributes: map[string]interface{}{"serial_number": "SN-1"}},
+			{
+				ID: 1, CINumber: "CI-1", CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
+				Attributes: map[string]interface{}{"serial_number": "SN-1"},
+			},
 			{ID: 2, CINumber: "CI-2", CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline},
 		}
 		svc := newTestService(&mockRepository{
@@ -199,12 +211,18 @@ func TestService_GetGovernanceReport(t *testing.T) {
 	t.Run("重复聚类识别同资产两笔账", func(t *testing.T) {
 		// 两条 CI 指向同一条云资源：这是真实的重复建账（发现建了一条、手工又建一条）。
 		everything := []*ConfigurationItem{
-			{ID: 1, CINumber: "CI-1", CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
-				CloudProvider: "aliyun", CloudResourceID: "i-dup", AssetTag: "T-1"},
-			{ID: 2, CINumber: "CI-2", CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
-				CloudProvider: "aliyun", CloudResourceID: "i-dup", AssetTag: "T-1"},
-			{ID: 3, CINumber: "CI-3", CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
-				CloudProvider: "aliyun", CloudResourceID: "i-unique", AssetTag: "T-3"},
+			{
+				ID: 1, CINumber: "CI-1", CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
+				CloudProvider: "aliyun", CloudResourceID: "i-dup", AssetTag: "T-1",
+			},
+			{
+				ID: 2, CINumber: "CI-2", CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
+				CloudProvider: "aliyun", CloudResourceID: "i-dup", AssetTag: "T-1",
+			},
+			{
+				ID: 3, CINumber: "CI-3", CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
+				CloudProvider: "aliyun", CloudResourceID: "i-unique", AssetTag: "T-3",
+			},
 		}
 		svc := newTestService(&mockRepository{
 			listCIsForGovernanceFn: func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {

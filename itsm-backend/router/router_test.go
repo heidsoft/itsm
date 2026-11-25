@@ -20,9 +20,9 @@ import (
 	releaseHandler "itsm-backend/handlers/release"
 	systemConfigHandler "itsm-backend/handlers/systemconfig"
 	userHandler "itsm-backend/handlers/user"
+	"itsm-backend/internal/services"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
-	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

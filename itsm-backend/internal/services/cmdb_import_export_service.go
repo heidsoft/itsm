@@ -1139,7 +1139,7 @@ func cmdbExportDir(tenantID int) (string, error) {
 		return "", fmt.Errorf("invalid CMDB export tenant id")
 	}
 	dir := filepath.Join(os.TempDir(), "itsm-exports", fmt.Sprintf("t%d", tenantID))
-	if err := os.MkdirAll(dir, 0700); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", fmt.Errorf("create CMDB export directory: %w", err)
 	}
 	return dir, nil
@@ -1192,7 +1192,7 @@ func (s *CMDBImportExportService) generateCSVExport(items []*dto.CIResponse, fie
 	}
 	// O_EXCL：即便随机数撞车也拒绝覆盖既有任务文件，而不是静默复用。
 	// 0600：导出内容含 CI 资产清单，不应对同机其他用户可读。
-	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
 		return "", 0, err
 	}
@@ -1268,7 +1268,7 @@ func (s *CMDBImportExportService) generateExcelExport(items []*dto.CIResponse, f
 	if err != nil {
 		return "", 0, err
 	}
-	placeholder, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	placeholder, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
 		return "", 0, err
 	}

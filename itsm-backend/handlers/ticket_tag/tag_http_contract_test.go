@@ -29,9 +29,9 @@ import (
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/tickettag"
 	tagHandler "itsm-backend/handlers/ticket_tag"
+	"itsm-backend/internal/services"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

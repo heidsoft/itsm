@@ -42,7 +42,7 @@ export default function RelationshipsPage() {
     <div className="space-y-6 p-6">
       <ManagementPageHeader
         title="关系管理"
-        description="查看和管理配置项之间的依赖、托管、影响和包含关系。"
+        description="按配置项查看它的出入向关系，并维护依赖、承载、包含、影响、拥有、使用等关系类型。"
       />
 
       <Card
@@ -70,7 +70,7 @@ export default function RelationshipsPage() {
         ) : selectedCi ? (
           <CIRelationshipManager ciId={selectedCi.id} ciName={selectedCi.name} />
         ) : (
-          <Empty description="请选择一个配置项后查看关系图谱" />
+          <Empty description="请选择一个配置项后查看它的关系列表" />
         )}
       </Card>
     </div>

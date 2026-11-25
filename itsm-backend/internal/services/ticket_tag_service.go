@@ -363,6 +363,8 @@ func (s *TicketTagService) RemoveTagsFromTicket(ctx context.Context, ticketID in
 
 // 三个请求类型已下沉到 dto 包；别名是同一类型（不是新定义），
 // 因此 service 公开 API 与 Gin 依据 json/binding tag 的绑定行为都不变。
-type CreateTagRequest = dto.CreateTagRequest
-type UpdateTagRequest = dto.UpdateTagRequest
-type ListTagsRequest = dto.ListTagsRequest
+type (
+	CreateTagRequest = dto.CreateTagRequest
+	UpdateTagRequest = dto.UpdateTagRequest
+	ListTagsRequest  = dto.ListTagsRequest
+)

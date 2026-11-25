@@ -30,9 +30,9 @@ import (
 	"itsm-backend/ent/enttest"
 	provisioningHandler "itsm-backend/handlers/provisioning"
 	serviceRequestHandler "itsm-backend/handlers/service_request"
+	"itsm-backend/internal/services"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

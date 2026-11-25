@@ -97,10 +97,14 @@ func TestBPMNExclusiveGateway_DefaultFlowTakenOnZeroConditionMatch(t *testing.T)
 		EndEvents: []*BPMNEndEvent{{ID: "End"}},
 		SequenceFlows: []*BPMNSequenceFlow{
 			{ID: "f0", SourceRef: "Start", TargetRef: "G1"},
-			{ID: "f1", SourceRef: "G1", TargetRef: "TaskHigh",
-				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"}},
-			{ID: "f2", SourceRef: "G1", TargetRef: "TaskMid",
-				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 100"}},
+			{
+				ID: "f1", SourceRef: "G1", TargetRef: "TaskHigh",
+				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"},
+			},
+			{
+				ID: "f2", SourceRef: "G1", TargetRef: "TaskMid",
+				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 100"},
+			},
 			{ID: "f3", SourceRef: "G1", TargetRef: "TaskDefault"},
 			{ID: "f4", SourceRef: "TaskDefault", TargetRef: "End"},
 			// f5 是「普通但无条件」的出边，目标与 default 不同。
@@ -168,10 +172,14 @@ func TestBPMNInclusiveGateway_DefaultFlowTakenOnZeroConditionMatch(t *testing.T)
 		EndEvents: []*BPMNEndEvent{{ID: "End"}},
 		SequenceFlows: []*BPMNSequenceFlow{
 			{ID: "f0", SourceRef: "Start", TargetRef: "G1"},
-			{ID: "f1", SourceRef: "G1", TargetRef: "TaskHigh",
-				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"}},
-			{ID: "f2", SourceRef: "G1", TargetRef: "TaskMid",
-				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 100"}},
+			{
+				ID: "f1", SourceRef: "G1", TargetRef: "TaskHigh",
+				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"},
+			},
+			{
+				ID: "f2", SourceRef: "G1", TargetRef: "TaskMid",
+				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 100"},
+			},
 			{ID: "f3", SourceRef: "G1", TargetRef: "TaskDefault"},
 			{ID: "f4", SourceRef: "TaskDefault", TargetRef: "End"},
 		},
@@ -202,14 +210,16 @@ func TestBPMNExclusiveGateway_NoDefaultSuspendsWithReason(t *testing.T) {
 	instance := newGatewayInstance(t, ctx, client, "exclusiveNoDefault")
 
 	process := &BPMNProcess{
-		StartEvents:      []*BPMNStartEvent{{ID: "Start"}},
+		StartEvents:       []*BPMNStartEvent{{ID: "Start"}},
 		ExclusiveGateways: []*BPMNExclusiveGateway{{ID: "G1", Name: "排他网关"}},
-		UserTasks:        []*BPMNUserTask{{ID: "TaskDenied", Name: "高额任务"}},
-		EndEvents:        []*BPMNEndEvent{{ID: "End"}},
+		UserTasks:         []*BPMNUserTask{{ID: "TaskDenied", Name: "高额任务"}},
+		EndEvents:         []*BPMNEndEvent{{ID: "End"}},
 		SequenceFlows: []*BPMNSequenceFlow{
 			{ID: "f0", SourceRef: "Start", TargetRef: "G1"},
-			{ID: "f1", SourceRef: "G1", TargetRef: "TaskDenied",
-				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"}},
+			{
+				ID: "f1", SourceRef: "G1", TargetRef: "TaskDenied",
+				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"},
+			},
 		},
 	}
 
@@ -236,14 +246,16 @@ func TestBPMNInclusiveGateway_NoDefaultSuspendsWithReason(t *testing.T) {
 	instance := newGatewayInstance(t, ctx, client, "inclusiveNoDefault")
 
 	process := &BPMNProcess{
-		StartEvents:      []*BPMNStartEvent{{ID: "Start"}},
+		StartEvents:       []*BPMNStartEvent{{ID: "Start"}},
 		InclusiveGateways: []*BPMNInclusiveGateway{{ID: "G1", Name: "包容网关"}},
-		UserTasks:        []*BPMNUserTask{{ID: "TaskDenied", Name: "高额任务"}},
-		EndEvents:        []*BPMNEndEvent{{ID: "End"}},
+		UserTasks:         []*BPMNUserTask{{ID: "TaskDenied", Name: "高额任务"}},
+		EndEvents:         []*BPMNEndEvent{{ID: "End"}},
 		SequenceFlows: []*BPMNSequenceFlow{
 			{ID: "f0", SourceRef: "Start", TargetRef: "G1"},
-			{ID: "f1", SourceRef: "G1", TargetRef: "TaskDenied",
-				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"}},
+			{
+				ID: "f1", SourceRef: "G1", TargetRef: "TaskDenied",
+				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"},
+			},
 		},
 	}
 
@@ -279,8 +291,10 @@ func TestBPMNExclusiveGateway_InvalidDefaultSuspends(t *testing.T) {
 		EndEvents: []*BPMNEndEvent{{ID: "End"}},
 		SequenceFlows: []*BPMNSequenceFlow{
 			{ID: "f0", SourceRef: "Start", TargetRef: "G1"},
-			{ID: "f1", SourceRef: "G1", TargetRef: "TaskDenied",
-				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"}},
+			{
+				ID: "f1", SourceRef: "G1", TargetRef: "TaskDenied",
+				ConditionExpression: &BPMNConditionExpression{Expression: "amount > 1000"},
+			},
 		},
 	}
 

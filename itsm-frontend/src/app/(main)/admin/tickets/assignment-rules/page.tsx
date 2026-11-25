@@ -211,7 +211,7 @@ export default function AssignmentRulesPage() {
       });
       setTestResult(
         response.matched
-          ? `匹配成功${response.assignedTo ? `，推荐分配给用户 ID ${response.assignedTo}` : ''}。${response.reason || ''}`
+          ? `匹配成功${response.assignedTo ? `，会分配给用户 ID ${response.assignedTo}` : ''}。${response.reason || ''}（这里只做预演，不会真的改工单的处理人）`
           : `未匹配。${response.reason || ''}`
       );
     } catch {
@@ -318,7 +318,7 @@ export default function AssignmentRulesPage() {
             <Title level={3} style={{ marginBottom: 4 }}>
               工单分配规则
             </Title>
-            <Text type="secondary">按条件自动选择处理人，支撑工单进入可运营的分派流程。</Text>
+            <Text type="secondary">按条件匹配规则，把工单指派给对应处理人。</Text>
           </div>
           <div className="flex items-center gap-2">
             <Tooltip title="刷新">
@@ -363,7 +363,7 @@ export default function AssignmentRulesPage() {
             type="info"
             showIcon
             title="暂无分配规则"
-            description="创建规则后，工单可按优先级、状态、分类或部门等条件自动推荐处理人。"
+            description="创建规则后，工单可按优先级、状态、分类或部门等条件自动指派处理人。"
           />
         ) : (
           <Table

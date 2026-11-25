@@ -198,6 +198,89 @@ func TestBPMNVersion_ListVersions_TenantIsolation(t *testing.T) {
 	assert.Empty(t, versions)
 }
 
+// P2-07：version 是字符串列，SQL 字符串 DESC 的字典序是 "9" > "2" > "10"，
+// 数值感知必须返回 [10, 9, 2]。
+func TestBPMNVersion_ListVersions_NumericDescending(t *testing.T) {
+	f := setupVersionFixture(t)
+	defer f.client.Close()
+	ctx := context.Background()
+
+	seedDefinition(t, f, "numeric_order", "2")
+	seedDefinition(t, f, "numeric_order", "9")
+	seedDefinition(t, f, "numeric_order", "10")
+
+	versions, err := f.svc.ListVersions(ctx, "numeric_order", f.tenantID)
+	require.NoError(t, err)
+	require.Len(t, versions, 3)
+	got := []int{versions[0].Version, versions[1].Version, versions[2].Version}
+	assert.Equal(t, []int{10, 9, 2}, got, "版本列表必须按数值降序，字符串 DESC 会把 9 排在 10 前")
+}
+
+// P2-07：CreateVersion 的编号来自 getCurrentVersion+1，最高版本号必须按数值取，
+// 否则 "9"/"2.0.0" 被当成最高，新版本撞出重复编号。
+func TestBPMNVersion_CreateVersion_UsesNumericLatest(t *testing.T) {
+	tests := []struct {
+		name     string
+		seeded   []string
+		wantNext int
+	}{
+		{"纯整数双位数", []string{"9", "10"}, 11},
+		{"semver 主版本双位数", []string{"2.0.0", "10.0.0"}, 11},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := setupVersionFixture(t)
+			defer f.client.Close()
+			ctx := context.Background()
+			for _, v := range tt.seeded {
+				seedDefinition(t, f, "num_latest", v)
+			}
+
+			got, err := f.svc.CreateVersion(ctx, &CreateVersionRequest{
+				ProcessDefinitionKey: "num_latest",
+				Name:                 "num_latest next",
+				BPMNXML:              "<definitions/>",
+				TenantID:             f.tenantID,
+				CreatedBy:            "1",
+			})
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantNext, got.Version, "最高版本号必须按数值取（字符串 DESC 会取到 9 / 2 → 新版本 10 / 3）")
+		})
+	}
+}
+
+// P2-07 伴生口径：不可解析的版本行与 ListVersions 的 continue 同口径——
+// 跳过而不是阻断版本生成；全部不可解析时显式报错，不凭空从 1 开始。
+func TestBPMNVersion_CreateVersion_SkipsUnparseableVersions(t *testing.T) {
+	f := setupVersionFixture(t)
+	defer f.client.Close()
+	ctx := context.Background()
+
+	seedDefinition(t, f, "dirty_latest", "abc")
+	seedDefinition(t, f, "dirty_latest", "5")
+
+	got, err := f.svc.CreateVersion(ctx, &CreateVersionRequest{
+		ProcessDefinitionKey: "dirty_latest",
+		Name:                 "dirty_latest next",
+		BPMNXML:              "<definitions/>",
+		TenantID:             f.tenantID,
+		CreatedBy:            "1",
+	})
+	require.NoError(t, err, "单条脏版本行不应阻断版本生成")
+	assert.Equal(t, 6, got.Version, "应跳过不可解析行、取数值最大的可解析行")
+
+	seedDefinition(t, f, "all_dirty", "xyz")
+	_, err = f.svc.CreateVersion(ctx, &CreateVersionRequest{
+		ProcessDefinitionKey: "all_dirty",
+		Name:                 "all_dirty next",
+		BPMNXML:              "<definitions/>",
+		TenantID:             f.tenantID,
+		CreatedBy:            "1",
+	})
+	require.Error(t, err, "全部版本行不可解析时必须报错")
+	assert.Contains(t, err.Error(), "获取当前版本失败")
+}
+
 func TestBPMNVersion_ActivateVersion(t *testing.T) {
 	f := setupVersionFixture(t)
 	defer f.client.Close()
@@ -302,7 +385,7 @@ func TestBPMNVersion_CompareVersions_ContentChangedNoStructuralDiff(t *testing.T
 
 	comparison, err := f.svc.CompareVersions(ctx, "cmp_content", 1, 2, f.tenantID)
 	require.NoError(t, err)
-	assert.Equal(t, "compatible", comparison.Compatibility, "内容变化但 task 数不变 → medium impact → compatible")
+	assert.Equal(t, "unknown", comparison.Compatibility, "内容变化但未做全量结构分析 → 只能给 unknown（P2-07）")
 	assert.Len(t, comparison.Changes, 1)
 	assert.Equal(t, "medium", comparison.Changes[0].Impact)
 }
@@ -417,19 +500,24 @@ func TestBPMNVersion_AssessCompatibility(t *testing.T) {
 		name            string
 		changes         []ChangeDetail
 		breakingChanges []string
+		analyzed        bool
 		want            string
 	}{
-		{"no breaking, no changes", nil, nil, "identical"},
-		{"breaking changes", []ChangeDetail{{Impact: "low"}}, []string{"removed field"}, "incompatible"},
-		{"high impact", []ChangeDetail{{Impact: "high"}}, nil, "risky"},
-		{"critical impact", []ChangeDetail{{Impact: "critical"}}, nil, "risky"},
-		{"medium impact only", []ChangeDetail{{Impact: "medium"}}, nil, "compatible"},
-		{"low impact only", []ChangeDetail{{Impact: "low"}}, nil, "compatible"},
+		{"no breaking, no changes", nil, nil, true, "identical"},
+		{"breaking changes", []ChangeDetail{{Impact: "low"}}, []string{"removed field"}, true, "incompatible"},
+		{"high impact", []ChangeDetail{{Impact: "high"}}, nil, true, "risky"},
+		{"critical impact", []ChangeDetail{{Impact: "critical"}}, nil, true, "risky"},
+		{"medium impact only", []ChangeDetail{{Impact: "medium"}}, nil, true, "compatible"},
+		{"low impact only", []ChangeDetail{{Impact: "low"}}, nil, true, "compatible"},
+		// P2-07：差异未被分析器覆盖时，任何 impact 都只是猜测 → 只能给 unknown
+		{"unanalyzed medium change", []ChangeDetail{{Impact: "medium"}}, nil, false, "unknown"},
+		{"unanalyzed high change", []ChangeDetail{{Impact: "high"}}, nil, false, "unknown"},
+		{"breaking beats unanalyzed", []ChangeDetail{{Impact: "medium"}}, []string{"removed"}, false, "incompatible"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := f.svc.assessCompatibility(tt.changes, tt.breakingChanges)
+			got := f.svc.assessCompatibility(tt.changes, tt.breakingChanges, tt.analyzed)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -441,33 +529,37 @@ func TestBPMNVersion_CompareBPMNXML(t *testing.T) {
 
 	t.Run("identical XML", func(t *testing.T) {
 		xml := "<definitions><process id=\"p1\"/></definitions>"
-		changes, breaking := f.svc.compareBPMNXML(xml, xml)
+		changes, breaking, analyzed := f.svc.compareBPMNXML(xml, xml)
 		assert.Empty(t, changes)
 		assert.Empty(t, breaking)
+		assert.True(t, analyzed, "字节全等是已检查结论")
 	})
 
 	t.Run("task count differs", func(t *testing.T) {
 		base := "<definitions><process id=\"p1\" name=\"proc\"><userTask id=\"t1\" name=\"a\"/></process></definitions>"
 		target := "<definitions><process id=\"p1\" name=\"proc\"><userTask id=\"t1\" name=\"a\"/><userTask id=\"t2\" name=\"b\"/></process></definitions>"
-		changes, _ := f.svc.compareBPMNXML(base, target)
+		changes, _, analyzed := f.svc.compareBPMNXML(base, target)
 		require.Len(t, changes, 1)
 		assert.Equal(t, "high", changes[0].Impact)
 		assert.Contains(t, changes[0].Description, "Task count changed from 1 to 2")
+		assert.True(t, analyzed, "userTask 数量对比完成 → 结构变更已确认")
 	})
 
 	t.Run("content differs but same task count", func(t *testing.T) {
 		base := "<definitions><process id=\"p1\" name=\"short\"/></definitions>"
 		target := "<definitions><process id=\"p1\" name=\"much_longer_name\"/></definitions>"
-		changes, _ := f.svc.compareBPMNXML(base, target)
+		changes, _, analyzed := f.svc.compareBPMNXML(base, target)
 		require.Len(t, changes, 1)
 		assert.Equal(t, "medium", changes[0].Impact)
 		assert.Equal(t, "BPMN XML content has changed", changes[0].Description)
+		assert.False(t, analyzed, "只落了通用描述、未做全量结构分析 → 不能推 compatible")
 	})
 
 	t.Run("invalid XML falls back to generic change", func(t *testing.T) {
-		changes, _ := f.svc.compareBPMNXML("not-xml", "<also bad")
+		changes, _, analyzed := f.svc.compareBPMNXML("not-xml", "<also bad")
 		require.Len(t, changes, 1)
 		assert.Equal(t, "medium", changes[0].Impact)
+		assert.False(t, analyzed, "解析失败 → 未分析")
 	})
 }
 

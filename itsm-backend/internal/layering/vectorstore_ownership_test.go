@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"itsm-backend/handlers/vector_store"
-	"itsm-backend/internal/vectorstore"
 	"itsm-backend/internal/services"
+	"itsm-backend/internal/vectorstore"
 )
 
 // 向量/嵌入共享基础设施归位专项回归锁（2026-11-11）。

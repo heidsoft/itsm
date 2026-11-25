@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/handlers/ai"
-	"go.uber.org/zap"
 )
 
 // 调查编排（POST /ai/tickets/:id/investigate）的评测层。

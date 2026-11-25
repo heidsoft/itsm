@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"itsm-backend/ent/enttest"
-	repoTicket "itsm-backend/repository/ticket"
 	"itsm-backend/internal/services"
+	repoTicket "itsm-backend/repository/ticket"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"

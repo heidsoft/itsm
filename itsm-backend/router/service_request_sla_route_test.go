@@ -16,8 +16,8 @@ import (
 	cmdbHandler "itsm-backend/handlers/cmdb"
 	scHandler "itsm-backend/handlers/service_catalog"
 	srHandler "itsm-backend/handlers/service_request"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 	"itsm-backend/service/sla"
 
 	"github.com/gin-gonic/gin"

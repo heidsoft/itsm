@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: ghcr.io/heidsoft/itsm-backend:1.6.9
+          image: ghcr.io/heidsoft/itsm-backend:1.6.60
           envFrom:
             - configMapRef: { name: itsm-config }
             - secretRef: { name: itsm-secrets }

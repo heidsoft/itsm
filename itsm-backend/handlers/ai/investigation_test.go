@@ -113,7 +113,9 @@ func (s *investigationToolsStub) GetTool(name string) *dto.ToolDefinition {
 
 func (s *investigationToolsStub) ListTools() []dto.ToolDefinition { return nil }
 
-func (s *investigationToolsStub) ListToolsForTenant(_ context.Context, _ int) []dto.ToolDefinition { return nil }
+func (s *investigationToolsStub) ListToolsForTenant(_ context.Context, _ int) []dto.ToolDefinition {
+	return nil
+}
 
 // investigationTriageStub 固定分诊结论。
 type investigationTriageStub struct {
@@ -446,9 +448,9 @@ func TestInvestigateTicket_Handler_CamelCaseContract(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
 
 	var body struct {
-		Code    int             `json:"code"`
-		Message string          `json:"message"`
-		Data    map[string]any  `json:"data"`
+		Code    int            `json:"code"`
+		Message string         `json:"message"`
+		Data    map[string]any `json:"data"`
 	}
 	require.NoError(t, mustUnmarshal(w.Body.Bytes(), &body))
 	require.Zero(t, body.Code, body.Message)

@@ -33,7 +33,8 @@ func cmdbDownloadFixture(t *testing.T) (*ent.Client, *CMDBImportExportService, c
 }
 
 func cmdbDownloadTask(t *testing.T, svc *CMDBImportExportService, client *ent.Client, ctx context.Context,
-	taskID string, tenantID, operatorID int, mutate func(*ent.CMDBExportTaskCreate)) string {
+	taskID string, tenantID, operatorID int, mutate func(*ent.CMDBExportTaskCreate),
+) string {
 	t.Helper()
 	path, _, err := svc.generateCSVExport(nil, []string{"id", "name"}, tenantID, taskID)
 	require.NoError(t, err)

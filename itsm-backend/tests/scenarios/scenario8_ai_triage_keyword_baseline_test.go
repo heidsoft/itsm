@@ -9,16 +9,17 @@ import (
 	"itsm-backend/internal/services"
 )
 
-// Scenario 8: AI 分诊准确率 + RAG 命中基线
+// Scenario 8: AI 关键词分诊启发式基线
 //
 // 覆盖：
 //   - 关键词分诊覆盖全部 8 个分类（database/network/server/application/security/storage/user_access/general）
 //   - 优先级升级：安全关键词 → critical，宕机/不可用 → high
 //   - 置信度归一化：越界值回落到 0.6
 //   - 无 LLM 时降级到关键词启发式
-//   - RAG 关键词搜索基本命中（标题匹配得分高于内容匹配）
+//
+// RAG 命中/召回质量不在本场景覆盖，见 AI 域 Pilot 承诺与 cmd/ai-eval 人工验收。
 
-func TestScenario8_AITriageRAGBaseline(t *testing.T) {
+func TestScenario8_AITriageKeywordBaseline(t *testing.T) {
 	logger := zap.NewNop()
 	svc := service.NewTriageService(nil, logger)
 	ctx := context.Background()
@@ -94,10 +95,13 @@ func TestScenario8_AITriageRAGBaseline(t *testing.T) {
 		}
 	})
 
-	t.Run("default assignee is set by category", func(t *testing.T) {
+	t.Run("no hardcoded assignee injection without a real source", func(t *testing.T) {
+		// 7804845bc 的产品决策：无 guidance/LLM 来源时 AssigneeID 保持 0 =
+		// 「无建议」；旧 defaultAssignees 硬编码（database→某固定 ID）是伪造
+		// 的跨租户错误数据。本断言锁「不注入」，防止硬编码回潮。
 		result := svc.Suggest(ctx, "MySQL 慢查询", "数据库连接池问题")
-		if result.AssigneeID == 0 {
-			t.Fatal("database 分类应设置默认 assignee")
+		if result.AssigneeID != 0 {
+			t.Fatalf("无来源时不应注入 assignee，实际 AssigneeID=%d（硬编码兜底回潮？）", result.AssigneeID)
 		}
 	})
 

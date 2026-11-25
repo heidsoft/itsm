@@ -4,10 +4,23 @@ on:
   pull_request:
     paths:
       - 'README.md'
+      - 'README.en.md'
+      - 'ROADMAP.md'
+      - 'UPGRADE.md'
       - 'docs/**'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - '.markdownlint.json'
+      - '.env.prod.example'
+      - 'itsm-backend/go.mod'
+      - 'itsm-backend/main.go'
+      - 'itsm-backend/router/**'
+      - 'itsm-backend/handlers/mcp/**'
+      - 'itsm-frontend/package.json'
+      - 'deploy/k8s/**'
+      - 'scripts/check-version-consistency.js'
+      - 'scripts/__tests__/version-consistency.test.js'
+      - 'scripts/version-drift-baseline.json'
       - '.github/workflows/docs.yml'
       - '.github/workflows/docs-gate.yml'
       - 'scripts/docs-gate/**'
@@ -15,9 +28,22 @@ on:
     branches: [main]
     paths:
       - 'README.md'
+      - 'README.en.md'
+      - 'ROADMAP.md'
+      - 'UPGRADE.md'
       - 'docs/**'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
+      - '.env.prod.example'
+      - 'itsm-backend/go.mod'
+      - 'itsm-backend/main.go'
+      - 'itsm-backend/router/**'
+      - 'itsm-backend/handlers/mcp/**'
+      - 'itsm-frontend/package.json'
+      - 'deploy/k8s/**'
+      - 'scripts/check-version-consistency.js'
+      - 'scripts/__tests__/version-consistency.test.js'
+      - 'scripts/version-drift-baseline.json'
       - '.github/workflows/docs.yml'
       - '.github/workflows/docs-gate.yml'
       - 'scripts/docs-gate/**'
@@ -60,6 +86,25 @@ jobs:
     uses: ./.github/workflows/docs-gate.yml
     with:
       strict: false
+
+  version-truth:
+    name: Version Truth
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve canonical version from git tag
+        id: version
+        run: echo "value=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+      - name: Check all version surfaces
+        run: node scripts/check-version-consistency.js --canonical="${{ steps.version.outputs.value }}" --strict
+      - name: Run version guard tests
+        run: node --test scripts/__tests__/version-consistency.test.js
 
   deploy:
     name: Deploy GitHub Pages

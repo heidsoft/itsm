@@ -53,6 +53,6 @@ func TestAuditWriters_PreserveRequestIDAfterCancellation(t *testing.T) {
 
 func TestAuditWriters_NilClient(t *testing.T) {
 	// 无后端时必须在读取 ctx 前早退。
-	require.NotPanics(t, func() { RecordLoginAudit(nil, nil, 0, 0, "", "", "") })
-	require.NotPanics(t, func() { RecordSelfServiceAudit(nil, nil, SelfServiceAuditEvent{}) })
+	require.NotPanics(t, func() { RecordLoginAudit(context.Background(), nil, 0, 0, "", "", "") })
+	require.NotPanics(t, func() { RecordSelfServiceAudit(context.Background(), nil, SelfServiceAuditEvent{}) })
 }

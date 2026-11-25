@@ -243,7 +243,9 @@ export interface BpmnVersionChange {
 
 /**
  * 对应后端 service.VersionComparison。
- * compatibility 取值：identical / compatible / risky / incompatible。
+ * compatibility 取值：identical / compatible / risky / incompatible / unknown。
+ * unknown = 后端比对未能覆盖全部结构面（如仅内容差异或 XML 解析失败），
+ * 只声明「未分析」而不推断兼容；页面按未知提示渲染，不当作兼容。
  */
 export interface BpmnVersionComparison {
   baseVersion: BpmnProcessVersion | null;

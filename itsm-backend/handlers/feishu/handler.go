@@ -289,6 +289,35 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 		return
 	}
 
+	if msg.Type == "im.message.receive_v1" {
+		if h.syncService == nil {
+			common.Fail(ctx, common.ServiceUnavailableCode, "Feishu inbound is unavailable")
+			return
+		}
+		resp, err := h.syncService.CreateTicketFromInboundMessage(ctx.Request.Context(), tenantID, fc, msg)
+		if err != nil {
+			// 处理失败必须释放去重行，否则飞书重投会被判重复而永久丢失该消息。
+			h.forgetWebhookEvent(ctx.Request.Context(), tenantID, headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"])
+			switch {
+			case errors.Is(err, errInboundRequesterForbidden):
+				common.Fail(ctx, common.ForbiddenCode, "Feishu sender is not authorized")
+			case errors.Is(err, errInboundDuplicate):
+				common.Conflict(ctx, "Message already processed", nil)
+			case errors.Is(err, errInboundUnconfigured):
+				common.Fail(ctx, common.ServiceUnavailableCode, "Feishu inbound is not configured")
+			case errors.Is(err, errInboundInvalidPayload):
+				common.Fail(ctx, common.ParamErrorCode, "Empty message text")
+			default:
+				h.logger.Errorw("Failed to create ticket from Feishu message", "tenant_id", tenantID, "err", err)
+				common.FailWithErr(ctx, err, "Failed to create ticket from message")
+			}
+			return
+		}
+		h.markWebhookProcessed(ctx.Request.Context(), tenantID, headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"], "ok")
+		common.Success(ctx, resp)
+		return
+	}
+
 	if msg.Type == "task_event" {
 		eventType := msg.Content
 		taskData, ok := msg.Extras["task_data"].(map[string]interface{})

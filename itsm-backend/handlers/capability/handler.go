@@ -14,7 +14,7 @@ import (
 // 成熟度、README/商业契约口径、pilotReason 与对应回归证据。它不是发布版本，
 // 也不代表全部能力已验收；但不得早于 CHANGELOG 最新发布版本，发版未复核矩阵
 // 会让 TestAcceptanceVersionIsNotBehindLatestRelease 失败。
-const acceptanceVersion = "2026.11.08"
+const acceptanceVersion = "2026.11.25"
 
 type Maturity string
 

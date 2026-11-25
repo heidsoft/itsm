@@ -87,8 +87,10 @@ type TimerStore interface {
 
 // 两个值类型已下沉到 dto 包；别名是同一类型而非新定义，
 // 保证 TimerStore.List/Stats 的方法签名与 handlers/timer 域内契约完全一致。
-type TimerListFilter = dto.TimerListFilter
-type TimerStats = dto.TimerStats
+type (
+	TimerListFilter = dto.TimerListFilter
+	TimerStats      = dto.TimerStats
+)
 
 type DBTimerStore struct {
 	client *ent.Client
