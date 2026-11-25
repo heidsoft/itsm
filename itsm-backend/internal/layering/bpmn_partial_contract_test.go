@@ -389,7 +389,7 @@ func TestBPMNDomainConfigValuesComeFromDTO(t *testing.T) {
 	svcFlat := squashSpace(stripLineComments(string(svc)))
 	for _, decl := range []string{
 		"var ErrConfigNotFound = dto.ErrConfigNotFound",
-		"type ResolvedConfig = dto.ResolvedConfig",
+		"ResolvedConfig = dto.ResolvedConfig",
 	} {
 		if !strings.Contains(svcFlat, squashSpace(decl)) {
 			t.Errorf("internal/services/config_inheritance_service.go 丢失别名 %q", decl)
@@ -600,9 +600,9 @@ func TestBPMNEngineDTOsHaveSingleSource(t *testing.T) {
 	eng := readEngineServiceFile(t, "bpmn_process_engine.go")
 	engFlat := squashSpace(stripLineComments(eng))
 	for _, decl := range []string{
-		"type ProcessDefinitionService = dto.ProcessDefinitionCatalog",
-		"type ProcessInstanceService = dto.ProcessInstanceCatalog",
-		"type TaskService = dto.TaskCatalog",
+		"ProcessDefinitionService = dto.ProcessDefinitionCatalog",
+		"ProcessInstanceService = dto.ProcessInstanceCatalog",
+		"TaskService = dto.TaskCatalog",
 	} {
 		if !strings.Contains(engFlat, squashSpace(decl)) {
 			t.Errorf("internal/services/bpmn_process_engine.go 丢失接口别名 %q", decl)

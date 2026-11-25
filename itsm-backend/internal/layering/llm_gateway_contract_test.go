@@ -116,12 +116,12 @@ func TestLLMValueTypesShareOneDefinition(t *testing.T) {
 
 	// 逐处比对，不取并集：任何一条别名被改回独立定义都要变红。
 	aliasDecls := []struct{ file, decl string }{
-		{"llm_gateway.go", "type LLMTool = dto.LLMTool"},
-		{"llm_gateway.go", "type LLMToolCall = dto.LLMToolCall"},
-		{"llm_gateway.go", "type LLMMessage = dto.LLMMessage"},
-		{"llm_gateway.go", "type RateLimitError = dto.RateLimitError"},
-		{"llm_gateway.go", "type LLMGatewayPort = dto.LLMGatewayPort"},
-		{"incident_service.go", "type EmailIncidentCommand = dto.EmailIncidentCommand"},
+		{"llm_gateway.go", "LLMTool = dto.LLMTool"},
+		{"llm_gateway.go", "LLMToolCall = dto.LLMToolCall"},
+		{"llm_gateway.go", "LLMMessage = dto.LLMMessage"},
+		{"llm_gateway.go", "RateLimitError = dto.RateLimitError"},
+		{"llm_gateway.go", "LLMGatewayPort = dto.LLMGatewayPort"},
+		{"incident_service.go", "EmailIncidentCommand = dto.EmailIncidentCommand"},
 	}
 	byFile := map[string]string{
 		"llm_gateway.go":      gatewaySrc,

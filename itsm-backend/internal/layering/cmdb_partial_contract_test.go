@@ -266,7 +266,7 @@ func TestCMDBTimerPureFunctionsAreSingleSource(t *testing.T) {
 		}
 	}
 	store := readServiceFile(t, "timer_store.go")
-	if !strings.Contains(squashSpace(stripLineComments(store)), squashSpace("type ExpressionType = dto.ExpressionType")) {
+	if !strings.Contains(squashSpace(stripLineComments(store)), squashSpace("ExpressionType = dto.ExpressionType")) {
 		t.Error("internal/services/timer_store.go 的 ExpressionType 别名丢失")
 	}
 
@@ -439,8 +439,8 @@ func TestCMDBContractDTOAndOperatorIdentity(t *testing.T) {
 
 	// service 侧必须是别名/薄委托，而不是重新定义 struct 或第二份 context key。
 	guards := []struct{ file, decl string }{
-		{"configuration_item_service.go", "type LifecycleChangeParams = dto.LifecycleChangeParams"},
-		{"tool_registry.go", "type ToolDefinition = dto.ToolDefinition"},
+		{"configuration_item_service.go", "LifecycleChangeParams = dto.LifecycleChangeParams"},
+		{"tool_registry.go", "ToolDefinition = dto.ToolDefinition"},
 		{"ci_relationship_service.go", "var ErrInvalidRelationshipType = dto.ErrInvalidRelationshipType"},
 		{"operator_context.go", "const SystemOperatorID = dto.SystemOperatorID"},
 		{"operator_context.go", "return dto.WithOperator(ctx, operatorID, operatorName)"},

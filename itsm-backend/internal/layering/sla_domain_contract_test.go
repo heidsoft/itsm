@@ -54,11 +54,14 @@ func readSLARepoFile(t *testing.T, parts ...string) string {
 	return string(body)
 }
 
-// slaHasLine 逐行精确锚定声明：不用 squashSpace 全文模糊匹配，
+// slaHasLine 逐行锚定声明：仍是「整行相等」而非 squashSpace 全文模糊匹配，
 // 否则同名的 setter 参数/注释会形成假绿通道（2026-11-11 escalation R2 教训）。
+// 行内空白先折叠再比：gofumpt v0.7.0 会把连续 type 声明合并进 type (...) 块
+// 并对齐 =，行首 tab 与对齐空格差异不应让锚定失效。
 func slaHasLine(src, decl string) bool {
+	want := squashSpace(decl)
 	for _, line := range strings.Split(src, "\n") {
-		if strings.TrimSpace(line) == strings.TrimSpace(decl) {
+		if squashSpace(line) == want {
 			return true
 		}
 	}
@@ -89,10 +92,10 @@ func TestSLAPredictionImplementationIsDomainOwned(t *testing.T) {
 	for _, decl := range []string{
 		"gateway dto.LLMGatewayPort",
 		"func NewSLAForecastSkill(client *ent.Client, gateway dto.LLMGatewayPort, logger *zap.SugaredLogger) *SLAForecastSkill {",
-		"type ForecastInput = dto.ForecastInput",
-		"type PredictionPoint = dto.PredictionPoint",
-		"type ForecastOutput = dto.ForecastOutput",
-		"type ForecastData = dto.ForecastData",
+		"ForecastInput = dto.ForecastInput",
+		"PredictionPoint = dto.PredictionPoint",
+		"ForecastOutput = dto.ForecastOutput",
+		"ForecastData = dto.ForecastData",
 		"Where(ticketrepo.DataScopePredicates(datascope.ViewerTicketScope(input.Viewer.ScopeAll, input.Viewer.Role), input.Viewer.UserID)...).",
 		"Limit(datascope.MaxReportTickets + 1).",
 		"if len(tickets) > datascope.MaxReportTickets {",

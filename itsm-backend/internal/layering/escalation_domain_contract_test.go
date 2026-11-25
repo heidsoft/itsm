@@ -79,8 +79,8 @@ func TestEscalationDomainImplementationIsDomainOwned(t *testing.T) {
 
 	matrix := squashSpace(readEscalationRepoFile(t, "handlers", "escalation_matrix", "escalation_matrix.go"))
 	for _, decl := range []string{
-		"type EscalationLevel = dto.EscalationLevel",
-		"type EscalationMatrix = dto.EscalationMatrix",
+		"EscalationLevel = dto.EscalationLevel",
+		"EscalationMatrix = dto.EscalationMatrix",
 		"func NewEscalationMatrixServiceWithStore(logger *zap.SugaredLogger, store EscalationMatrixStore) *EscalationMatrixService",
 	} {
 		if !strings.Contains(matrix, squashSpace(decl)) {

@@ -188,7 +188,7 @@ func TestProblemContractsAndBridgeWiring(t *testing.T) {
 	// 值类型只有一份定义：共享层别名 + reflect.Type 身份 + JSON 形状。
 	slaSvc := readRepoFile(t, "internal", "services", "ticket_sla_service.go")
 	if !strings.Contains(squashSpace(stripLineComments(slaSvc)),
-		squashSpace("type SLADeadlineResult = dto.SLADeadlineResult")) {
+		squashSpace("SLADeadlineResult = dto.SLADeadlineResult")) {
 		t.Errorf("internal/services/ticket_sla_service.go 丢失 SLADeadlineResult 别名")
 	}
 	if reflect.TypeOf(service.SLADeadlineResult{}) != reflect.TypeOf(dto.SLADeadlineResult{}) {

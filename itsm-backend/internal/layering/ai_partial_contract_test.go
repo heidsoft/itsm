@@ -165,19 +165,19 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 
 	// 逐处别名源码守卫（不取并集）。
 	aliasDecls := []struct{ file, decl string }{
-		{"ai_evaluator.go", "type AIEvaluationReport = dto.AIEvaluationReport"},
-		{"ai_evaluator.go", "type AIScenarioEval = dto.AIScenarioEval"},
-		{"ai_evaluator.go", "type AISkillEval = dto.AISkillEval"},
-		{"ai_evaluator.go", "type AICalibrationBucket = dto.AICalibrationBucket"},
-		{"ai_evaluator.go", "type LLMPlatformStats = dto.LLMPlatformStats"},
-		{"ai_evaluator.go", "type AIAuditEntry = dto.AIAuditEntry"},
+		{"ai_evaluator.go", "AIEvaluationReport = dto.AIEvaluationReport"},
+		{"ai_evaluator.go", "AIScenarioEval = dto.AIScenarioEval"},
+		{"ai_evaluator.go", "AISkillEval = dto.AISkillEval"},
+		{"ai_evaluator.go", "AICalibrationBucket = dto.AICalibrationBucket"},
+		{"ai_evaluator.go", "LLMPlatformStats = dto.LLMPlatformStats"},
+		{"ai_evaluator.go", "AIAuditEntry = dto.AIAuditEntry"},
 		{"root_cause_service.go", "var ErrAIAnalysisUnavailable = dto.ErrAIAnalysisUnavailable"},
 		{"ai_telemetry_repository.go", "var ErrFeedbackNotFound = dto.ErrFeedbackNotFound"},
-		{"triage_service.go", "type TriageResult = dto.TriageResult"},
-		{"ai_telemetry.go", "type AIMetrics = dto.AIMetrics"},
-		{"ai_quota.go", "type QuotaUsage = dto.QuotaUsage"},
-		{"ai_quota.go", "type CostEstimate = dto.CostEstimate"},
-		{"summarize_service.go", "type SummaryWithMetadata = dto.SummaryWithMetadata"},
+		{"triage_service.go", "TriageResult = dto.TriageResult"},
+		{"ai_telemetry.go", "AIMetrics = dto.AIMetrics"},
+		{"ai_quota.go", "QuotaUsage = dto.QuotaUsage"},
+		{"ai_quota.go", "CostEstimate = dto.CostEstimate"},
+		{"summarize_service.go", "SummaryWithMetadata = dto.SummaryWithMetadata"},
 	}
 	cache := map[string]string{}
 	for _, a := range aliasDecls {

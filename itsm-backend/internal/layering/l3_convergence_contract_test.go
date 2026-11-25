@@ -126,10 +126,10 @@ func TestApprovalChainValueTypesAreDTOAliases(t *testing.T) {
 	}
 	// service 侧必须是别名声明（逐处比对，不取并集）。
 	for _, a := range []struct{ file, decl string }{
-		{"approval_chain_evaluation.go", "type ApprovalEvalContext = dto.ApprovalEvalContext"},
-		{"approval_chain_evaluation.go", "type ApprovalLevelEval = dto.ApprovalLevelEval"},
-		{"approval_chain_evaluation.go", "type ApprovalChainEvaluation = dto.ApprovalChainEvaluation"},
-		{"approval_chain_shadow.go", "type ShadowResult = dto.ShadowResult"},
+		{"approval_chain_evaluation.go", "ApprovalEvalContext = dto.ApprovalEvalContext"},
+		{"approval_chain_evaluation.go", "ApprovalLevelEval = dto.ApprovalLevelEval"},
+		{"approval_chain_evaluation.go", "ApprovalChainEvaluation = dto.ApprovalChainEvaluation"},
+		{"approval_chain_shadow.go", "ShadowResult = dto.ShadowResult"},
 	} {
 		src := readL3RepoFile(t, "internal", "services", a.file)
 		if !strings.Contains(squashSpace(src), squashSpace(a.decl)) {

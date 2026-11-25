@@ -143,9 +143,9 @@ func TestSkillValueTypesAreDTOAliases(t *testing.T) {
 
 	// 逐处别名源码守卫（实现已迁 handlers/skill/registry.go）。
 	for _, a := range []struct{ file, decl string }{
-		{"registry.go", "type Skill = dto.Skill"},
-		{"registry.go", "type SkillEntry = dto.SkillEntry"},
-		{"registry.go", "type SkillInvokeResult = dto.SkillInvokeResult"},
+		{"registry.go", "Skill = dto.Skill"},
+		{"registry.go", "SkillEntry = dto.SkillEntry"},
+		{"registry.go", "SkillInvokeResult = dto.SkillInvokeResult"},
 		{"registry.go", "var ErrSkillAlreadyRegistered = dto.ErrSkillAlreadyRegistered"},
 		{"registry.go", "var ErrSkillNotFound = dto.ErrSkillNotFound"},
 		{"registry.go", "var ErrSkillValidation = dto.ErrSkillValidation"},
