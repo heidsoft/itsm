@@ -5,7 +5,6 @@ import Script from 'next/script';
 import './globals.css';
 import { AntdProvider } from '@/lib/providers/AntdProvider';
 import { ThemeProvider, ThemeConfig, useTheme } from '@/lib/design-system/theme';
-import { RecentVisitTracker } from '@/components/layout/RecentVisitTracker';
 import { ThemeHtmlClassSync } from '@/components/layout/ThemeHtmlClassSync';
 import { DayjsLocaleSync } from '@/components/layout/DayjsLocaleSync';
 import { HtmlLangSync } from '@/components/layout/HtmlLangSync';
@@ -100,7 +99,6 @@ export default function RootLayout({
         }}
       >
         <ThemeProvider>
-          <RecentVisitTracker />
           <ThemeHtmlClassSync />
           <DayjsLocaleSync />
           <HtmlLangSync />

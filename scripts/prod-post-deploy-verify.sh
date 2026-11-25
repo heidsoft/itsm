@@ -20,6 +20,8 @@
 #   ADMIN_USERNAME 登录用户（默认 admin）
 #   ADMIN_PASSWORD 默认从 <repo>/.env.prod 读取；也可显式传入
 #   ENV_FILE       env 文件路径（默认 <repo>/.env.prod）
+#   POSTGRES_CONTAINER 死信计数查询的 postgres 容器名（默认 itsm-postgres-prod）；
+#                  隔离验收栈须显式传入，如 POSTGRES_CONTAINER=itsm-qa-postgres
 #   FLOW_SCENARIO  --full 时运行的 itsm-cli 业务旅程（默认 ticket-lifecycle）
 
 set -euo pipefail
@@ -33,6 +35,7 @@ BASE_URL="${BASE_URL:-http://localhost}"
 ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
 ENV_FILE="${ENV_FILE:-${REPO_ROOT}/.env.prod}"
 FLOW_SCENARIO="${FLOW_SCENARIO:-ticket-lifecycle}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-itsm-postgres-prod}"
 RUN_FULL=false
 SKIP_VERSION=false
 for a in "$@"; do
@@ -116,7 +119,7 @@ fi
 DB_USER="$(grep -E '^DB_USER=' "$ENV_FILE" | head -1 | cut -d= -f2 | tr -d '[:space:]' 2>/dev/null || true)"
 DB_NAME="$(grep -E '^DB_NAME=' "$ENV_FILE" | head -1 | cut -d= -f2 | tr -d '[:space:]' 2>/dev/null || true)"
 if [ -n "$DB_USER" ] && [ -n "$DB_NAME" ]; then
-  DL_COUNT=$(docker exec itsm-postgres-prod psql -U "$DB_USER" -d "$DB_NAME" -t -A -c \
+  DL_COUNT=$(docker exec "$POSTGRES_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -t -A -c \
     "SELECT count(*) FROM operational_commands WHERE status='dead_letter';" 2>/dev/null || echo "?")
   if [ "$DL_COUNT" != "?" ]; then
     echo "[INFO] dead-letter stock: $DL_COUNT (threshold/处置见 scripts/prod-dead-letter-check.sh + /admin/operations)"

@@ -15,6 +15,7 @@ import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { AuthService } from '@/lib/services/auth-service';
 import { refreshSession } from '@/lib/api/session-api';
 import { useTheme } from '@/lib/design-system/theme';
+import { RecentVisitTracker } from '@/components/layout/RecentVisitTracker';
 
 const { Content } = Layout;
 
@@ -234,6 +235,12 @@ export default function MainLayout({
       isMobile={isMobile}
       handleContentClick={handleContentClick}
     >
+      {/* RecentVisitTracker 调用 useUserMenusQuery()（内部 useQuery），必须满足两点：
+          1) 位于根布局 QueryProvider 子树内，否则 SSG 预渲染无 QueryClient context → 构建崩溃（QA-001）；
+          2) 只在认证后的主布局渲染，未登录页面（登录页等）不得拉用户菜单，否则
+             auth/menus 401 → http-client 401 拦截器续签 → 无 refresh cookie → 400（QA-004）。
+          全局根布局不满足 2)，故挂载点收敛到此处。 */}
+      <RecentVisitTracker />
       <AdminRouteGuard>
         <PageTransition>{children}</PageTransition>
       </AdminRouteGuard>
