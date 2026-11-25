@@ -1094,6 +1094,19 @@ func NewApplication() *Application {
 	// 权限管理 API 的写入与 AI 执行链的读取必须用同一个实例，否则策略改完只清掉一方缓存。
 	authz.ConfigureShared(client)
 
+	// 启动期权限目录自检（codex 审计 P2-6）：ValidateBootstrap 此前只有定义、
+	// 没有生产调用点，DB 缺码/三元组错误只能运行期暴露。
+	// 默认 strict（用户拍板：全部立即 strict）；空库/未初始化租户自动跳过，
+	// 避免打断「先迁移再播种」的全新安装链。
+	authzValidationMode := ResolveAuthzStartupValidationMode(os.Getenv("ITSM_AUTHZ_BOOTSTRAP_VALIDATION"))
+	if err := ValidateAuthzCatalogAtStartup(context.Background(), client, authz.Shared(), authzValidationMode); err != nil {
+		if _, isDiag := err.(*AuthzStartupDiagnostic); isDiag {
+			sugar.Warnw("authz bootstrap catalog diagnostic (report mode, startup continues)", "detail", err.Error())
+		} else {
+			sugar.Fatalw("Unsafe permission catalog; refusing to start", "detail", err.Error())
+		}
+	}
+
 	// AI Domain
 	aiRepo := ai.NewEntRepository(client)
 	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, analyticsService, predictionService, slaForecastSkill, triageService, rootCauseService, aiTelemetryService)
