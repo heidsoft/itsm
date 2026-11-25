@@ -205,5 +205,5 @@ func (r *Registry) ValidateBootstrap(ctx context.Context, tenantID int) error { 
 
 - **问题（基准 `c3cbe9a3`）**：`internal/services/tool_registry.go` 的 `update_ticket` 分支调用 `UpdateTicket(..., 0, "")`，以「系统操作」为由显式跳过 `enforceTicketRowScope`。HTTP 更新走同一服务时强制当前用户为请求人或处理人；AI/MCP 审批通过后的 durable command 却可改写同租户任意工单。Gate 2 只要求 `ticket:write`，该码由 `end_user` 等普通角色持有，因此是租户内跨记录写入，不是跨租户提权。
 - **修复**：工具写路径与读面共用 `datascope.ActorFromContext(ctx, tenantID)`；actor 由服务器在鉴权后写入 context，模型参数无法伪造；缺失或租户不匹配时 fail-closed，并把 `actor.UserID` / `actor.Role` 传入 `TicketService.UpdateTicket`。管理员角色仍保留租户全量写入语义；未修改权限码目录、DB schema、迁移或部署策略。
-- **回归证据**：新增 `internal/services/tool_registry_update_ticket_scope_test.go::TestUpdateTicketToolEnforcesTrustedActorRowScope`，覆盖非属主拒绝（且 DB 未变更）、属主允许、缺失 actor 拒绝、异租户 actor 拒绝、管理员全量允许。先回退修复运行为红（exit 1），恢复修复运行为绿（exit 0）。
+- **回归证据**：在既有 `internal/services/tool_registry_write_tools_test.go` 中补充 `TestUpdateTicketToolEnforcesTrustedActorRowScope`，覆盖非属主拒绝（且 DB 未变更）、属主允许、缺失 actor 拒绝、异租户 actor 拒绝、管理员全量允许。先回退修复运行为红（exit 1），恢复修复运行为绿（exit 0）。测试放入既有文件而非新增顶层文件，避免抬高 docs-gate C.6.4 的 shared-services 表面基线。
 - **剩余边界（不在本次范围）**：`get_ci` / `get_ci_tickets` 等同族只读工具仍未应用 CI 行级范围（P1-1 残留面）；service 主体 `userID=0` 仍按既有系统语义跳过行级校验，属既定设计边界，改变它需要产品拍板。
