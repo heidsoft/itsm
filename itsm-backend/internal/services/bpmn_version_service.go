@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -162,11 +164,14 @@ func (s *BPMNVersionService) ListVersions(ctx context.Context, processKey string
 			processdefinition.Key(processKey),
 			processdefinition.TenantID(tenantID),
 		).
-		Order(ent.Desc(processdefinition.FieldVersion)).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义列表失败: %w", err)
 	}
+
+	// version 是字符串列：SQL 字符串 DESC 会把 "9" 排在 "10" 前（codex 审计 P2-07），
+	// 统一在 Go 侧按分段数值感知降序排列，与 getCurrentVersion 共用同一规则。
+	sortProcessDefinitionsByVersionDesc(processDefs)
 
 	var versions []*ProcessVersion
 	for _, processDef := range processDefs {
@@ -340,11 +345,11 @@ func (s *BPMNVersionService) CompareVersions(ctx context.Context, processKey str
 		return nil, fmt.Errorf("获取目标版本失败: %w", err)
 	}
 
-	// 比较BPMN XML内容
-	changes, breakingChanges := s.compareBPMNXML(baseProcessDef.BPMNXML, targetProcessDef.BPMNXML)
+	// 比较BPMN XML内容（analyzed 标记差异是否被结构分析覆盖）
+	changes, breakingChanges, analyzed := s.compareBPMNXML(baseProcessDef.BPMNXML, targetProcessDef.BPMNXML)
 
-	// 评估兼容性
-	compatibility := s.assessCompatibility(changes, breakingChanges)
+	// 评估兼容性：未分析的差异只能给 unknown，不能推成 compatible（P2-07）
+	compatibility := s.assessCompatibility(changes, breakingChanges, analyzed)
 
 	return &VersionComparison{
 		BaseVersion:     baseProcessDef,
@@ -361,20 +366,78 @@ func ParseVersionNumber(versionStr string) (int, error) {
 	return dto.ParseVersionNumber(versionStr)
 }
 
-// getCurrentVersion 获取当前最高版本号
+// getCurrentVersion 获取当前最高版本号。
+// 与 ListVersions 共用同一套数值感知排序（codex 审计 P2-07）：字符串列 DESC 会让
+// "9" 被当成最高版本，CreateVersion 据此 +1 会撞出重复版本号；不可解析的行跳过，
+// 与 ListVersions 的 continue 口径一致，单条脏数据不再阻断版本生成。
 func (s *BPMNVersionService) getCurrentVersion(ctx context.Context, processKey string, tenantID int) (int, error) {
-	processDef, err := s.client.ProcessDefinition.Query().
+	processDefs, err := s.client.ProcessDefinition.Query().
 		Where(
 			processdefinition.Key(processKey),
 			processdefinition.TenantID(tenantID),
 		).
-		Order(ent.Desc(processdefinition.FieldVersion)).
-		First(ctx)
+		All(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("获取流程定义失败: %w", err)
 	}
+	if len(processDefs) == 0 {
+		return 0, fmt.Errorf("获取流程定义失败: 流程定义不存在: key=%s tenant=%d", processKey, tenantID)
+	}
 
-	return ParseVersionNumber(processDef.Version)
+	sortProcessDefinitionsByVersionDesc(processDefs)
+	for _, processDef := range processDefs {
+		if versionNumber, err := ParseVersionNumber(processDef.Version); err == nil {
+			return versionNumber, nil
+		}
+		s.logger.Warnw("跳过无法解析的版本号", "key", processKey, "version", processDef.Version)
+	}
+	return 0, fmt.Errorf("获取流程定义失败: 版本号均不可解析: key=%s tenant=%d", processKey, tenantID)
+}
+
+// compareVersionStrings 分段数值感知比较两个版本字符串（-1/0/1）：每段双方都能
+// 解析为整数时按数值比（"9" < "10"、"1.9" < "1.10"），否则按字典序，段数不齐时
+// 缺段视为空串。字符串字典序会把 "9" 排在 "10" 前，版本列表与最高版本号计算
+// 必须走本比较器，禁止直接对 version 列做 SQL 排序。
+func compareVersionStrings(a, b string) int {
+	as := strings.Split(a, ".")
+	bs := strings.Split(b, ".")
+	for i := 0; i < len(as) || i < len(bs); i++ {
+		var av, bv string
+		if i < len(as) {
+			av = as[i]
+		}
+		if i < len(bs) {
+			bv = bs[i]
+		}
+		ai, aErr := strconv.Atoi(av)
+		bi, bErr := strconv.Atoi(bv)
+		if aErr == nil && bErr == nil {
+			if ai < bi {
+				return -1
+			}
+			if ai > bi {
+				return 1
+			}
+			continue
+		}
+		if av < bv {
+			return -1
+		}
+		if av > bv {
+			return 1
+		}
+	}
+	return 0
+}
+
+// sortProcessDefinitionsByVersionDesc 按版本号数值降序排列（分段数值感知，见
+// compareVersionStrings）。替代 ent 对 version 列的字符串 DESC——那会把 "9" 排在
+// "10" 前，导致最高版本号取错、新版本编号撞号。可解析行之间的相对顺序按主版本
+// 单调（parseable 行的段0 必为整数，即主版本），取首即可得数值最大版本。
+func sortProcessDefinitionsByVersionDesc(defs []*ent.ProcessDefinition) {
+	sort.SliceStable(defs, func(i, j int) bool {
+		return compareVersionStrings(defs[i].Version, defs[j].Version) > 0
+	})
 }
 
 // recordVersionChangeLog 记录版本变更日志
@@ -426,15 +489,19 @@ func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, process
 	return nil
 }
 
-// compareBPMNXML 比较BPMN XML内容
-func (s *BPMNVersionService) compareBPMNXML(baseXML, targetXML string) ([]ChangeDetail, []string) {
+// compareBPMNXML 比较BPMN XML内容。第三个返回值表示本函数是否已得出可据以下
+// 结论的判定：仅当字节全等（identical）或 userTask 数量对比确认了结构变更
+// （risky）时为 true；其余情况（内容有差异但只落了通用描述、或 XML 解析失败）
+// 为 false——网关/连线/事件等结构面都没有检查过，兼容性结论必须是 unknown，
+// 不能推成 compatible（codex 审计 P2-07）。
+func (s *BPMNVersionService) compareBPMNXML(baseXML, targetXML string) ([]ChangeDetail, []string, bool) {
 	// 简单比较：检查XML长度是否变化
 	baseLen := len(baseXML)
 	targetLen := len(targetXML)
 
 	if baseLen == targetLen && baseXML == targetXML {
-		// 完全相同
-		return []ChangeDetail{}, []string{}
+		// 完全相同：结论来自直接比对，属于已检查
+		return []ChangeDetail{}, []string{}, true
 	}
 
 	var changes []ChangeDetail
@@ -452,6 +519,10 @@ func (s *BPMNVersionService) compareBPMNXML(baseXML, targetXML string) ([]Change
 		Process Process `xml:"process"`
 	}
 
+	// analyzed：只有「结构变更已确认」（userTask 数量对比得出差异）才算得出判定；
+	// 两侧解析成功但数量相同只覆盖了 userTask 一个结构面，其余结构面未检查，
+	// 不能据此推 compatible。
+	analyzed := false
 	var baseDef Definitions
 	if err := xml.Unmarshal([]byte(baseXML), &baseDef); err == nil {
 		var targetDef Definitions
@@ -467,11 +538,13 @@ func (s *BPMNVersionService) compareBPMNXML(baseXML, targetXML string) ([]Change
 					Description: fmt.Sprintf("Task count changed from %d to %d", len(baseDef.Process.Tasks), len(targetDef.Process.Tasks)),
 					Impact:      "high",
 				})
+				analyzed = true
 			}
 		}
 	}
 
-	// 如果无法详细解析或没有发现特定差异但内容不同，添加通用变更记录
+	// 如果无法详细解析或没有发现特定差异但内容不同，添加通用变更记录。
+	// 通用记录不是分析结论（网关/连线/事件等结构面均未检查），analyzed 保持 false。
 	if len(changes) == 0 {
 		changeDetail := ChangeDetail{
 			ElementID:   "root",
@@ -485,17 +558,24 @@ func (s *BPMNVersionService) compareBPMNXML(baseXML, targetXML string) ([]Change
 		changes = append(changes, changeDetail)
 	}
 
-	return changes, []string{}
+	return changes, []string{}, analyzed
 }
 
-// assessCompatibility 评估兼容性
-func (s *BPMNVersionService) assessCompatibility(changes []ChangeDetail, breakingChanges []string) string {
+// assessCompatibility 评估兼容性。结论只覆盖已检查的差异类型：
+// breaking→incompatible、无差异→identical、已确认的结构变更（high/critical）→risky、
+// 已分析的低/中风险差异→compatible；差异存在但未被分析器覆盖（analyzed=false）时
+// 返回 unknown——「没查出问题」不等于「兼容」（codex 审计 P2-07）。
+func (s *BPMNVersionService) assessCompatibility(changes []ChangeDetail, breakingChanges []string, analyzed bool) string {
 	if len(breakingChanges) > 0 {
 		return "incompatible"
 	}
 
 	if len(changes) == 0 {
 		return "identical"
+	}
+
+	if !analyzed {
+		return "unknown"
 	}
 
 	// 检查是否有高风险变更
