@@ -2747,6 +2747,24 @@ minApprovals / isActive），不含 displayName / icon / color / i18nKey / sortO
 「一次 HTTP 请求」。空串 `runId` 表示该调用不属于任何可标识的运行轮次（如单发
 HTTP 工具调用）；`EnsureRunID` 在审计点会为这类调用兜底生成独立轮次。
 
+**主体显式化与读面字段（2026-11-25）**：`GET /api/v1/agent/tools/invocations`、
+`GET /api/v1/agent/tools/{id}` 与 `GET /api/v1/agent/runs/{runId}/invocations`
+的每条记录新增两个只读字段（由同一序列化函数产出，三个读面字段集合一致）：
+
+| 字段 | 取值 | 语义 |
+|:--|:--|:--|
+| `principal` | `human` / `agent` / `service`；信封不可解码时为 `""` | 该次调用的真实发起主体；审批复核与执行前重判均按此身份重载当前角色，不再从 `policyVersion` 推断 |
+| `identitySource` | `stored` / `inferred` / `unreadable` | `stored`=落库时写入服务端主体信封；`inferred`=无信封的历史记录按旧字段兼容推断；`unreadable`=信封损坏，保留原始 `arguments` 供排查，不猜测主体 |
+
+`arguments` 现在返回**剥离内部信封后的裸参数**（JSON 字符串），服务端信封不外泄；
+信封由服务端在落库时写入，模型传入的同名参数无法覆盖。旧的 `userID=0` 且主体
+还原失败的存量记录一律 fail-closed 拒绝执行，不会按 agent 猜测放行。
+
+同时，`list_tickets` / `list_cis` 工具读面已与工单/CMDB 页面统一：服务器在鉴权后
+将可信 actor 写入 context（不可由工具参数伪造），普通角色只看本人创建/受理的工单
+与本人持有或未归属的 CI；管理角色仍全租户可见，缺失或错租户 actor 拒绝执行。
+CI「`owner_id` 与 `department_id` 双空 = 租户公共资产」规则不变。
+
 **新增读面：`GET /api/v1/agent/runs/{runId}/invocations`**（权限 `ai:read`）
 
 按运行轮次取出该轮全部工具调用（含只读审计行），**时间正序**（证据链按

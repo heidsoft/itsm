@@ -3933,6 +3933,25 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 `owner_id` 回填只在迁移脚本里做。生产环境 `ITSM_AUTO_SEED=false` 时务必确认迁移已执行，
 否则 `owner_id` 列不存在会让所有 CI 查询报错。
 
+### 1.108 权限体系产品化修复：AI 工具行级范围、主体显式化与启动严格校验（2026-11-25，行为变更 + 迁移 + 新环境变量）
+
+六批修复来自 codex 权限审计的三条 P1 与三条 P2。**下列四项会改变用户可见行为，升级前必须确认**：
+
+**① AI / MCP 工具的工单与 CI 读取从此遵循登录者数据范围（安全修复）。**
+此前 `list_tickets` / `list_cis` 工具只按租户过滤，普通角色经 AI 助手或 MCP 通道能读到同租户他人的工单与已归属他人的 CI，而同一用户在工单/CMDB 页面只能看到本人范围。修复后工具读面与页面统一：普通角色只看本人创建/受理的工单、本人持有或未归属的 CI，管理角色仍全租户可见。**依赖 AI 工具读取他人数据的自动化流程会收窄**——请为其配置具备管理角色的服务账号，而不是给普通角色扩权。CI「owner_id 与 department_id 双空 = 租户公共资产」的既有产品规则不变；治理看板仍是全局质量视图。
+
+**② 审批列表 / 详情的工具调用响应新增 `principal`、`identitySource` 两个字段（纯新增）。**
+`principal` 为 `human` / `agent` / `service` 之一，标识这条调用的真实发起主体；`identitySource` 为 `stored`（新记录的服务端主体信封）/ `inferred`（无信封的存量记录按 policyVersion 兼容推断）/ `unreadable`（信封损坏，读面保留原始参数供排查）。`arguments` 字段现在返回**剥离内部信封后的裸参数**，不再暴露服务端存储格式。旧前端忽略新增字段照常工作。
+
+**③ 启动期权限目录严格校验，默认开启（可用性取舍）。**
+`internal/authz.Registry.ValidateBootstrap` 此前没有生产调用点，DB 缺码或 `code != resource:action` 只会在运行期以 403 暴露。现在服务启动时会逐租户校验权限目录；**默认 `strict`：任一已初始化租户的目录损坏或缺码即拒绝启动**（sugar.Fatalw）。空库（全新安装、迁移/播种尚未运行）自动跳过，不打断首装链。需要临时降级时设置 `ITSM_AUTHZ_BOOTSTRAP_VALIDATION=report`（只记 warning 继续启动），但这是过渡手段，不是推荐常态。回滚顺序：先把该变量设为 `report` 再降级镜像，避免新旧 worker 对 invocation 主体格式的理解分叉。
+
+**④ 新增 sysadmin MCP 授权补偿迁移（会补回主动撤权的关联）。**
+`20261118_mcp_read_permission.sql` 漏给 sysadmin 建 `mcp:read` 关联，存量 `ITSM_AUTO_SEED=false` 实例升级后 sysadmin 访问 MCP 得到 403（用 super_admin 验收发现不了，因其 `*:*` 直通）。新迁移 `20261125_reconcile_sysadmin_mcp_read.sql` 按租户幂等补齐所有 sysadmin 的该关联。**产品决策：全量自动补齐**——如果管理员此前主动撤销过某 sysadmin 的 `mcp:read`，本次会一并补回。该决策的对应回滚 `20261125_reconcile_sysadmin_mcp_read_down.sql` 会移除所有 sysadmin 的 `mcp:read` 关联（不改其它角色、不删权限码），升级前若有定制撤权请记录清单以便回滚后人工恢复。迁移测试在 sqlite 上以真实 SQL 字节验证补齐/幂等/跨租户/down 四态。
+
+**⑤ 身份新鲜度与主体持久化的内部语义变化（无 API 破坏）。**
+已批准的工具调用在执行前会重新加载发起人的当前账号状态与角色：降权、停用、删除、租户归属变更后不再按旧角色快照执行，审批人复核页也显示当前能否执行。工具调用的主体不再从 `policy_version` 或 `approval_state` 间接推断，而是由服务端在 `arguments` 中保存版本化信封（形如 `{"_itsmInvocation":{"version":1,"principal":"service"},"toolArguments":{...}}` 的内部布局，不对外暴露）。**多副本滚动升级期间请保持双读兼容**：新格式由新版本写入，旧版本 worker 不识别信封会拒绝执行；请先升级所有 worker/backend，再开启新写入。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
@@ -3978,6 +3997,10 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 - **`AI_SERVICE_AUTH_MODE`（可选，仅本地开发）**：设为 `disabled` 时 sidecar 显式降级为无鉴权（等价旧行为）。生产禁止使用；该降级态会在启动日志打 ERROR，并在 `/health` 的 `auth.serviceToken` 持续暴露为 `disabled`。其余任何取值（含未设置）均为鉴权开启。
 
 `AI_SERVICE_TOKEN` 生成建议：`openssl rand -hex 32`（它是共享密钥，不是 JWT，与 `ITSM_BACKEND_TOKEN` 不同）。两者都从 `.env.prod` 注入，不进镜像、不进 git。
+
+- **`ITSM_AUTHZ_BOOTSTRAP_VALIDATION`（可选，默认 `strict`）**：启动期权限目录校验模式。`strict`（默认，用户拍板「全部立即 strict」）在任一已初始化租户的目录缺码或三元组损坏时拒绝启动；`report` 只记 warning 继续启动，用于升级过渡或故障排查。未设置、空串、未知值一律按 `strict`（fail-closed）。空库自动跳过校验。⚠️ 这是**启动可用性取舍**：多租户共享进程下，一个目录损坏的租户会阻止整个实例启动；若不能接受该取舍，显式设为 `report` 并按日志修复目录。详见 §1.108③。
+
+主体信封的双读兼容在代码层实现（写入即信封、读取兼容无信封），**本版本没有引入相关部署开关**；滚动升级时请先升级所有 backend/worker，再让新写入生效（见 §1.108⑤）。
 
 ---
 
