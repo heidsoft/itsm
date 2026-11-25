@@ -62,10 +62,10 @@ func (ConfigurationItem) Fields() []ent.Field {
 		field.String("assigned_to").
 			Comment("分配给").
 			Optional(),
-	// 2026-11-19 行级权限改造：owned_by 自由文本 → owner_id 用户 FK。
-	// 保留 owned_by 不删（存量读兼容、列表展示），但它不再是权限判定依据；
-	// 写路径以 owner_id 为准，并把 owned_by 同步成该用户的显示名。
-	field.String("owned_by").
+		// 2026-11-19 行级权限改造：owned_by 自由文本 → owner_id 用户 FK。
+		// 保留 owned_by 不删（存量读兼容、列表展示），但它不再是权限判定依据；
+		// 写路径以 owner_id 为准，并把 owned_by 同步成该用户的显示名。
+		field.String("owned_by").
 			Comment("拥有者显示名（历史字段，仅展示；权限判定一律用 owner_id）").
 			Optional(),
 		field.Int("owner_id").

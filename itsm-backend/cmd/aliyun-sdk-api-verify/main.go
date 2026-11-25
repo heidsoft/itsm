@@ -256,8 +256,10 @@ func main() {
 	// 验证的是真正交付时会发出去的那份参数。
 	{
 		start := time.Now()
-		r := result{Group: "dry-run", API: "RunInstances(DryRun=true)", ElapsedMS: 0,
-			Note: "写 API 的参数/权限/配额校验链；不创建实例、不产生费用"}
+		r := result{
+			Group: "dry-run", API: "RunInstances(DryRun=true)", ElapsedMS: 0,
+			Note: "写 API 的参数/权限/配额校验链；不创建实例、不产生费用",
+		}
 		dryReq, buildErr := alicloud.BuildDryRunRequest(infracloud.ExecuteRequest{
 			TenantID:         1,
 			TaskID:           0,

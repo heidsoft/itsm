@@ -212,12 +212,18 @@ func TestComputeAttributeQuality_EmptySet(t *testing.T) {
 
 func TestDetectDuplicateGroups_CloudIdentity(t *testing.T) {
 	cis := []*ConfigurationItem{
-		{ID: 1, CINumber: "CI-1", LifecycleStatus: common.CILifecycleStatusOnline,
-			CloudProvider: "aliyun", CloudResourceID: "i-abc"},
-		{ID: 2, CINumber: "CI-2", LifecycleStatus: common.CILifecycleStatusOnline,
-			CloudProvider: "ALIYUN", CloudResourceID: " I-ABC "},
-		{ID: 3, CINumber: "CI-3", LifecycleStatus: common.CILifecycleStatusOnline,
-			CloudProvider: "aliyun", CloudResourceID: "i-other"},
+		{
+			ID: 1, CINumber: "CI-1", LifecycleStatus: common.CILifecycleStatusOnline,
+			CloudProvider: "aliyun", CloudResourceID: "i-abc",
+		},
+		{
+			ID: 2, CINumber: "CI-2", LifecycleStatus: common.CILifecycleStatusOnline,
+			CloudProvider: "ALIYUN", CloudResourceID: " I-ABC ",
+		},
+		{
+			ID: 3, CINumber: "CI-3", LifecycleStatus: common.CILifecycleStatusOnline,
+			CloudProvider: "aliyun", CloudResourceID: "i-other",
+		},
 	}
 	groups := DetectDuplicateGroups(cis)
 	if len(groups) != 1 {
@@ -260,10 +266,14 @@ func TestDetectDuplicateGroups_SerialPlusName(t *testing.T) {
 // 判重键优先级：有云身份就走云身份，不再按资产标签重复报一遍。
 func TestDetectDuplicateGroups_PriorityAvoidsDoubleCounting(t *testing.T) {
 	cis := []*ConfigurationItem{
-		{ID: 1, CINumber: "CI-1", LifecycleStatus: common.CILifecycleStatusOnline,
-			CloudProvider: "aliyun", CloudResourceID: "i-1", AssetTag: "T-9"},
-		{ID: 2, CINumber: "CI-2", LifecycleStatus: common.CILifecycleStatusOnline,
-			CloudProvider: "aliyun", CloudResourceID: "i-1", AssetTag: "T-9"},
+		{
+			ID: 1, CINumber: "CI-1", LifecycleStatus: common.CILifecycleStatusOnline,
+			CloudProvider: "aliyun", CloudResourceID: "i-1", AssetTag: "T-9",
+		},
+		{
+			ID: 2, CINumber: "CI-2", LifecycleStatus: common.CILifecycleStatusOnline,
+			CloudProvider: "aliyun", CloudResourceID: "i-1", AssetTag: "T-9",
+		},
 	}
 	groups := DetectDuplicateGroups(cis)
 	if len(groups) != 1 {

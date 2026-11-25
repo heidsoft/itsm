@@ -27,18 +27,18 @@ func TestValidateAWSRegion(t *testing.T) {
 
 	// 每条都是真实可造成 host 混淆/凭据外带的形态，不是随手造的边界值。
 	malicious := []string{
-		"",                       // 空 region → https://ec2..amazonaws.com
-		"evil.com/",              // 拼成 https://ec2.evil.com/.amazonaws.com
-		"x@169.254.169.254/",     // userinfo 形式指向 IMDS
-		"us-east-1.evil.com",     // 子域外带
-		"US-EAST-1",              // 大写（host 大小写不敏感，但拼接与签名不一致）
-		"us-east-1:443",          // 端口注入
-		"us-east-1#@evil.com",    // fragment 截断
-		"us_east_1",              // 下划线
-		"-us-east-1",             // 以连字符开头
-		"us-east-1-",             // 以连字符结尾
-		"us--east-1",             // 畸形 label
-		"us east 1",              // 空白
+		"",                    // 空 region → https://ec2..amazonaws.com
+		"evil.com/",           // 拼成 https://ec2.evil.com/.amazonaws.com
+		"x@169.254.169.254/",  // userinfo 形式指向 IMDS
+		"us-east-1.evil.com",  // 子域外带
+		"US-EAST-1",           // 大写（host 大小写不敏感，但拼接与签名不一致）
+		"us-east-1:443",       // 端口注入
+		"us-east-1#@evil.com", // fragment 截断
+		"us_east_1",           // 下划线
+		"-us-east-1",          // 以连字符开头
+		"us-east-1-",          // 以连字符结尾
+		"us--east-1",          // 畸形 label
+		"us east 1",           // 空白
 		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 64 字符，超 label 上限
 	}
 	for _, region := range malicious {

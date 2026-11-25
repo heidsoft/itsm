@@ -123,43 +123,60 @@ func main() {
 
 	probes = append(probes,
 		// 开通状态与资产面：判定「安全事件能不能进来」的前置条件。
-		probe{group: "activation", scope: "sas", action: "DescribeVersionConfig",
+		probe{
+			group: "activation", scope: "sas", action: "DescribeVersionConfig",
 			api: "DescribeVersionConfig", note: "云安全中心开通版本与配置",
-			params: map[string]string{"Lang": "zh"}},
-		probe{group: "activation", scope: "sas", action: "DescribeAllGroups",
+			params: map[string]string{"Lang": "zh"},
+		},
+		probe{
+			group: "activation", scope: "sas", action: "DescribeAllGroups",
 			api: "DescribeAllGroups", note: "安全中心资产分组",
-			params: map[string]string{"Lang": "zh"}},
-		probe{group: "activation", scope: "sas", action: "DescribeCloudCenterInstances",
+			params: map[string]string{"Lang": "zh"},
+		},
+		probe{
+			group: "activation", scope: "sas", action: "DescribeCloudCenterInstances",
 			api: "DescribeCloudCenterInstances", note: "安全中心资产清单（可与 ECS 侧交叉验证 CI 投影）",
-			params: map[string]string{"Lang": "zh", "CurrentPage": "1", "PageSize": "50"}},
-		probe{group: "activation", scope: "sas", action: "DescribeCheckWarningSummary",
+			params: map[string]string{"Lang": "zh", "CurrentPage": "1", "PageSize": "50"},
+		},
+		probe{
+			group: "activation", scope: "sas", action: "DescribeCheckWarningSummary",
 			api: "DescribeCheckWarningSummary", note: "基线检查风险项汇总（RiskId 来源）",
-			params: map[string]string{"Lang": "zh"}},
-		probe{group: "activation", scope: "sas", action: "DescribeWarningMachines",
+			params: map[string]string{"Lang": "zh"},
+		},
+		probe{
+			group: "activation", scope: "sas", action: "DescribeWarningMachines",
 			api: "DescribeWarningMachines", note: "安全事件告警机器（RiskId 取官方示例值 196）",
-			params: map[string]string{"Lang": "zh", "RiskId": "196", "CurrentPage": "1", "PageSize": "50"}},
-		probe{group: "activation", scope: "sas", action: "DescribeVulNumStatistics",
+			params: map[string]string{"Lang": "zh", "RiskId": "196", "CurrentPage": "1", "PageSize": "50"},
+		},
+		probe{
+			group: "activation", scope: "sas", action: "DescribeVulNumStatistics",
 			api: "DescribeVulNumStatistics", note: "漏洞数量统计",
-			params: map[string]string{"Lang": "zh"}},
+			params: map[string]string{"Lang": "zh"},
+		},
 
 		// 产品告警同步在用的动作。
-		probe{group: "product-path", scope: "cms", action: "DescribeAlertLogList",
+		probe{
+			group: "product-path", scope: "cms", action: "DescribeAlertLogList",
 			api: "DescribeAlertLogList[近15分钟]", note: "产品告警同步在用的报警历史（同步窗口语义）",
 			params: map[string]string{
 				"StartTime":  strconv.FormatInt(time.Now().Add(-15*time.Minute).UnixMilli(), 10),
 				"EndTime":    strconv.FormatInt(time.Now().UnixMilli(), 10),
 				"PageNumber": "1",
 				"PageSize":   "100",
-			}},
-		probe{group: "product-path", scope: "cms", action: "DescribeAlertLogList",
+			},
+		},
+		probe{
+			group: "product-path", scope: "cms", action: "DescribeAlertLogList",
 			api: "DescribeAlertLogList[近7天]", note: "更宽时间窗，验证分页与总量语义",
 			params: map[string]string{
 				"StartTime":  strconv.FormatInt(time.Now().Add(-7*24*time.Hour).UnixMilli(), 10),
 				"EndTime":    strconv.FormatInt(time.Now().UnixMilli(), 10),
 				"PageNumber": "1",
 				"PageSize":   "100",
-			}},
-		probe{group: "activation", scope: "cms", action: "DescribeMetricList",
+			},
+		},
+		probe{
+			group: "activation", scope: "cms", action: "DescribeMetricList",
 			api: "DescribeMetricList[ecs/cpu_idle]", note: "云监控指标数据（时间格式为 YYYY-MM-DD HH:MM:SS，非毫秒）",
 			params: map[string]string{
 				"Namespace":  "acs_ecs_dashboard",
@@ -168,41 +185,50 @@ func main() {
 				"StartTime":  time.Now().Add(-2 * time.Hour).Format("2006-01-02 15:04:05"),
 				"EndTime":    time.Now().Format("2006-01-02 15:04:05"),
 				"Length":     "100",
-			}},
+			},
+		},
 
 		// 负向用例：观察云侧错误形态，重点看「HTTP 200 + 响应体业务码」
 		// 这种只看状态码会漏判的形态。
-		probe{group: "negative", scope: "sas", action: "DescribeVulList",
+		probe{
+			group: "negative", scope: "sas", action: "DescribeVulList",
 			api: "DescribeVulList[非法 Type]", note: "观察非法参数的错误形态",
 			params: map[string]string{
 				"Type":        "not-a-vuln-type",
 				"CurrentPage": "1",
 				"PageSize":    "10",
 				"RegionId":    "cn-hangzhou",
-			}},
-		probe{group: "negative", scope: "sas", action: "DescribeVulList",
+			},
+		},
+		probe{
+			group: "negative", scope: "sas", action: "DescribeVulList",
 			api: "DescribeVulList[缺 Type]", note: "观察缺必填参数的错误形态",
 			params: map[string]string{
 				"CurrentPage": "1",
 				"PageSize":    "10",
 				"RegionId":    "cn-hangzhou",
-			}},
-		probe{group: "negative", scope: "cms", action: "DescribeAlertLogList",
+			},
+		},
+		probe{
+			group: "negative", scope: "cms", action: "DescribeAlertLogList",
 			api: "DescribeAlertLogList[超 15 天窗口]", note: "观察超上限时间窗的错误形态",
 			params: map[string]string{
 				"StartTime":  strconv.FormatInt(time.Now().Add(-30*24*time.Hour).UnixMilli(), 10),
 				"EndTime":    strconv.FormatInt(time.Now().UnixMilli(), 10),
 				"PageNumber": "1",
 				"PageSize":   "10",
-			}},
-		probe{group: "negative", scope: "cms", action: "DescribeAlertLogList",
+			},
+		},
+		probe{
+			group: "negative", scope: "cms", action: "DescribeAlertLogList",
 			api: "DescribeAlertLogList[非法页码]", note: "观察非法分页参数的错误形态",
 			params: map[string]string{
 				"StartTime":  strconv.FormatInt(time.Now().Add(-time.Hour).UnixMilli(), 10),
 				"EndTime":    strconv.FormatInt(time.Now().UnixMilli(), 10),
 				"PageNumber": "-1",
 				"PageSize":   "10",
-			}},
+			},
+		},
 	)
 
 	var results []result

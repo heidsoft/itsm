@@ -227,10 +227,14 @@ func TestSkillBaseHooksAreExported(t *testing.T) {
 	}
 
 	// 行为锁：方法必须真的挂在下沉后的 dto 类型上，且语义未变。
-	m := dto.SkillManifest{Name: "ai.x", Version: "v1", Provider: "p",
-		Capabilities: []string{"b", "a"}, RequiredPermissions: []string{"z", "y"}, MinSystemVersion: "1.0"}
-	m2 := dto.SkillManifest{Name: "ai.x", Version: "v1", Provider: "p",
-		Capabilities: []string{"a", "b"}, RequiredPermissions: []string{"y", "z"}, MinSystemVersion: "1.0"}
+	m := dto.SkillManifest{
+		Name: "ai.x", Version: "v1", Provider: "p",
+		Capabilities: []string{"b", "a"}, RequiredPermissions: []string{"z", "y"}, MinSystemVersion: "1.0",
+	}
+	m2 := dto.SkillManifest{
+		Name: "ai.x", Version: "v1", Provider: "p",
+		Capabilities: []string{"a", "b"}, RequiredPermissions: []string{"y", "z"}, MinSystemVersion: "1.0",
+	}
 	if m.ComputeChecksum() != m2.ComputeChecksum() || !strings.HasPrefix(m.ComputeChecksum(), "sha256:") {
 		t.Errorf("ComputeChecksum 排序无关性/格式漂移：%s vs %s", m.ComputeChecksum(), m2.ComputeChecksum())
 	}

@@ -14,8 +14,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/handlers/approval"
-	"itsm-backend/router"
 	"itsm-backend/internal/services"
+	"itsm-backend/router"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

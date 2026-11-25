@@ -38,11 +38,11 @@ type ExportCIRequest struct {
 
 // ExportCIResult 导出结果
 type ExportCIResult struct {
-	TaskID      string     `json:"taskId"`             // 导出任务ID
-	Status      string     `json:"status"`             // 任务状态：pending processing completed failed
-	FileURL     string     `json:"fileUrl,omitempty"`  // 下载端点 URL（completed 后才有值；绝不回传服务器绝对路径）
-	TotalCount  int        `json:"totalCount"`         // 实际写入文件的 CI 数量
-	FileSize    int64      `json:"fileSize,omitempty"` // 文件大小（字节）
+	TaskID      string     `json:"taskId"`                // 导出任务ID
+	Status      string     `json:"status"`                // 任务状态：pending processing completed failed
+	FileURL     string     `json:"fileUrl,omitempty"`     // 下载端点 URL（completed 后才有值；绝不回传服务器绝对路径）
+	TotalCount  int        `json:"totalCount"`            // 实际写入文件的 CI 数量
+	FileSize    int64      `json:"fileSize,omitempty"`    // 文件大小（字节）
 	ExportLimit int        `json:"exportLimit,omitempty"` // 单次导出上限；用于与页面 COUNT 对账
 	Truncated   bool       `json:"truncated"`             // 命中上限：文件可能未包含全部符合条件的数据
 	CreatedAt   time.Time  `json:"createdAt"`

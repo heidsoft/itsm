@@ -154,16 +154,16 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"approval:read", "service_request:read", "service_catalog:read",
 			"knowledge:read", "cmdb:read", "asset:read", "license:read", "vendor:read",
 			"sla:read", "release:read", "workflow:read", "bpmn:read", "task:read",
-		"notification:read", "dashboard:read", "alert:read", "ai:read",
-		"team:read", "department:read", "group:read", "org:read",
-		"project:read", "application:read", "on_call:read", "msp:read",
-		// MCP 通道（2026-11-18）：audit_admin 是 service 主体的载体角色
-		// （cmd/service-token-gen 签发的 service JWT 固定用它）。
-		// 只授 mcp:read —— 可发现工具面、不可调用：
-		// service 主体默认零信任（AllowedPrincipals 恒为 ["human"]），
-		// 调用需运行期策略显式放行，此处不给角色级调用权。
-		"mcp:read",
-	},
+			"notification:read", "dashboard:read", "alert:read", "ai:read",
+			"team:read", "department:read", "group:read", "org:read",
+			"project:read", "application:read", "on_call:read", "msp:read",
+			// MCP 通道（2026-11-18）：audit_admin 是 service 主体的载体角色
+			// （cmd/service-token-gen 签发的 service JWT 固定用它）。
+			// 只授 mcp:read —— 可发现工具面、不可调用：
+			// service 主体默认零信任（AllowedPrincipals 恒为 ["human"]），
+			// 调用需运行期策略显式放行，此处不给角色级调用权。
+			"mcp:read",
+		},
 		// 部门经理（users.role=manager 对齐；服务请求 L1 审批角色）
 		domainrole.Manager: {
 			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",

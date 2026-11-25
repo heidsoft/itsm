@@ -30,14 +30,14 @@ func TestComputeCertificationMetrics_PartitionIsExhaustive(t *testing.T) {
 	const fresh = 90 * 24 * time.Hour
 
 	cis := []*ConfigurationItem{
-		&ConfigurationItem{ID: 1, LifecycleStatus: common.CILifecycleStatusOnline},                         // 从未确认
-		&ConfigurationItem{ID: 2, LifecycleStatus: common.CILifecycleStatusOnline, LastConfirmedAt: nil},   // 显式 nil
-		newCIAt(now.Add(-10 * 24 * time.Hour)),                                                             // 新鲜
-		newCIAt(now.Add(-89 * 24 * time.Hour)),                                                             // 临界内（差 1 天）
-		newCIAt(now.Add(-91 * 24 * time.Hour)),                                                             // 刚好过期
-		newCIAt(now.Add(-400 * 24 * time.Hour)),                                                            // 严重过期
-		&ConfigurationItem{ID: 7, LifecycleStatus: common.CILifecycleStatusScrapped, LastConfirmedAt: nil}, // 退役：不进分母
-		&ConfigurationItem{ID: 8, LifecycleStatus: common.CILifecycleStatusScrapped, LastConfirmedAt: func() *time.Time {
+		{ID: 1, LifecycleStatus: common.CILifecycleStatusOnline},                         // 从未确认
+		{ID: 2, LifecycleStatus: common.CILifecycleStatusOnline, LastConfirmedAt: nil},   // 显式 nil
+		newCIAt(now.Add(-10 * 24 * time.Hour)),                                           // 新鲜
+		newCIAt(now.Add(-89 * 24 * time.Hour)),                                           // 临界内（差 1 天）
+		newCIAt(now.Add(-91 * 24 * time.Hour)),                                           // 刚好过期
+		newCIAt(now.Add(-400 * 24 * time.Hour)),                                          // 严重过期
+		{ID: 7, LifecycleStatus: common.CILifecycleStatusScrapped, LastConfirmedAt: nil}, // 退役：不进分母
+		{ID: 8, LifecycleStatus: common.CILifecycleStatusScrapped, LastConfirmedAt: func() *time.Time {
 			ts := now.Add(-500 * 24 * time.Hour)
 			return &ts
 		}()}, // 退役即使确认过也不进分母

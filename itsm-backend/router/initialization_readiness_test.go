@@ -38,6 +38,7 @@ func (readinessBlockingStmt) NumInput() int { return -1 }
 func (readinessBlockingStmt) Exec([]driver.Value) (driver.Result, error) {
 	return nil, errors.New("not implemented")
 }
+
 func (readinessBlockingStmt) Query([]driver.Value) (driver.Rows, error) {
 	return nil, errors.New("not implemented")
 }

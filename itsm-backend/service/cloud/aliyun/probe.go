@@ -103,7 +103,8 @@ func (e *ErrNotReadOnlyAction) Error() string {
 //
 // action 必须在只读白名单内，否则直接返回 ErrNotReadOnlyAction 且不发起任何请求。
 func ProbeSecurityCenter(ctx context.Context, accessKeyID, accessKeySecret, securityToken,
-	action string, params map[string]string) (*RPCProbeResult, error) {
+	action string, params map[string]string,
+) (*RPCProbeResult, error) {
 	if !readOnlySecurityActions[action] {
 		return nil, &ErrNotReadOnlyAction{Action: action, Scope: "云安全中心"}
 	}
@@ -113,7 +114,8 @@ func ProbeSecurityCenter(ctx context.Context, accessKeyID, accessKeySecret, secu
 
 // ProbeCloudMonitor 用生产同一套 RPC 签名与端点探测云监控只读动作。
 func ProbeCloudMonitor(ctx context.Context, accessKeyID, accessKeySecret, securityToken,
-	action string, params map[string]string) (*RPCProbeResult, error) {
+	action string, params map[string]string,
+) (*RPCProbeResult, error) {
 	if !readOnlyMonitorActions[action] {
 		return nil, &ErrNotReadOnlyAction{Action: action, Scope: "云监控"}
 	}
@@ -128,7 +130,8 @@ func ProbeCloudMonitor(ctx context.Context, accessKeyID, accessKeySecret, securi
 // 不把「HTTP 200 + 响应体里带业务错误码」当成功——原始体一并返回，
 // Code/Success 由调用方判定，避免探测工具复用同一处盲区。
 func probeRPC(ctx context.Context, endpoint, version, action string, params map[string]string,
-	accessKeyID, accessKeySecret, securityToken string) (*RPCProbeResult, error) {
+	accessKeyID, accessKeySecret, securityToken string,
+) (*RPCProbeResult, error) {
 	caller := newRPCClient(endpoint, version, accessKeyID, accessKeySecret, securityToken)
 
 	raw, err := caller.callRaw(ctx, action, params)

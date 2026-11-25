@@ -21,8 +21,8 @@ import (
 	"go.uber.org/zap"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 	"itsm-backend/service/sla"
 )
 

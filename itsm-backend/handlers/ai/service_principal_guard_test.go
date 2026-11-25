@@ -43,7 +43,6 @@ func TestExecuteTool_ServicePrincipalPassesIdentityGuard(t *testing.T) {
 
 	// audit_admin 是只读角色：选一个只读工具，避免写工具进审批流干扰断言。
 	_, _, err := env.svc.ExecuteTool(ctx, 0, 10, "audit_admin", "get_incident_stats", map[string]interface{}{})
-
 	// 要点：不得因 userID=0 被**身份守卫**拒绝。
 	//
 	// 身份守卫的拒绝特征是「无任何附加信息」的裸 ErrToolPermissionDenied；

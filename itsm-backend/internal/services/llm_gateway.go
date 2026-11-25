@@ -67,9 +67,11 @@ type ToolCallingStreamProvider interface {
 
 // 下列值类型的唯一定义在 dto 包，service 侧保留同名别名：
 // 运行时类型、字段与 JSON tag 完全一致，既有调用点零改动。
-type LLMTool = dto.LLMTool
-type LLMToolCall = dto.LLMToolCall
-type LLMMessage = dto.LLMMessage
+type (
+	LLMTool     = dto.LLMTool
+	LLMToolCall = dto.LLMToolCall
+	LLMMessage  = dto.LLMMessage
+)
 
 type TokenLimiter interface {
 	Allow(nTokens int) bool

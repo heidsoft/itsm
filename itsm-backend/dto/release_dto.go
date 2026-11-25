@@ -56,50 +56,50 @@ const (
 
 // CreateReleaseRequest 创建发布请求
 type CreateReleaseRequest struct {
-	ReleaseNumber      string     `json:"releaseNumber" binding:"required"` // 发布编号
-	Title              string     `json:"title" binding:"required"`         // 发布标题
-	Description        string     `json:"description"`                      // 发布描述
-	Type               string     `json:"type" binding:"omitempty,oneof=major minor patch hotfix"`  // 发布类型
+	ReleaseNumber      string     `json:"releaseNumber" binding:"required"`                             // 发布编号
+	Title              string     `json:"title" binding:"required"`                                     // 发布标题
+	Description        string     `json:"description"`                                                  // 发布描述
+	Type               string     `json:"type" binding:"omitempty,oneof=major minor patch hotfix"`      // 发布类型
 	Environment        string     `json:"environment" binding:"omitempty,oneof=dev staging production"` // 目标环境
 	Severity           string     `json:"severity" binding:"omitempty,oneof=low medium high critical"`  // 严重程度
-	ChangeID           *int       `json:"changeId"`                         // 关联变更ID
-	OwnerID            *int       `json:"ownerId"`                          // 负责人ID
-	PlannedReleaseDate *time.Time `json:"plannedReleaseDate"`               // 计划发布日期
-	PlannedStartDate   *time.Time `json:"plannedStartDate"`                 // 计划开始时间
-	PlannedEndDate     *time.Time `json:"plannedEndDate"`                   // 计划结束时间
-	ReleaseNotes       string     `json:"releaseNotes"`                     // 发布说明
-	RollbackProcedure  string     `json:"rollbackProcedure"`                // 回滚程序
-	ValidationCriteria string     `json:"validationCriteria"`               // 验证标准
-	AffectedSystems    []string   `json:"affectedSystems"`                  // 受影响的系统
-	AffectedComponents []string   `json:"affectedComponents"`               // 受影响的组件
-	DeploymentSteps    []string   `json:"deploymentSteps"`                  // 部署步骤
-	Tags               []string   `json:"tags"`                             // 标签
-	IsEmergency        bool       `json:"isEmergency"`                      // 是否紧急发布
-	RequiresApproval   bool       `json:"requiresApproval"`                 // 是否需要审批
+	ChangeID           *int       `json:"changeId"`                                                     // 关联变更ID
+	OwnerID            *int       `json:"ownerId"`                                                      // 负责人ID
+	PlannedReleaseDate *time.Time `json:"plannedReleaseDate"`                                           // 计划发布日期
+	PlannedStartDate   *time.Time `json:"plannedStartDate"`                                             // 计划开始时间
+	PlannedEndDate     *time.Time `json:"plannedEndDate"`                                               // 计划结束时间
+	ReleaseNotes       string     `json:"releaseNotes"`                                                 // 发布说明
+	RollbackProcedure  string     `json:"rollbackProcedure"`                                            // 回滚程序
+	ValidationCriteria string     `json:"validationCriteria"`                                           // 验证标准
+	AffectedSystems    []string   `json:"affectedSystems"`                                              // 受影响的系统
+	AffectedComponents []string   `json:"affectedComponents"`                                           // 受影响的组件
+	DeploymentSteps    []string   `json:"deploymentSteps"`                                              // 部署步骤
+	Tags               []string   `json:"tags"`                                                         // 标签
+	IsEmergency        bool       `json:"isEmergency"`                                                  // 是否紧急发布
+	RequiresApproval   bool       `json:"requiresApproval"`                                             // 是否需要审批
 }
 
 // UpdateReleaseRequest 更新发布请求
 type UpdateReleaseRequest struct {
-	Title              *string    `json:"title"`              // 发布标题
-	Description        *string    `json:"description"`        // 发布描述
-	Type               *string    `json:"type" binding:"omitempty,oneof=major minor patch hotfix"`  // 发布类型
+	Title              *string    `json:"title"`                                                        // 发布标题
+	Description        *string    `json:"description"`                                                  // 发布描述
+	Type               *string    `json:"type" binding:"omitempty,oneof=major minor patch hotfix"`      // 发布类型
 	Environment        *string    `json:"environment" binding:"omitempty,oneof=dev staging production"` // 目标环境
 	Severity           *string    `json:"severity" binding:"omitempty,oneof=low medium high critical"`  // 严重程度
-	ChangeID           *int       `json:"changeId"`           // 关联变更ID
-	OwnerID            *int       `json:"ownerId"`            // 负责人ID
-	PlannedReleaseDate *time.Time `json:"plannedReleaseDate"` // 计划发布日期
-	PlannedStartDate   *time.Time `json:"plannedStartDate"`   // 计划开始时间
-	PlannedEndDate     *time.Time `json:"plannedEndDate"`     // 计划结束时间
-	ActualReleaseDate  *time.Time `json:"actualReleaseDate"`  // 实际发布日期
-	ReleaseNotes       *string    `json:"releaseNotes"`       // 发布说明
-	RollbackProcedure  *string    `json:"rollbackProcedure"`  // 回滚程序
-	ValidationCriteria *string    `json:"validationCriteria"` // 验证标准
-	AffectedSystems    []string   `json:"affectedSystems"`    // 受影响的系统
-	AffectedComponents []string   `json:"affectedComponents"` // 受影响的组件
-	DeploymentSteps    []string   `json:"deploymentSteps"`    // 部署步骤
-	Tags               []string   `json:"tags"`               // 标签
-	IsEmergency        *bool      `json:"isEmergency"`        // 是否紧急发布
-	RequiresApproval   *bool      `json:"requiresApproval"`   // 是否需要审批
+	ChangeID           *int       `json:"changeId"`                                                     // 关联变更ID
+	OwnerID            *int       `json:"ownerId"`                                                      // 负责人ID
+	PlannedReleaseDate *time.Time `json:"plannedReleaseDate"`                                           // 计划发布日期
+	PlannedStartDate   *time.Time `json:"plannedStartDate"`                                             // 计划开始时间
+	PlannedEndDate     *time.Time `json:"plannedEndDate"`                                               // 计划结束时间
+	ActualReleaseDate  *time.Time `json:"actualReleaseDate"`                                            // 实际发布日期
+	ReleaseNotes       *string    `json:"releaseNotes"`                                                 // 发布说明
+	RollbackProcedure  *string    `json:"rollbackProcedure"`                                            // 回滚程序
+	ValidationCriteria *string    `json:"validationCriteria"`                                           // 验证标准
+	AffectedSystems    []string   `json:"affectedSystems"`                                              // 受影响的系统
+	AffectedComponents []string   `json:"affectedComponents"`                                           // 受影响的组件
+	DeploymentSteps    []string   `json:"deploymentSteps"`                                              // 部署步骤
+	Tags               []string   `json:"tags"`                                                         // 标签
+	IsEmergency        *bool      `json:"isEmergency"`                                                  // 是否紧急发布
+	RequiresApproval   *bool      `json:"requiresApproval"`                                             // 是否需要审批
 }
 
 // ReleaseResponse 发布响应

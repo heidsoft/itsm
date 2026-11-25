@@ -13,8 +13,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	problemHandler "itsm-backend/handlers/problem"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 	"itsm-backend/service/sla"
 
 	"github.com/gin-gonic/gin"

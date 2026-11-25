@@ -737,8 +737,10 @@ func (s *deniedToolSkill) Code() string   { return "tool.denied" }
 func (s *deniedToolSkill) Name() string   { return "工具拒绝探针" }
 func (s *deniedToolSkill) Tags() []string { return nil }
 func (s *deniedToolSkill) Manifest() dto.SkillManifest {
-	return dto.SkillManifest{Name: "tool.denied", Version: "v1", Category: "pilot",
-		RequiredPermissions: []string{"ai:read"}}
+	return dto.SkillManifest{
+		Name: "tool.denied", Version: "v1", Category: "pilot",
+		RequiredPermissions: []string{"ai:read"},
+	}
 }
 func (s *deniedToolSkill) GetMetrics() dto.SkillMetrics { return dto.SkillMetrics{} }
 func (s *deniedToolSkill) Validate(_ interface{}) error { return nil }

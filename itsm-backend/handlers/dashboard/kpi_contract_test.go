@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

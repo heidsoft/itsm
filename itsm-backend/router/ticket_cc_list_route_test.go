@@ -14,8 +14,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	ticketWorkflowHandler "itsm-backend/handlers/ticket_workflow"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

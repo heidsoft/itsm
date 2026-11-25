@@ -22,8 +22,8 @@ import (
 	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"

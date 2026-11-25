@@ -29,9 +29,11 @@ type ComponentDef map[string]interface{}
 
 // DataModelUpdate 消息。结构已下沉到 dto 包；别名是同一类型（不是新定义），
 // 服务侧生成初始表单与 handler 侧构造提交成功消息共用同一套 JSON 结构。
-type A2UIDataModelUpdate = dto.A2UIDataModelUpdate
-type DataModelUpdate = dto.DataModelUpdate
-type Content = dto.Content
+type (
+	A2UIDataModelUpdate = dto.A2UIDataModelUpdate
+	DataModelUpdate     = dto.DataModelUpdate
+	Content             = dto.Content
+)
 
 // BeginRendering 消息
 type A2UIBeginRendering struct {
@@ -44,8 +46,10 @@ type BeginRendering struct {
 }
 
 // DeleteSurface 消息
-type A2UIDeleteSurface = dto.A2UIDeleteSurface
-type DeleteSurface = dto.DeleteSurface
+type (
+	A2UIDeleteSurface = dto.A2UIDeleteSurface
+	DeleteSurface     = dto.DeleteSurface
+)
 
 // ==================== 工单表单服务 ====================
 
