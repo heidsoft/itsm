@@ -510,18 +510,3 @@ func (t *TriageService) SuggestWithMetadata(ctx context.Context, title, descript
 
 	return result, nil
 }
-
-func parseAssigneeID(s string) (int, error) {
-	var id int
-	for _, c := range s {
-		if c >= '0' && c <= '9' {
-			id = id*10 + int(c-'0')
-		} else {
-			break
-		}
-	}
-	if id == 0 {
-		return 0, fmt.Errorf("no valid ID found")
-	}
-	return id, nil
-}

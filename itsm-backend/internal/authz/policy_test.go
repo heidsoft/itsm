@@ -151,6 +151,7 @@ func TestPrincipalFromContext(t *testing.T) {
 	if got := PrincipalFromContext(context.Background()); got != PrincipalHuman {
 		t.Fatalf("缺省主体应为 human，得到 %q", got)
 	}
+	//lint:ignore SA1012 nil ctx 是本断言的测试对象（验证缺省主体降级），非漏传
 	if got := PrincipalFromContext(nil); got != PrincipalHuman {
 		t.Fatalf("nil ctx 应为 human，得到 %q", got)
 	}

@@ -154,6 +154,7 @@ func main() {
 	}
 
 	// 3) 交换机：交付表单必填 vSwitchId。
+	//lint:ignore SA1019 诊断工具保留旧 API 验证存量链路；迁移 Vpc::2016-04-28 新 API 属独立变更
 	vswResp, vswErr := client.DescribeVSwitchesWithOptions(&ecs.DescribeVSwitchesRequest{
 		RegionId: tea.String(*region),
 	}, aliyun.ProbeRuntimeOptions())

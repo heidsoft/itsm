@@ -137,6 +137,7 @@ func main() {
 			}, rt)
 		}, "镜像与规格可组合（交叉校验交付参数）"},
 		{"DescribeVSwitches", func(c context.Context) (any, error) {
+			//lint:ignore SA1019 探针保留旧 API 验证存量链路；迁移 Vpc::2016-04-28 新 API 属独立变更
 			return client.DescribeVSwitchesWithOptions(&ecs.DescribeVSwitchesRequest{
 				RegionId:  tea.String(*region),
 				VSwitchId: tea.String(*vSwitchID),
@@ -210,6 +211,7 @@ func main() {
 			}, rt)
 		}, "密钥对清单"},
 		{"DescribeTags", func(c context.Context) (any, error) {
+			//lint:ignore SA1019 探针保留旧 API 验证存量链路；迁移 Tag::2018-08-28 新 API 属独立变更
 			return client.DescribeTagsWithOptions(&ecs.DescribeTagsRequest{
 				RegionId:     tea.String(*region),
 				ResourceType: tea.String("instance"),
@@ -322,6 +324,7 @@ func main() {
 			}, rt)
 		}, "非法地域 ID：云侧抛结构化错误"},
 		{"DescribeVSwitches(bad vswitch)", "empty", func(c context.Context) (any, error) {
+			//lint:ignore SA1019 探针保留旧 API 验证存量链路；迁移 Vpc::2016-04-28 新 API 属独立变更
 			return client.DescribeVSwitchesWithOptions(&ecs.DescribeVSwitchesRequest{
 				RegionId: tea.String(*region), VSwitchId: tea.String("vsw-itsm-verify-not-exist"),
 			}, rt)

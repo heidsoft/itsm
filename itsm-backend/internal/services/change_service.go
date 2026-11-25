@@ -23,12 +23,6 @@ func CloseChangeApprovalChains(ctx context.Context, changeID, tenantID int) erro
 	return err
 }
 
-// normalizeChangeTransitionStatus 把待审批的两个同义词归一到迁移表词表（submitted）。
-// 唯一实现在 dto 包；此处保留薄委托以保持 service 包既有调用点不变。
-func normalizeChangeTransitionStatus(status string) string {
-	return dto.NormalizeChangeTransitionStatus(status)
-}
-
 // IsValidChangeStatusTransition 检查变更状态转换是否合法。
 // 唯一实现在 dto 包；此处保留薄委托以保持 service 包既有调用点不变。
 func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) bool {

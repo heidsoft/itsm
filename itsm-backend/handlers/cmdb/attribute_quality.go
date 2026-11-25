@@ -1,8 +1,6 @@
 package cmdb
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"sort"
 	"strings"
 	"time"
@@ -349,10 +347,4 @@ func DuplicateRatePct(duplicateCIs, inUseCIs int) float64 {
 		return 0
 	}
 	return roundToTwoDecimals(float64(duplicateCIs) / float64(inUseCIs) * 100)
-}
-
-// fingerprintCIIdentity 生成 CI 身份的稳定指纹，供审计留痕（不参与判重）。
-func fingerprintCIIdentity(parts ...string) string {
-	sum := sha256.Sum256([]byte(strings.Join(parts, "\x1f")))
-	return hex.EncodeToString(sum[:8])
 }

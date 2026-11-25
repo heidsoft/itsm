@@ -29,10 +29,6 @@ const (
 	rlsAlignmentMigration = "../migrations/20261031_rls_policy_alignment.sql"
 	rlsRolesMigration     = "../migrations/20261031_rls_roles_bootstrap.sql"
 	rlsCanonicalPrefix    = "tenant_isolation_"
-	// rlsCutoff 是「策略姿态统一」的日期前缀。更早的文件是历史事实
-	// （已应用、已参与 checksum），由 20261031 的统一迁移在运行时修正；
-	// 更晚的文件必须直接写对。
-	rlsCutoff = "20261031"
 )
 
 var (

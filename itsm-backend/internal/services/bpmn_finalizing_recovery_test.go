@@ -117,10 +117,6 @@ func completedApprove() subTaskSpec {
 	return subTaskSpec{status: common.ProcessTaskStatusCompleted, vars: map[string]interface{}{"approved": true}}
 }
 
-func completedReject() subTaskSpec {
-	return subTaskSpec{status: common.ProcessTaskStatusCompleted, vars: map[string]interface{}{"approved": false}}
-}
-
 // TestScanStuckFinalizing_ApprovedParent_Advanced：阈值已凑齐（2/2 赞成）→
 // 扫描器以系统上下文推进父任务到 completed，实例走到结束。
 func TestScanStuckFinalizing_ApprovedParent_Advanced(t *testing.T) {

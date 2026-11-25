@@ -300,6 +300,8 @@ func (e *CustomProcessEngine) markServiceTaskExecuting(ctx context.Context, cmd 
 // 同一个完成事务里原子提交；完成事务回滚后的恢复路径会按凭据缺失重放
 // handler，重新产出输出，不再需要独立事务兜住 result 丢失。保留此函数供
 // 运维诊断脚本与历史兼容调用，禁止重新接回主命令路径。
+//
+//lint:ignore U1000 2026-11-08 设计注记：有意保留供运维诊断脚本与历史兼容调用
 func (e *CustomProcessEngine) saveServiceTaskOutput(ctx context.Context, cmd *ent.OperationalCommand, instanceID int, outputs map[string]interface{}) error {
 	if len(outputs) == 0 {
 		return nil

@@ -62,6 +62,7 @@ func TestWithRunIDIgnoresEmptyValue(t *testing.T) {
 func TestRunIDFromContextHandlesNilContext(t *testing.T) {
 	// 防御性：nil ctx 不能 panic。执行链上存在构造 context 的边界情况
 	// （worker/CLI 入口），panic 会让整轮 Agent 中止而不是降级记录。
+	//lint:ignore SA1012 nil ctx 是本用例的测试对象（验证防御行为），非漏传
 	if _, ok := RunIDFromContext(nil); ok {
 		t.Fatal("nil context 不应返回已注入状态")
 	}

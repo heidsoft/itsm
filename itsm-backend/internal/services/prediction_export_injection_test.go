@@ -3,6 +3,7 @@ package service
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"html"
 	"io"
 	"strings"
@@ -96,7 +97,7 @@ func TestPredictionExcelExport_NeutralizesMetadataAndCells(t *testing.T) {
 	exporter := NewReportExportService()
 	resp := newPredictionExportFixture()
 
-	data, _, err := exporter.ExportPredictionToExcel(nil, resp)
+	data, _, err := exporter.ExportPredictionToExcel(context.Background(), resp)
 	require.NoError(t, err)
 	require.NotEmpty(t, data)
 

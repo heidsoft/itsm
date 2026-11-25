@@ -27,8 +27,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-
-	"itsm-backend/middleware"
 )
 
 // runIDContextKey 是运行轮次标识的 context 键（未导出类型，避免跨包冲突）。
@@ -88,13 +86,4 @@ func EnsureRunID(ctx context.Context) (context.Context, string) {
 	}
 	id := NewRunID()
 	return WithRunID(ctx, id), id
-}
-
-// requestIDForLog 返回用于日志关联的请求 ID；未注入时返回空串。
-// 仅用于日志字段，不参与任何判定。
-func requestIDForLog(ctx context.Context) string {
-	if rid, ok := middleware.RequestIDFromContext(ctx); ok {
-		return rid
-	}
-	return ""
 }
