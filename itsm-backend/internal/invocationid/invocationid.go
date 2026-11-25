@@ -42,9 +42,9 @@ type envelope struct {
 
 // Decoded 是一次解码的结果。Args 已剔除信封，可直接传给工具。
 type Decoded struct {
-	Args        map[string]interface{}
-	Principal   string
-	Source      string
+	Args      map[string]interface{}
+	Principal string
+	Source    string
 }
 
 var validPrincipals = map[string]bool{

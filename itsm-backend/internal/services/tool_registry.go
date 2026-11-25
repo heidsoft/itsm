@@ -617,10 +617,10 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		}
 		result, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{
 			Page: page, PageSize: limit, Search: search, CIType: ciType, CINumber: ciNumber,
-			ScopeConfigured: true,
-			ScopeUserID:     actor.UserID,
+			ScopeConfigured:   true,
+			ScopeUserID:       actor.UserID,
 			ScopeDepartmentID: actor.DepartmentID,
-			ScopeAll:        datascope.ForCIReader(actor.Role) == datascope.DataScopeAll,
+			ScopeAll:          datascope.ForCIReader(actor.Role) == datascope.DataScopeAll,
 		})
 		if err != nil {
 			return nil, err

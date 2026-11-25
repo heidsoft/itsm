@@ -9,8 +9,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/internal/datascope"
 	entticket "itsm-backend/ent/ticket"
+	"itsm-backend/internal/datascope"
 	ticketrepo "itsm-backend/repository/ticket"
 
 	_ "github.com/mattn/go-sqlite3"
