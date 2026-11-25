@@ -4927,6 +4927,36 @@ provider，可让所有租户的安装按钮全部失败。因此目录写独立
 去重表由后台任务每 10 分钟清理过期行（此前 `CleanupExpired` 只有单测调用，
 表只增不减）。
 
+### 飞书消息 → 工单（受控开关）
+
+`POST /api/v1/feishu/webhook/:instance_id` 收到 `im.message.receive_v1` 时，除验签、
+时间窗、nonce 去重外，还走一条**受控**的业务派发：
+
+1. **租户只来自 connector instance**：`instance_id` 经
+   `Manager.GetByCallbackInstanceID` 解析出租户；消息体中的 `app_id` / `tenant_key`
+   不参与归属判断。
+2. **默认只观察**：租户 `SystemConfig` 键 `feishu_inbound.mode` 默认为 `observe_only`，
+   响应 `{eventType, action:"observed"}`，不建单。只有显式设为 `auto_create` 才建单。
+3. **申请人解析**：发送者 `open_id` 必须映射到**本租户活跃用户**；未映射时回落到
+   `feishu_inbound.automation_reporter_user_id` 指向的同租户活跃用户。两者都不存在
+   返回 `403 / 2003`（未授权），未配置自动化账号且无发送者返回 `503 / 5003`（未配置）。
+4. **双层幂等**：nonce 级去重键为 `timestamp:nonce`；消息级去重键为 provider
+   `message_id`（connector 名 `feishu_message`），并配合租户内唯一工单号
+   `TKT-FS-<tenant>-<hash>`。重复消息返回 `409 / 4090`，不产生第二张工单。
+5. **事务与副作用**：建单、`AuditLog` 与 `notification.deliver` durable command 在
+   同一个 `ent.Tx` 提交；命令幂等键为
+   `feishu-inbound-ticket:<tenant>:<messageId>:<ticketId>`。审计只写不可变标识，
+   不写消息正文；provider 原始错误不进入响应。
+
+成功响应（统一 `{code,message,data}` 信封）：
+
+```json
+{"code":0,"message":"success","data":{"eventType":"im.message.receive_v1","action":"ticket_created","ticketId":123,"ticketNumber":"TKT-FS-3-2147483647"}}
+```
+
+该能力仍为 **Preview**：已完成单测与真实路由 E2E，但未与真实飞书租户做生产收发验收，
+也未做真实故障的死信重放演练；人工签字栏留空，不得由脚本代签。
+
 ### 企微入站解密（url_verification 与事件回调）
 
 企微回调 body 是密文（`Encrypt`/`echostr`），由连接器用 `encoding_aes_key` 解密

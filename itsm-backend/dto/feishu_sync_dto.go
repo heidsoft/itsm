@@ -46,7 +46,9 @@ type FeishuTicketSyncResponse struct {
 }
 
 type FeishuWebhookResponse struct {
-	EventType string                    `json:"eventType,omitempty"`
-	Action    string                    `json:"action,omitempty"`
-	Sync      *FeishuTicketSyncResponse `json:"sync,omitempty"`
+	EventType    string                    `json:"eventType,omitempty"`
+	Action       string                    `json:"action,omitempty"`
+	Sync         *FeishuTicketSyncResponse `json:"sync,omitempty"`
+	TicketID     int                       `json:"ticketId,omitempty"`
+	TicketNumber string                    `json:"ticketNumber,omitempty"`
 }

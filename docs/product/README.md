@@ -6,6 +6,7 @@
 
 ## 当前入口
 
+- [当前产品现状（证据基线，2026-11-23）](./current-state.md) · [P0/P1 差距与商业化阻塞点](./gap-analysis.md) · [技术债清单](./technical-debt.md) · [四周执行计划（ subordinate，事实源见根 ROADMAP）](./roadmap.md)
 - [开源发布能力说明](./open-source-release-capability.md)
 - [商业化能力契约](./itsm-commercial-capability-contract.md)
 - [ServiceNow 差距分析](./servicenow-gap-analysis.md)
