@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"itsm-backend/handlers/ai"
+	"itsm-backend/internal/invocationid"
 	service "itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -73,13 +74,19 @@ func (r *auditFieldsRepo) ListToolInvocationsByRun(_ context.Context, _ int, run
 }
 
 func (r *auditFieldsRepo) invocation(id int, runID string) *ai.ToolInvocation {
+	// 服务端信封：工具参数只有 page，主体为 agent。
+	withEnvelope, err := invocationid.Encode(map[string]interface{}{"page": float64(1)}, "agent")
+	if err != nil {
+		panic(err)
+	}
 	return &ai.ToolInvocation{
 		ID:              id,
 		TenantID:        10,
 		ToolName:        "update_ticket",
-		Arguments:       "{}",
+		Arguments:       withEnvelope,
 		Status:          "pending",
 		ApprovalState:   "pending_agent_two",
+		UserID:          42,
 		PermissionCheck: "passed",
 		PolicyVersion:   "a1b2c3d4e5f60718293a4b5c6d7e8f90",
 		RunID:           runID,
@@ -180,6 +187,12 @@ func TestToolInvocationResponsesExposeAuditFields(t *testing.T) {
 		require.Contains(t, data, "runId")
 		require.NotEmpty(t, data["policyVersion"], "详情页策略版本为空：审计字段未透出")
 		require.NotEmpty(t, data["runId"])
+		// 信封是服务端内部格式，HTTP 读面必须剥掉后返回裸参数。
+		argsOut, ok := data["arguments"].(string)
+		require.True(t, ok)
+		require.NotContains(t, argsOut, "_itsmInvocation", "内部信封不得泄漏给客户端")
+		require.Equal(t, "agent", data["principal"])
+		require.Equal(t, "stored", data["identitySource"])
 	})
 
 	t.Run("审批列表", func(t *testing.T) {

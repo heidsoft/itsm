@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/internal/authz"
+	"itsm-backend/internal/invocationid"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/metrics"
 	"itsm-backend/middleware"
@@ -216,15 +217,17 @@ type toolDecision struct {
 	PolicyVersion string
 }
 
-// RevalidateApprovedTool uses the persisted policy fingerprint to recover the
-// original principal: empty means human; every nonempty value means agent.
-// ApprovalState cannot recover it after approval has changed that state.
-func (s *Service) RevalidateApprovedTool(ctx context.Context, tenantID, userID int, role, name, storedPolicyVersion string) (bool, string, error) {
-	principal := authz.PrincipalHuman
-	if storedPolicyVersion != "" {
-		principal = authz.PrincipalAgent
+// RevalidateApprovedTool 按 invocation 持久化的主体信封恢复真实 principal，
+// 再用当前策略重判。此前用「policy_version 非空即 agent」间接推断，把 service
+// 主体错认成 agent 后被 userID=0 身份守卫拒绝——已批准的服务调用反而无法执行。
+// 信封由服务端在落库时写入，客户端/模型无法伪造；无信封的存量记录由
+// invocationid.Decode 的唯一兼容解码器处理，无法安全还原时 fail-closed。
+func (s *Service) RevalidateApprovedTool(ctx context.Context, tenantID, userID int, role, name, arguments, storedPolicyVersion string) (bool, string, error) {
+	decoded, err := invocationid.Decode(arguments, storedPolicyVersion, userID)
+	if err != nil {
+		return false, "approved tool identity invalid", err
 	}
-	d, err := s.evaluateToolCall(ctx, tenantID, userID, role, name, principal)
+	d, err := s.evaluateToolCall(ctx, tenantID, userID, role, name, decoded.Principal)
 	if err != nil {
 		return false, "approved tool revalidation unavailable", err
 	}
@@ -416,8 +419,13 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 
 	approvalState := approvalStateFor(principal, d.MinApprovals)
 
-	// 写工具：创建 pending invocation，等待审批
-	argsStr, _ := json.Marshal(args)
+	// 写工具：创建 pending invocation，等待审批。
+	// arguments 内嵌服务端主体信封：审批人与 Worker 据此恢复真实 principal，
+	// 不再靠 policy_version / approval_state 间接推断（会把 service 错认成 agent）。
+	argsStr, encErr := invocationid.Encode(args, principal)
+	if encErr != nil {
+		return nil, 0, fmt.Errorf("%w: %v", ErrToolPermissionDenied, encErr)
+	}
 	ticketRef, changeRef := businessRefsFromArgs(args)
 	// 待审批记录同样要带 policyVersion / run_id / request_id：审批可能发生在
 	// 几分钟后甚至跨进程重启，那时 context 早已消失；只有落库的这三个值能把
@@ -550,32 +558,19 @@ func (s *Service) ReviewInvocation(ctx context.Context, invocationID, tenantID, 
 		return nil, fmt.Errorf("%w: tool %s no longer registered", ErrUnknownTool, inv.ToolName)
 	}
 
-	// 从落库的审批态推导原发起主体：pending_agent* / awaiting_second 都是
-	// AI 发起后才可能出现的态；pending 是人发起。用审批态推导而不是新增一列
-	// 「principal」，是因为审批态本就是它的函数——同一事实存两份必然漂移。
-	originPrincipal := authz.PrincipalHuman
-	switch inv.ApprovalState {
-	case "pending_agent", "pending_agent_two", "awaiting_second":
-		originPrincipal = authz.PrincipalAgent
+	// 从 invocation 的服务端主体信封恢复真实 principal。此前用审批态推断，
+	// 与 Worker 用 policy_version 推断互相分叉，且不识别 service 主体。
+	// 解码失败 fail-closed，不给审批人一个与执行链无关的结论。
+	decoded, derr := invocationid.Decode(inv.Arguments, inv.PolicyVersion, inv.UserID)
+	if derr != nil {
+		return nil, fmt.Errorf("%w: invocation %d identity unreadable: %v",
+			ErrToolPermissionDenied, invocationID, derr)
 	}
 
-	var args map[string]interface{}
-	if inv.Arguments != "" {
-		if uerr := json.Unmarshal([]byte(inv.Arguments), &args); uerr != nil {
-			// 参数已损坏：不能拿一份读不懂的输入去判定，那会给审批人一个
-			// 建立在空参数之上的结论（比拒绝更危险）。
-			return nil, fmt.Errorf("%w: invocation %d arguments are unreadable",
-				ErrToolPermissionDenied, invocationID)
-		}
-	}
-	if args == nil {
-		args = map[string]interface{}{}
-	}
-
-	// role 用被复核记录的 role_snapshot：Gate 2 判的是「发起时的载体角色是否
-	// 持该权限」，用审批人当前角色代替会让结论与执行链不一致。
-	return s.dryRunForPrincipal(ctx, userID, tenantID, inv.RoleSnapshot, inv.ToolName, args,
-		originPrincipal, inv.ID, inv.PolicyVersion)
+	// role 用被复核记录的 role_snapshot；userID 用 invocation 的发起人，
+	// 而不是审批人的 userID——复核的是「这条调用能否执行」，不是审批人自己。
+	return s.dryRunForPrincipal(ctx, inv.UserID, tenantID, inv.RoleSnapshot, inv.ToolName, decoded.Args,
+		decoded.Principal, inv.ID, inv.PolicyVersion)
 }
 
 // dryRunForPrincipal 是预演的唯一实现：普通预演与复核共用，只是判定主体不同。

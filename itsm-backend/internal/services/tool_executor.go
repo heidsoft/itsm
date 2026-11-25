@@ -7,13 +7,17 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/toolinvocation"
+	"itsm-backend/internal/invocationid"
 
 	"go.uber.org/zap"
 )
 
 // ApprovedToolGuard reuses the Action Gateway decision at execution time.
+//
+// arguments 原始文本必须一并传入：主体身份保存在服务端信封里，执行前要按
+// invocation 当时的真实 principal 重判，而不是从 policy_version 间接推断。
 type ApprovedToolGuard interface {
-	RevalidateApprovedTool(context.Context, int, int, string, string, string) (bool, string, error)
+	RevalidateApprovedTool(ctx context.Context, tenantID, userID int, role, name, arguments, policyVersion string) (bool, string, error)
 }
 
 type approvedToolRunner interface {
@@ -112,10 +116,11 @@ func (e *ToolExecutor) ExecuteApprovedInvocation(ctx context.Context, invocation
 	}
 
 	// Revalidate the persisted initiating identity, never the approver's context.
+	// arguments 携带服务端主体信封，guard 据此恢复真实 principal（human/agent/service）。
 	allowed, reason := false, "approved tool guard unavailable"
 	if e.guard != nil {
 		var guardErr error
-		allowed, reason, guardErr = e.guard.RevalidateApprovedTool(ctx, tenantID, inv.UserID, inv.RoleSnapshot, inv.ToolName, inv.PolicyVersion)
+		allowed, reason, guardErr = e.guard.RevalidateApprovedTool(ctx, tenantID, inv.UserID, inv.RoleSnapshot, inv.ToolName, inv.Arguments, inv.PolicyVersion)
 		if guardErr != nil {
 			allowed, reason = false, "approved tool revalidation failed"
 		}
@@ -127,15 +132,15 @@ func (e *ToolExecutor) ExecuteApprovedInvocation(ctx context.Context, invocation
 		return e.finalize(ctx, invocationID, tenantID, nil, &approvedToolDenial{reason: reason})
 	}
 
-	var args map[string]interface{}
-	if inv.Arguments != "" {
-		if err := json.Unmarshal([]byte(inv.Arguments), &args); err != nil {
-			invalid := fmt.Errorf("tool invocation %d has invalid arguments: %w", invocationID, err)
-			return e.finalize(ctx, invocationID, tenantID, nil, invalid)
-		}
+	// 用同一个解码器取出裸参数：信封是服务端内部存储格式，绝不能传给工具，
+	// 否则模型/工具会看到 _itsmInvocation 保留字段。解码失败 fail-closed。
+	decoded, decErr := invocationid.Decode(inv.Arguments, inv.PolicyVersion, inv.UserID)
+	if decErr != nil {
+		return e.finalize(ctx, invocationID, tenantID, nil,
+			fmt.Errorf("tool invocation %d has invalid arguments/identity: %w", invocationID, decErr))
 	}
 
-	res, execErr := e.tools.Execute(ctx, tenantID, inv.ToolName, withInvocationUser(args, inv.UserID))
+	res, execErr := e.tools.Execute(ctx, tenantID, inv.ToolName, withInvocationUser(decoded.Args, inv.UserID))
 	return e.finalize(ctx, invocationID, tenantID, res, execErr)
 }
 

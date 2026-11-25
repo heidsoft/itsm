@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/internal/authz"
+	"itsm-backend/internal/invocationid"
 )
 
 // 这组测试锁「复核既有调用」的四条判据：
@@ -55,11 +56,16 @@ func reviewAs(t *testing.T, h *ai.Handler, tenantID, userID int, invocationID in
 // 直插而不走 ExecuteTool：这里要验证的是**复核读面**，被复核记录如何产生无关。
 func pendingInvocationForReview(t *testing.T, f *dryRunFixture, toolName, policyVersion string) int {
 	t.Helper()
+	// 写服务端主体信封：AI 发起的调用必须显式声明 agent。
+	// 封装后业务参数仍是 {"ticketId":7}，与旧夹具等价，但复核读面
+	// 不再依赖 approval_state / policy_version 间接推断主体。
+	argsWithIdentity, encErr := invocationid.Encode(map[string]interface{}{"ticketId": float64(7)}, authz.PrincipalAgent)
+	require.NoError(t, encErr)
 	inv, err := f.client.ToolInvocation.Create().
 		SetTenantID(f.tenantID).
 		SetUserID(f.userID).
 		SetToolName(toolName).
-		SetArguments(`{"ticketId":7}`).
+		SetArguments(argsWithIdentity).
 		SetStatus("pending").
 		SetNeedsApproval(true).
 		SetApprovalState("pending_agent").

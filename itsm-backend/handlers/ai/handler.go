@@ -15,6 +15,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/internal/authz"
+	"itsm-backend/internal/invocationid"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/middleware"
 
@@ -1131,10 +1132,20 @@ func (h *Handler) GetToolInvocation(c *gin.Context) {
 // 读面把语义翻译成「人类友好」会掩盖「读不出来」与「无策略参与」的区别。
 func (h *Handler) toolInvocationView(ctx context.Context, tenantID int, inv *ToolInvocation) gin.H {
 	riskLevel, minApprovals := h.invocationPolicyMeta(ctx, tenantID, inv.ToolName)
+	// 信封是服务端内部存储格式，绝不能原样透出给客户端；解码失败时保留
+	// 原始文本供审计排查，并显式标记 identitySource=unreadable，不静默伪装。
+	argsOut, principalOut, identitySource := inv.Arguments, "", "unreadable"
+	if decoded, derr := invocationid.Decode(inv.Arguments, inv.PolicyVersion, inv.UserID); derr == nil {
+		buf, _ := json.Marshal(decoded.Args)
+		argsOut = string(buf)
+		principalOut, identitySource = decoded.Principal, decoded.Source
+	}
 	return gin.H{
 		"id":               inv.ID,
 		"toolName":         inv.ToolName,
-		"arguments":        inv.Arguments,
+		"arguments":        argsOut,
+		"principal":        principalOut,
+		"identitySource":   identitySource,
 		"result":           inv.Result,
 		"error":            inv.Error,
 		"status":           inv.Status,
