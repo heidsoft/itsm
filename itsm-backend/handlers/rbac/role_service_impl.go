@@ -753,10 +753,10 @@ func (s *permissionServiceImpl) UpdatePermission(ctx context.Context, id, tenant
 	if err != nil {
 		return nil, fmt.Errorf("更新权限失败: %w", err)
 	}
+	// InvalidateAuthzCaches 现在统一失效三类缓存（角色权限 / Registry / ACL）
+	// 并向其它副本广播；不要再单独调 InvalidateAllPermissionCachesEx，
+	// 后者只清本进程且不广播，会让停用状态在其它副本残留到 TTL 到期。
 	middleware.InvalidateAuthzCaches(tenantID)
-	// 停用状态属于人工 RBAC 判定输入（middleware 的 role→permission 缓存），
-	// 只失效 authz.Registry 会让人类用户在 TTL 窗口内继续持有已停用的码。
-	middleware.InvalidateAllPermissionCachesEx()
 	s.logger.Infow("permission policy updated",
 		"tenant_id", tenantID, "code", existing.Code,
 		"risk", policy.RiskLevel, "principals", policy.AllowedPrincipals,
@@ -790,9 +790,8 @@ func (s *permissionServiceImpl) DeletePermission(ctx context.Context, id, tenant
 		SetDescription(encoded).Save(ctx); err != nil {
 		return fmt.Errorf("停用权限失败: %w", err)
 	}
+	// 与 UpdatePermission 走同一失效原语（三类缓存 + 跨副本广播）。
 	middleware.InvalidateAuthzCaches(tenantID)
-	// 同上：必须同步失效人工 RBAC 的缓存，否则停用只影响 AI 判定链。
-	middleware.InvalidateAllPermissionCachesEx()
 	return nil
 }
 

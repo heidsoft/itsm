@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -60,6 +61,35 @@ func TestInvalidateAuthzCaches_ClearsLocalACLCache(t *testing.T) {
 	_, exists = aclCache[tenantID]
 	aclCacheLock.RUnlock()
 	require.False(t, exists, "策略缓存失效必须同时清掉本进程的 ACL 缓存")
+}
+
+// 权限停用属于人工 RBAC 判定输入（role→permission 缓存）。此前写入路径只清
+// Registry 与 ACL，人类用户在 TTL 窗口内仍能通过 RequirePermission；这里锁住
+// 「一次失效清三类缓存」的契约。反向验证：把 invalidateTenantAuthzCachesLocal
+// 改回只清后两类，本测试必须红在断言上（roleCache 仍在）。
+func TestInvalidateAuthzCaches_ClearsRolePermissionCache(t *testing.T) {
+	const tenantID = 987655
+	const roleName = "cache_invalidate_probe_role"
+	cacheKey := roleName + "_" + strconv.Itoa(tenantID)
+
+	cacheRolePermissions(cacheKey, []Permission{{Resource: "ticket", Action: "read"}}, nil)
+	t.Cleanup(func() {
+		permissionCacheLock.Lock()
+		delete(permissionCache, cacheKey)
+		permissionCacheLock.Unlock()
+	})
+
+	permissionCacheLock.RLock()
+	_, exists := permissionCache[cacheKey]
+	permissionCacheLock.RUnlock()
+	require.True(t, exists, "夹具必须先写入角色权限缓存")
+
+	InvalidateAuthzCaches(tenantID)
+
+	permissionCacheLock.RLock()
+	_, exists = permissionCache[cacheKey]
+	permissionCacheLock.RUnlock()
+	require.False(t, exists, "策略失效必须同时清掉角色权限缓存（本副本立即撤权）")
 }
 
 // 真实 Redis 端到端：证明策略写入会向独立频道发布租户号，另一副本可据此失效。

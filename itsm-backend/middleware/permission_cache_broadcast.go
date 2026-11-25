@@ -102,12 +102,25 @@ func parseInvalidateMessage(payload string) (string, int, bool) {
 	return roleName, tenantID, true
 }
 
-// InvalidateAuthzCaches 使某租户的策略目录（authz.Registry）与动态 ACL 缓存失效，
-// 并向其它副本广播。权限策略写入后必须调用它，而不是只调 authz.Shared().Invalidate：
-// 后者只清本进程，多副本下另一实例仍会按旧策略判定最长 5 分钟。
-func InvalidateAuthzCaches(tenantID int) {
+// invalidateTenantAuthzCachesLocal 只清本进程的三类权限缓存，不广播。
+//
+// 三类缓存必须作为**一个操作**失效：角色权限缓存（middleware.permissionCache）、
+// 运行期策略目录（authz.Registry）与动态 ACL（smart_permission.aclCache）。
+// 此前权限停用只清后两类，人工 RBAC 与 AI Gate 2 仍可在 TTL 窗口内按旧授权放行。
+//
+// 订阅端必须调用本函数而不是 InvalidateAuthzCaches，否则收到广播后再次广播，
+// 形成消息环路。
+func invalidateTenantAuthzCachesLocal(tenantID int) {
+	InvalidateAllPermissionCaches()
 	authz.Shared().Invalidate(tenantID)
 	InvalidateTenantACLCache(tenantID)
+}
+
+// InvalidateAuthzCaches 使某租户的三类权限缓存失效，并向其它副本广播。
+// 权限策略写入后必须调用它，而不是只调 authz.Shared().Invalidate：
+// 后者只清本进程，多副本下另一实例仍会按旧策略判定最长 5 分钟。
+func InvalidateAuthzCaches(tenantID int) {
+	invalidateTenantAuthzCachesLocal(tenantID)
 	broadcastAuthzCacheInvalidation(tenantID)
 }
 
@@ -132,8 +145,9 @@ func subscribeAuthzCacheInvalidation(client *redis.Client) {
 		if !ok {
 			continue
 		}
-		authz.Shared().Invalidate(tenantID)
-		InvalidateTenantACLCache(tenantID)
+		// 与写入路径共用同一本地失效原语（含角色权限缓存），且不再广播，
+		// 避免环路；这是多副本下停用权限立即生效的关键。
+		invalidateTenantAuthzCachesLocal(tenantID)
 		zap.S().Debugw("收到策略缓存失效广播，已清除本进程缓存", "tenant_id", tenantID)
 	}
 }
