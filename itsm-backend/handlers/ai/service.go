@@ -227,7 +227,13 @@ func (s *Service) RevalidateApprovedTool(ctx context.Context, tenantID, userID i
 	if err != nil {
 		return false, "approved tool identity invalid", err
 	}
-	d, err := s.evaluateToolCall(ctx, tenantID, userID, role, name, decoded.Principal)
+	// 身份新鲜度：按 invocation 的发起人重新加载当前账号状态与角色。
+	// 快照角色只作历史解释；用户被降权/停用后已排队的调用不得再执行。
+	currentRole, err := s.ResolveCurrentInitiator(ctx, tenantID, userID, decoded.Principal, role)
+	if err != nil {
+		return false, "initiator identity no longer valid", err
+	}
+	d, err := s.evaluateToolCall(ctx, tenantID, userID, currentRole, name, decoded.Principal)
 	if err != nil {
 		return false, "approved tool revalidation unavailable", err
 	}
@@ -567,9 +573,15 @@ func (s *Service) ReviewInvocation(ctx context.Context, invocationID, tenantID, 
 			ErrToolPermissionDenied, invocationID, derr)
 	}
 
-	// role 用被复核记录的 role_snapshot；userID 用 invocation 的发起人，
-	// 而不是审批人的 userID——复核的是「这条调用能否执行」，不是审批人自己。
-	return s.dryRunForPrincipal(ctx, inv.UserID, tenantID, inv.RoleSnapshot, inv.ToolName, decoded.Args,
+	// 与 Worker 执行链共用同一发起人解析：复核展示的「现在能否执行」必须
+	// 反映发起人当前状态/角色，否则审批人看到的是一条永远无法执行的操作。
+	// userID 用 invocation 的发起人，不是审批人的 userID。
+	currentRole, rerr := s.ResolveCurrentInitiator(ctx, inv.TenantID, inv.UserID, decoded.Principal, inv.RoleSnapshot)
+	if rerr != nil {
+		return nil, fmt.Errorf("%w: invocation %d initiator invalid: %v",
+			ErrToolPermissionDenied, invocationID, rerr)
+	}
+	return s.dryRunForPrincipal(ctx, inv.UserID, tenantID, currentRole, inv.ToolName, decoded.Args,
 		decoded.Principal, inv.ID, inv.PolicyVersion)
 }
 

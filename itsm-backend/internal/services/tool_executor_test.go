@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	userpkg "itsm-backend/ent/user"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/internal/authz"
 	"itsm-backend/middleware"
@@ -205,14 +206,19 @@ func TestToolExecutorRevalidatesApprovedSnapshot(t *testing.T) {
 			update := client.ToolInvocation.UpdateOneID(inv.ID).SetPolicyVersion(def.PolicyVersion())
 			switch scenario {
 			case "revoked_role":
-				role := client.Role.Create().SetName("revoked").SetCode("revoked").SetTenantID(tenant.ID).SaveX(ctx)
+				// B3：guard 现在按发起人**当前角色**重判，不再信 role_snapshot。
+				// 夹具必须让用户真实持有该角色，再撤销其权限绑定。
+				roleCode := string(userpkg.RoleItAdmin)
+				role := client.Role.Create().SetName("IT 管理员").SetCode(roleCode).SetTenantID(tenant.ID).SaveX(ctx)
 				binding := client.RolePermission.Create().SetRoleID(role.ID).SetPermissionID(permission.ID).SetTenantID(tenant.ID).SaveX(ctx)
-				allowed, _, checkErr := executor.guard.RevalidateApprovedTool(ctx, tenant.ID, user.ID, "revoked", inv.ToolName, inv.Arguments, def.PolicyVersion())
+				client.User.UpdateOneID(user.ID).SetRole(userpkg.RoleItAdmin).SaveX(ctx)
+				snapshotRole := "revoked" // 快照是旧角色，故意与当前不同
+				allowed, _, checkErr := executor.guard.RevalidateApprovedTool(ctx, tenant.ID, user.ID, snapshotRole, inv.ToolName, inv.Arguments, def.PolicyVersion())
 				require.NoError(t, checkErr)
-				require.True(t, allowed)
+				require.True(t, allowed, "当前角色持权时应放行，即使快照角色已失效")
 				require.NoError(t, client.RolePermission.DeleteOneID(binding.ID).Exec(ctx))
 				middleware.InvalidateAllPermissionCaches()
-				update.SetRoleSnapshot("revoked")
+				update.SetRoleSnapshot(snapshotRole)
 			case "changed_policy":
 				policy.MinApprovals++
 				changed, encodeErr := authz.EncodeDefinition("ticket write", policy)
