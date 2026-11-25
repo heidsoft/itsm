@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0",
+  "run_id": "cm-auto-20261126-loop-01",
+  "generated_at": "2026-11-26T07:32:38+08:00",
+  "status": "partial",
+  "repository": "heidsoft/itsm",
+  "base_commit": "d8654786534febbabf91305b553a347eaba64498",
+  "worktree": "/Users/heidsoft/WorkBuddy AI/2026-11-25-22-18-29/itsm-loop",
+  "branch": "feat/autonomous-loop-skeleton",
+  "commits": ["b9e363ca"],
+  "pull_request": {
+    "number": 132,
+    "url": "https://github.com/heidsoft/itsm/pull/132",
+    "head": "b9e363ca6ae67bad2edf0ba22486c0250bb72ec1"
+  },
+  "task": {
+    "id": "ENG-LOOP-01",
+    "title": "补齐机器可读 Run Manifest 与证据→backlog 回写骨架",
+    "rationale": "上一轮已产出报告但无机器消费者、backlog 靠手工改；新增可验证的最小闭环，不重复建设 itsm-agent 的 issue→PR→审批链。",
+    "evidence": [
+      {
+        "path": "scripts/parallel/run-manifest.schema.json",
+        "lines": "1-160",
+        "fact": "定义 Run Manifest 必填字段、状态枚举、退出码整数约束与快照摘要"
+      },
+      {
+        "path": "scripts/parallel/run-manifest.py",
+        "lines": "compute_writeback / command_writeback",
+        "fact": "纯函数规划回写；CLI 默认 dry-run，--apply 校验快照后写 backlog 与 JSONL 账本"
+      },
+      {
+        "path": "docs/audits/remediation-backlog.md",
+        "lines": "23",
+        "fact": "AUDIT-070 由工具从 confirmed 回写为 resolved，带 run ID 与证据"
+      }
+    ]
+  },
+  "tests": [
+    {
+      "command": "python3 -m unittest discover -s scripts/__tests__ -p 'test_*.py' -v",
+      "exit_code": 0,
+      "note": "8 tests OK"
+    },
+    {
+      "command": "python3 -m py_compile scripts/parallel/run-manifest.py scripts/__tests__/test_run_manifest.py",
+      "exit_code": 0,
+      "note": "语法编译通过"
+    },
+    {
+      "command": "python3 scripts/parallel/run-manifest.py validate docs/audits/run-manifests/cm-auto-20261125-01.json",
+      "exit_code": 0,
+      "note": "首个真实清单校验通过"
+    },
+    {
+      "command": "python3 scripts/parallel/run-manifest.py writeback <manifest> (dry-run)",
+      "exit_code": 0,
+      "note": "预览回写且不写文件"
+    },
+    {
+      "command": "python3 scripts/parallel/run-manifest.py writeback <manifest> --apply",
+      "exit_code": 0,
+      "note": "实际回写 AUDIT-070 并生成 JSONL 账本"
+    },
+    {
+      "command": "bash scripts/docs-gate/run-all.sh --strict",
+      "exit_code": 0,
+      "note": "8 gates, 0 failed"
+    },
+    {
+      "command": "bash scripts/parallel/gate-at-head.sh",
+      "exit_code": 0,
+      "note": "判定行一致；既有红均可在 HEAD 复现"
+    },
+    {
+      "command": "python3 scripts/parallel/session-ledger.py check --id 20261126-loop-skeleton --commit",
+      "exit_code": 0,
+      "note": "提交前检查 PASS"
+    }
+  ],
+  "ci": [
+    { "name": "docs / Docs Gate (C.6 hard)", "status": "pass", "run_id": "45721909308" },
+    { "name": "docs / Build documentation", "status": "pass", "run_id": "45721909308" },
+    { "name": "docs / Version Truth", "status": "pass", "run_id": "45721909308" },
+    { "name": "Security Scan / NPM Security Audit", "status": "pass", "run_id": "45721909313" },
+    { "name": "Security Scan / Secret Detection", "status": "pass", "run_id": "45721909313" },
+    { "name": "Security Scan / Trivy Vulnerability Report", "status": "pass", "run_id": "45721909313" },
+    { "name": "Security Scan / Trivy Gate (High and Critical)", "status": "fail", "run_id": "45721909313", "baseline": true },
+    { "name": "Security Scan / Go Vulnerability Check", "status": "fail", "run_id": "45721909313", "baseline": true },
+    { "name": "docs-gate (duplicate cancelled job shown as check)", "status": "fail", "run_id": "45721909275", "baseline": true }
+  ],
+  "security": {
+    "policy_changed": false,
+    "db_migration": false,
+    "deploy": false,
+    "notes": "工具只写 backlog 与 JSONL 账本；不合并 PR、不部署、不迁移、不修改权限码或策略；无新增依赖。"
+  },
+  "approvals": {
+    "required": false,
+    "pending": [
+      "Security Scan 工具链/依赖升级",
+      "权限策略与数据库结构变更",
+      "13 个 dependabot PR"
+    ]
+  },
+  "risks": [
+    "校验器只实现文档列出的 JSON Schema 子集，不宣称完整 JSON Schema 合规",
+    "快照过期时 writeback --apply 会拒绝写入，需重新生成清单而非盲写",
+    "尚未接入 CI 强制检查，避免形成没有消费者的假门禁"
+  ],
+  "blockers": [
+    "Security Scan 的 Trivy Gate 与 Go Vulnerability Check 仍为基线红项",
+    "并发取消的重复 docs-gate 作业在 PR 检查列表中显示 fail，但 advisory 对应作业通过",
+    "本轮未修改 CI 工作流，闭环工具尚未成为必需检查"
+  ],
+  "deployment": {
+    "performed": false
+  },
+  "rollback": "revert b9e363ca（及本清单提交）；回退 backlog 状态、JSONL 账本记录与新增工具文件。",
+  "ledger_snapshot_sha256": "2fdc8871fbf25f1e95d5a63b0ed26c81f4ac7512442f2378ff59e6f7dff481cb"
+}
