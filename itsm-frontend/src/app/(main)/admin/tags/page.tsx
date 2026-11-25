@@ -4,12 +4,20 @@ import React, { useState, useEffect } from 'react';
 import { App, Button, ColorPicker, Form, Input, Modal, Space, Switch, Table, Tag } from 'antd';
 import { Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
+import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 import type { TicketTag } from '@/lib/services/ticket-tag-service';
 import { ticketTagService } from '@/lib/services/ticket-tag-service';
 import { useI18n } from '@/lib/i18n';
 
 // 全局标签的真实所有者是工单标签（/api/v1/ticket-tags）；
 // /api/v1/tags 只是只读别名，写操作打到它上面会 404。
+//
+// 权限口径：本菜单的准入码是 system_config:read，而写操作分别落在
+// ticket_tag:create / ticket_tag:update / ticket_tag:delete 上
+// （见 router/ticket_tag_routes.go）。两者不同源，因此只按菜单码放人进来
+// 会出现「能进页面、写一律 403」——audit_admin / security_admin 正是这种组合。
+// 页面按真实写码分别收敛按钮。
 interface TagFormValues {
   name: string;
   color?: unknown;
@@ -26,6 +34,10 @@ function toHex(value: unknown): string | undefined {
 export default function TagsPage() {
   const { t } = useI18n();
   const { message, modal } = App.useApp();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission(PERM.ticket_tag.create);
+  const canUpdate = hasPermission(PERM.ticket_tag.update);
+  const canDelete = hasPermission(PERM.ticket_tag.delete);
   const [form] = Form.useForm<TagFormValues>();
   const [tags, setTags] = useState<TicketTag[]>([]);
   const [total, setTotal] = useState(0);
@@ -166,14 +178,19 @@ export default function TagsPage() {
       key: 'action',
       render: (_: unknown, record: TicketTag) => (
         <Space size="middle">
-          <Button type="text" aria-label="编辑" icon={<Pencil />} onClick={() => openEdit(record)} />
-          <Button
-            type="text"
-            danger
-            aria-label="删除"
-            icon={<Trash2 />}
-            onClick={() => handleDelete(record)}
-          />
+          {canUpdate && (
+            <Button type="text" aria-label="编辑" icon={<Pencil />} onClick={() => openEdit(record)} />
+          )}
+          {canDelete && (
+            <Button
+              type="text"
+              danger
+              aria-label="删除"
+              icon={<Trash2 />}
+              onClick={() => handleDelete(record)}
+            />
+          )}
+          {!canUpdate && !canDelete && <span style={{ color: '#999' }}>只读</span>}
         </Space>
       ),
     },
@@ -189,10 +206,12 @@ export default function TagsPage() {
         <Button key="refresh" icon={<RefreshCw />} onClick={() => reload()} loading={fetching}>
           刷新
         </Button>,
-        <Button key="create" type="primary" icon={<Plus />} onClick={openCreate}>
-          新建标签
-        </Button>,
-      ]}
+        canCreate && (
+          <Button key="create" type="primary" icon={<Plus />} onClick={openCreate}>
+            新建标签
+          </Button>
+        ),
+      ].filter(Boolean)}
     >
       <Table
         columns={columns}

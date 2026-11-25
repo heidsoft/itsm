@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Table, Tag, Button, Card, App, Space, Modal, Input } from 'antd';
+import { Alert, Table, Tag, Button, Card, App, Space, Modal, Input } from 'antd';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { useI18n } from '@/lib/i18n';
+import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 import { ServiceRequestStatus } from '@/types/service-catalog';
 
 interface ServiceRequestRecord {
@@ -17,6 +19,12 @@ interface ServiceRequestRecord {
 export default function ServiceApprovalsPage() {
   const { message } = App.useApp();
   const { t } = useI18n();
+  // 审批动作由后端 POST /service-requests/:id/approval 上的 service_request:approve
+  // 把关，菜单准入用的却是 service_request:read。只按 read 放人进来，会出现
+  // 「能看到待审列表、点审批必 403」——service_catalog_admin / technician /
+  // end_user / audit_admin 都只持 read。这里按真实动作码收敛按钮。
+  const { hasPermission } = usePermissions();
+  const canApprove = hasPermission(PERM.service_request.approve);
   const [requests, setRequests] = useState<ServiceRequestRecord[]>([]);
   // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
   const [listLoading, setListLoading] = useState(true);
@@ -98,14 +106,16 @@ export default function ServiceApprovalsPage() {
       title: t('common.actions'),
       render: (_: unknown, record: ServiceRequestRecord) => (
         <Space>
-          <Button
-            size="small"
-            type="primary"
-            loading={actionLoadingId === record.id}
-            onClick={() => handleApprove(record.id)}
-          >
-            {t('service.approve')}
-          </Button>
+          {canApprove && (
+            <Button
+              size="small"
+              type="primary"
+              loading={actionLoadingId === record.id}
+              onClick={() => handleApprove(record.id)}
+            >
+              {t('service.approve')}
+            </Button>
+          )}
           <Button
             size="small"
             onClick={() => {
@@ -115,16 +125,18 @@ export default function ServiceApprovalsPage() {
           >
             {t('common.view')}
           </Button>
-          <Button
-            size="small"
-            danger
-            onClick={() => {
-              setSelectedRequest(record);
-              setRejectModalVisible(true);
-            }}
-          >
-            {t('service.reject')}
-          </Button>
+          {canApprove && (
+            <Button
+              size="small"
+              danger
+              onClick={() => {
+                setSelectedRequest(record);
+                setRejectModalVisible(true);
+              }}
+            >
+              {t('service.reject')}
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -133,6 +145,15 @@ export default function ServiceApprovalsPage() {
   return (
     <div className="p-6">
       <Card title={t('service.pendingApprovals')}>
+        {!canApprove && (
+          <Alert
+            type="info"
+            showIcon
+            title="当前账号可查看待审列表，但没有审批权限"
+            description="审批与驳回需要 service_request:approve。这里只提供查看，需要处理时请联系审批人。"
+            style={{ marginBottom: 16 }}
+          />
+        )}
         <Table columns={columns} dataSource={requests} loading={listLoading} rowKey="id" />
       </Card>
 
