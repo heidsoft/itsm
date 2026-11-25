@@ -36,7 +36,7 @@ type txCloserStub struct {
 	terminatorCalls int
 	// lastTerminateTx 记录终止器收到的事务 client；必须非 nil，
 	// 否则终止与状态写入不在同一事务，原子性无从谈起
-	lastTerminateTx *ent.Client
+	lastTerminateTx  *ent.Client
 	lastTerminateArg struct {
 		tenantID, actorID, ticketID int
 		reason                      string

@@ -150,7 +150,7 @@ func TestBPMNErrorTyping_PublishValidation(t *testing.T) {
 	//    最外层 AppError.Message）。
 	badCandidateErr := func() error {
 		_, err := defSvc.PublishProcessDefinition(ctx, "etp1", "1.0", &UpdateProcessDefinitionRequest{
-			BPMNXML:            bizBPMNSimpleApproval,
+			BPMNXML:             bizBPMNSimpleApproval,
 			CandidateDefinition: map[string]interface{}{"domain": "expense"},
 		})
 		return err

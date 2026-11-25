@@ -13,8 +13,8 @@ import (
 	enttenant "itsm-backend/ent/tenant"
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/internal/authz"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

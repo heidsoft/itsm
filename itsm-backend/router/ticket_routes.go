@@ -3,8 +3,8 @@ package router
 import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 )

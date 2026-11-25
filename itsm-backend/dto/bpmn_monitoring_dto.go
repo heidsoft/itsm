@@ -80,10 +80,10 @@ type ProcessStat struct {
 	// ProcessDefinitionName 流程定义显示名（如「通用工单流程」），由指标服务
 	// 批量回填；定义缺失时留空，前端回退显示 Key，不得用 Key 冒充名称。
 	ProcessDefinitionName string  `json:"processDefinitionName,omitempty"`
-	TotalInstances       int     `json:"totalInstances"`
-	RunningInstances     int     `json:"runningInstances"`
-	CompletedInstances   int     `json:"completedInstances"`
-	AvgDuration          float64 `json:"avgDurationMinutes"`
+	TotalInstances        int     `json:"totalInstances"`
+	RunningInstances      int     `json:"runningInstances"`
+	CompletedInstances    int     `json:"completedInstances"`
+	AvgDuration           float64 `json:"avgDurationMinutes"`
 }
 
 // TaskStat 任务状态分布

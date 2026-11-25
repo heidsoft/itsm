@@ -31,10 +31,12 @@ func (s *permStub) Manifest() connector.Manifest { return s.manifest }
 func (s *permStub) Init(_ context.Context, _ connector.Config) error {
 	return nil
 }
+
 func (s *permStub) Send(_ context.Context, _ *connector.Message) error {
 	*s.sendCalls++
 	return nil
 }
+
 func (s *permStub) HealthCheck(_ context.Context) connector.HealthStatus {
 	return connector.HealthStatus{OK: true}
 }

@@ -61,7 +61,7 @@ func TestCMDBExportCSV_DoesNotOverwriteConcurrentTask(t *testing.T) {
 
 	info, err := os.Stat(p1)
 	require.NoError(t, err)
-	require.Equal(t, os.FileMode(0600), info.Mode().Perm(), "CI 资产清单不应同机其他用户可读")
+	require.Equal(t, os.FileMode(0o600), info.Mode().Perm(), "CI 资产清单不应同机其他用户可读")
 }
 
 func TestCMDBExportExcel_DoesNotOverwriteConcurrentTask(t *testing.T) {

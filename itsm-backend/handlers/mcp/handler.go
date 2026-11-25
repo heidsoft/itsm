@@ -59,14 +59,18 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 func (h *Handler) Handle(c *gin.Context) {
 	body, err := io.ReadAll(io.LimitReader(c.Request.Body, maxRequestBytes))
 	if err != nil {
-		writeRPC(c, &Response{JSONRPC: "2.0", ID: json.RawMessage("null"),
-			Error: NewError(CodeParseError, "读取请求体失败")})
+		writeRPC(c, &Response{
+			JSONRPC: "2.0", ID: json.RawMessage("null"),
+			Error: NewError(CodeParseError, "读取请求体失败"),
+		})
 		return
 	}
 	var req Request
 	if err := json.Unmarshal(body, &req); err != nil {
-		writeRPC(c, &Response{JSONRPC: "2.0", ID: json.RawMessage("null"),
-			Error: NewError(CodeParseError, "请求体不是合法 JSON: "+err.Error())})
+		writeRPC(c, &Response{
+			JSONRPC: "2.0", ID: json.RawMessage("null"),
+			Error: NewError(CodeParseError, "请求体不是合法 JSON: "+err.Error()),
+		})
 		return
 	}
 	caller := CallerFromContext(c)

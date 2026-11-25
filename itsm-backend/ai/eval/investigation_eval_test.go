@@ -110,8 +110,10 @@ func TestGate_InvestigationMetricsDetectDegradation(t *testing.T) {
 	faked.Degraded = false
 	faked.SuspectedRootCause = "编造的根因"
 	faked.Steps = []ai.InvestigationStep{
-		{Step: "triage"}, {Step: "knowledge", HitCount: 2},
-		{Step: "cmdb", HitCount: 1}, {Step: "synthesis"},
+		{Step: "triage"},
+		{Step: "knowledge", HitCount: 2},
+		{Step: "cmdb", HitCount: 1},
+		{Step: "synthesis"},
 	}
 	assert.Less(t, InvestigationDegradedHonesty(cases, map[string]*ai.TicketInvestigationResponse{"c1": &faked}), 1.0,
 		"降级伪装 completed 或编造根因必须让诚实率下降")

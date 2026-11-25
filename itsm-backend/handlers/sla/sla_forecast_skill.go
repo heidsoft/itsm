@@ -27,10 +27,12 @@ import (
 // ForecastData 内部使用的数据结构
 
 // SLA 预测值类型唯一实现在 dto；域包保留同名别名，调用点类型身份不变。
-type ForecastInput = dto.ForecastInput
-type PredictionPoint = dto.PredictionPoint
-type ForecastOutput = dto.ForecastOutput
-type ForecastData = dto.ForecastData
+type (
+	ForecastInput   = dto.ForecastInput
+	PredictionPoint = dto.PredictionPoint
+	ForecastOutput  = dto.ForecastOutput
+	ForecastData    = dto.ForecastData
+)
 
 // SLAForecastSkill AI-Native SLA 预测 Skill
 type SLAForecastSkill struct {

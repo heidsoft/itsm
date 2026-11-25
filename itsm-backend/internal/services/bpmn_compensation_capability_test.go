@@ -31,6 +31,7 @@ func (h *forwardOnlyHandler) GetHandlerID() string { return h.id }
 func (h *forwardOnlyHandler) Validate(context.Context, map[string]interface{}) error {
 	return nil
 }
+
 func (h *forwardOnlyHandler) Execute(_ context.Context, _ *ent.ProcessTask, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	if compensate, _ := variables["_compensate"].(bool); compensate {
 		h.compensateCalls++

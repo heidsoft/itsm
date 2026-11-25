@@ -18,11 +18,11 @@ import (
 // 推断结果必须能把作业节点和真正的审批节点分开。
 func TestInferredTaskPurpose(t *testing.T) {
 	cases := []struct {
-		name         string
-		key          string
-		taskName     string
-		variables    map[string]interface{}
-		want         string
+		name      string
+		key       string
+		taskName  string
+		variables map[string]interface{}
+		want      string
 	}{
 		{"显式审批优先于名称", "Activity_Assessment", "变更评估", map[string]interface{}{"taskPurpose": "approval"}, "approval"},
 		{"显式作业优先于名称", "Activity_Approval", "发布审批", map[string]interface{}{"taskPurpose": "work"}, "work"},

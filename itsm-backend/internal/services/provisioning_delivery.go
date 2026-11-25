@@ -32,6 +32,8 @@ const (
 
 // ProvisioningCIProjectionRequest / Result / Projector 的单一定义在 dto，
 // service 侧保留同名别名，交付链路与回归锁的签名不变。
-type ProvisioningCIProjectionRequest = dto.ProvisioningCIProjectionRequest
-type ProvisioningCIProjectionResult = dto.ProvisioningCIProjectionResult
-type ProvisioningCIProjector = dto.ProvisioningCIProjector
+type (
+	ProvisioningCIProjectionRequest = dto.ProvisioningCIProjectionRequest
+	ProvisioningCIProjectionResult  = dto.ProvisioningCIProjectionResult
+	ProvisioningCIProjector         = dto.ProvisioningCIProjector
+)

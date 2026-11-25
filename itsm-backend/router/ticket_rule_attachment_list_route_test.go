@@ -16,8 +16,8 @@ import (
 	assignmentSmartHandler "itsm-backend/handlers/assignment_smart"
 	automationRuleHandler "itsm-backend/handlers/automation_rule"
 	ticketAttachmentHandler "itsm-backend/handlers/ticket_attachment"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

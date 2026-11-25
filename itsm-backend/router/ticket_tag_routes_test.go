@@ -13,8 +13,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	ticketTagHandler "itsm-backend/handlers/ticket_tag"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

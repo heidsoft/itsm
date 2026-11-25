@@ -14,8 +14,8 @@ import (
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/schema"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

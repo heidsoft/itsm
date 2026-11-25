@@ -37,6 +37,7 @@ func (f *fakeRAG) IndexArticle(_ context.Context, _, _ int, _, _ string) error {
 	f.indexed++
 	return nil
 }
+
 func (f *fakeRAG) RemoveArticle(_ context.Context, _, _ int) error {
 	f.removed++
 	return nil

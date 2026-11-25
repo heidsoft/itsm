@@ -18,8 +18,8 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
-	entuser "itsm-backend/ent/user"
 	entticket "itsm-backend/ent/ticket"
+	entuser "itsm-backend/ent/user"
 	"itsm-backend/internal/datascope"
 
 	"go.uber.org/zap"

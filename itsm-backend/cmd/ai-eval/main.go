@@ -236,15 +236,21 @@ func run(mode, outDir, datasets string) error {
 		metric, desc string
 		value        float64
 	}{
-		{"stepCompleteness",
+		{
+			"stepCompleteness",
 			"四步链（triage/knowledge/cmdb/synthesis）齐全的 case 占比。",
-			eval.InvestigationStepCompleteness(invCases, invResults)},
-		{"degradedHonesty",
+			eval.InvestigationStepCompleteness(invCases, invResults),
+		},
+		{
+			"degradedHonesty",
 			"降级如实自报且不伪造根因/动作建议的 case 占比。",
-			eval.InvestigationDegradedHonesty(invCases, invResults)},
-		{"evidenceFidelity",
+			eval.InvestigationDegradedHonesty(invCases, invResults),
+		},
+		{
+			"evidenceFidelity",
 			"降级结论如实转述证据（分诊解释/KB 命中数/CMDB 命中）的 case 占比。",
-			eval.InvestigationEvidenceFidelity(invCases, invResults)},
+			eval.InvestigationEvidenceFidelity(invCases, invResults),
+		},
 	} {
 		rep.Sections = append(rep.Sections, sectionResult{
 			Task: "investigation", Mode: "degraded",

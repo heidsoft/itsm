@@ -26,6 +26,8 @@ import CreateTicketPage from '../page';
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+  // 页面用 useSearchParams 读 ?key= 预选流程；缺这个 mock 会整页渲染崩掉
+  useSearchParams: () => ({ get: () => null }),
 }));
 
 jest.mock('@/lib/api/ticketTypeApi', () => ({

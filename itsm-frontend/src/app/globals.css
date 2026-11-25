@@ -2320,3 +2320,29 @@ html.dark .ant-select-item-option-disabled .ant-select-item-option-content,
   color: var(--color-text-disabled) !important;
   cursor: not-allowed !important;
 }
+
+/* D51：/workflow/designer 高度链。
+   根容器已扣除全局 chrome（见 WorkflowDesigner 根 Layout 注释），
+   这里把剩余高度逐级传到 tabpane：Tabs（flex 列）→ content-holder →
+   content → tabpane，画布/校验面板在 Tab 内自适应与滚动，
+   不再使用会随视口漂移的 100vh-200px 魔数高度。 */
+.workflow-designer-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.workflow-designer-tabs > .ant-tabs-content-holder {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.workflow-designer-tabs > .ant-tabs-content-holder > .ant-tabs-content {
+  height: 100%;
+}
+
+.workflow-designer-tabs .ant-tabs-tabpane {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}

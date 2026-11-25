@@ -105,7 +105,7 @@ describe('CMDB 质量报表页', () => {
 
     // 必须给出明确告知
     expect(
-      await screen.findByText('尚未配置必填属性定义，完整率不可评估')
+      await screen.findByText('尚未配置必填属性，完整率不可评估')
     ).toBeInTheDocument();
     // 数值位显示「—」而不是 0（后者会被读成「数据烂透了」）
     expect(await screen.findByText('—')).toBeInTheDocument();

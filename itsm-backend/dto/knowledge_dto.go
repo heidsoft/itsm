@@ -56,20 +56,20 @@ type KnowledgeFreshness struct {
 
 // 知识库文章响应
 type KnowledgeArticleResponse struct {
-	ID        int       `json:"id"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	Category  string    `json:"category"`
-	Status    string    `json:"status"`
+	ID       int    `json:"id"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	Category string `json:"category"`
+	Status   string `json:"status"`
 	// IsPublished 与 Status 同源，但显式透出布尔值，避免 API 消费者靠字符串
 	// 反推可见性（历史响应里该字段恒为 null）。
 	IsPublished bool      `json:"isPublished"`
 	Author      string    `json:"author"`
-	Views     int       `json:"views"`
-	Tags      []string  `json:"tags"`
-	TenantID  int       `json:"tenantId"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	Views       int       `json:"views"`
+	Tags        []string  `json:"tags"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 
 	// 评审状态（draft / under_review / approved / rejected），与 Status 是两条
 	// 独立的轴：Status 由 is_published 派生（草稿 vs 已发布），评审状态描述

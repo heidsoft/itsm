@@ -52,12 +52,14 @@ const (
 // LLMPlatformStats 平台级 LLM 调用统计（ai_llm_calls，无租户维度）。
 
 // AI 评估/审计值类型已下沉 dto；同名别名保持调用点零改动。
-type AIEvaluationReport = dto.AIEvaluationReport
-type AIScenarioEval = dto.AIScenarioEval
-type AISkillEval = dto.AISkillEval
-type AICalibrationBucket = dto.AICalibrationBucket
-type LLMPlatformStats = dto.LLMPlatformStats
-type AIAuditEntry = dto.AIAuditEntry
+type (
+	AIEvaluationReport  = dto.AIEvaluationReport
+	AIScenarioEval      = dto.AIScenarioEval
+	AISkillEval         = dto.AISkillEval
+	AICalibrationBucket = dto.AICalibrationBucket
+	LLMPlatformStats    = dto.LLMPlatformStats
+	AIAuditEntry        = dto.AIAuditEntry
+)
 
 // scenarioToSkillCode 把旧"kind"（scenarios）映射到 Skill 标识。
 //

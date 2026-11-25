@@ -534,7 +534,8 @@ func bpmnWorkTaskNotActionable(businessType string, businessID int) error {
 		common.ConflictCode,
 		"流程当前待办不是作业节点，拒绝推进",
 		fmt.Sprintf("businessType=%s businessId=%d", strings.ToLower(businessType), businessID),
-	)}
+	)
+}
 
 // HasPendingUserTasksWithClient 检查指定业务键是否仍有待办 BPMN 用户任务（事务内）。
 // 用于审批完成后判定业务状态：approve 后无剩余待办 → 全部审批通过。

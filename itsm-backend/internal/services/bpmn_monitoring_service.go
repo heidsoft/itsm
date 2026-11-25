@@ -1026,8 +1026,7 @@ func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *Proc
 		}
 		statusCounts[i] = count
 	}
-	runningCount, completedCount, failedCount, terminatedCount, suspendedCount :=
-		statusCounts[0], statusCounts[1], statusCounts[2], statusCounts[3], statusCounts[4]
+	runningCount, completedCount, failedCount, terminatedCount, suspendedCount := statusCounts[0], statusCounts[1], statusCounts[2], statusCounts[3], statusCounts[4]
 
 	metrics.RunningInstances = runningCount
 	metrics.CompletedInstances = completedCount

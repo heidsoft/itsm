@@ -31,7 +31,11 @@ concurrency:
 jobs:
   ga-approved:
     name: GA Gate · Approved
-    runs-on: ubuntu-latest
+    # 钉 24.04：ubuntu-latest 在 2026-11-15~17 间翻到 26.04，而锁版
+    # @playwright/test 1.58.2 尚不支持 ubuntu26.04-x64 的 chromium，
+    # `npx playwright install` 从 11-17 起必败、E2E/smoke 整段失明 8 天。
+    # 待 Playwright 上游支持 26.04（或依赖升级覆盖，dependabot #102）后再回 latest。
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
       DEPLOYMENT_MODE: private

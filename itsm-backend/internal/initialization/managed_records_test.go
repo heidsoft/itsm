@@ -39,6 +39,7 @@ func (i *managedInitializer) Plan(context.Context, Scope) (Plan, error) {
 		Actions:        i.actions,
 	}, nil
 }
+
 func (i *managedInitializer) Apply(ctx context.Context, scope Scope, plan Plan, d dialect.Driver) (Result, error) {
 	if i.apply != nil {
 		return i.apply(ctx, scope, plan, d)
