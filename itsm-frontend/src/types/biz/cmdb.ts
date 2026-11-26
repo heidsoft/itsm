@@ -45,6 +45,11 @@ export interface ConfigurationItem {
   attributes?: Record<string, any>;
   createdAt: string;
   updatedAt: string;
+  // 后端 CIResponse 下发 optimistic-lock 版本与生命周期状态；旧数据/桩可能缺字段。
+  version?: number;
+  lifecycleStatus?: string;
+  effectiveAt?: string;
+  expireAt?: string;
 }
 
 // CI 类型实体
