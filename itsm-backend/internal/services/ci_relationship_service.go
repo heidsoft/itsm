@@ -391,7 +391,16 @@ func (s *CIRelationshipService) DeleteCIRelationship(ctx context.Context, id, te
 }
 
 // GetCIImpactAnalysis 获取CI影响分析
-const maxCIImpactAnalysisDepth = 10
+const (
+	maxCIImpactAnalysisDepth = 10
+	maxCIGraphNodes          = 200
+	maxCIGraphEdges          = 400
+)
+
+// Fail explicitly instead of returning an apparently complete partial graph.
+func ciGraphBudgetError() error {
+	return common.NewValidationError("图查询超过预算（200节点/400边），请缩小深度或范围", nil)
+}
 
 func topologyNodeFromCI(ci *ent.ConfigurationItem) dto.TopologyNode {
 	return dto.TopologyNode{
@@ -421,7 +430,7 @@ func (s *CIRelationshipService) GetCITopology(ctx context.Context, ciID, tenantI
 		maxDepth = 3
 	}
 	if maxDepth > maxCIImpactAnalysisDepth {
-		maxDepth = maxCIImpactAnalysisDepth
+		return nil, common.NewValidationError("maxDepth/depth 不能超过10", nil)
 	}
 	root, err := scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.IDEQ(ciID), configurationitem.TenantIDEQ(tenantID)).Only(ctx)
@@ -437,9 +446,12 @@ func (s *CIRelationshipService) GetCITopology(ctx context.Context, ciID, tenantI
 		relations, err := s.client.CIRelationship.Query().Where(relationScope...).Where(
 			cirelationship.TenantIDEQ(tenantID), cirelationship.IsActiveEQ(true),
 			cirelationship.Or(cirelationship.SourceCiIDIn(frontier...), cirelationship.TargetCiIDIn(frontier...)),
-		).All(ctx)
+		).Limit(maxCIGraphEdges + 1).All(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query topology relationships: %w", err)
+		}
+		if len(relations) > maxCIGraphEdges {
+			return nil, ciGraphBudgetError()
 		}
 		nextIDs := make([]int, 0)
 		for _, rel := range relations {
@@ -450,6 +462,9 @@ func (s *CIRelationshipService) GetCITopology(ctx context.Context, ciID, tenantI
 					nextIDs = append(nextIDs, id)
 				}
 			}
+		}
+		if len(visited) > maxCIGraphNodes || len(edges) > maxCIGraphEdges {
+			return nil, ciGraphBudgetError()
 		}
 		if len(nextIDs) == 0 {
 			break
@@ -497,7 +512,7 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 		maxDepth = 3
 	}
 	if maxDepth > maxCIImpactAnalysisDepth {
-		maxDepth = maxCIImpactAnalysisDepth
+		return nil, common.NewValidationError("maxDepth/depth 不能超过10", nil)
 	}
 	// 检查CI是否存在
 	root, err := scopedCIQuery(ctx, s.client, tenantID).
@@ -542,6 +557,9 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 			seenEdges[edge.ID] = true
 			impactEdges = append(impactEdges, edge)
 		}
+	}
+	if len(impactNodes) > maxCIGraphNodes || len(impactEdges) > maxCIGraphEdges {
+		return nil, ciGraphBudgetError()
 	}
 	criticalDeps := append(downCritical, upCritical...)
 
@@ -634,11 +652,14 @@ func (s *CIRelationshipService) traverseImpactLayers(ctx context.Context, tenant
 		} else {
 			query = query.Where(cirelationship.SourceCiIDIn(frontier...))
 		}
-		relations, err := query.All(ctx)
+		relations, err := query.Limit(maxCIGraphEdges + 1).All(ctx)
 		if err != nil {
 			return nil, nil, nil, nil, fmt.Errorf("failed to query %s impact relationships: %w", direction, err)
 		}
 
+		if len(relations) > maxCIGraphEdges {
+			return nil, nil, nil, nil, ciGraphBudgetError()
+		}
 		nextIDs := make([]int, 0)
 		nextRelType := make(map[int]string)
 		nextCritical := make(map[int]bool)
@@ -654,6 +675,9 @@ func (s *CIRelationshipService) traverseImpactLayers(ctx context.Context, tenant
 				nextRelType[nextID] = rel.RelationshipType
 				nextCritical[nextID] = rel.Strength == cirelationship.StrengthCritical
 			}
+		}
+		if len(visited) > maxCIGraphNodes || len(edges) > maxCIGraphEdges {
+			return nil, nil, nil, nil, ciGraphBudgetError()
 		}
 		if len(nextIDs) == 0 {
 			continue

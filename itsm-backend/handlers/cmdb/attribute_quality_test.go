@@ -361,3 +361,13 @@ func TestDuplicateRatePct(t *testing.T) {
 		}
 	}
 }
+
+func TestAttributeQualityAuditEmptyCollections(t *testing.T) {
+	for _, value := range []interface{}{nil, "", " ", []interface{}{}, map[string]interface{}{}, []string{}, map[string]string{}} {
+		ci := makeAttrCI(1, 1, "in_service", map[string]interface{}{"required": value})
+		got := ComputeAttributeQuality([]*ConfigurationItem{ci}, map[int][]string{1: {"required"}}, time.Hour, time.Now())
+		if got.Incomplete != 1 {
+			t.Errorf("empty %T must be missing", value)
+		}
+	}
+}

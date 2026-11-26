@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
@@ -124,4 +125,36 @@ func TestCreateCI_WithRequiredAttributeSucceeds(t *testing.T) {
 	count, err := f.client.ConfigurationItem.Query().Count(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, 1, count)
+}
+
+func TestCreateCIAuditEnumAndBlankContract(t *testing.T) {
+	f := newCreateCICodeFixture(t)
+	ctx := context.Background()
+	def, err := f.client.CIAttributeDefinition.Query().Only(ctx)
+	require.NoError(t, err)
+	_, err = f.client.CIAttributeDefinition.UpdateOneID(def.ID).SetType("enum").SetEnumValues([]string{"prod"}).Save(ctx)
+	require.NoError(t, err)
+	w := f.postCreate(t, map[string]interface{}{"ip_address": "invalid"})
+	require.Equal(t, http.StatusBadRequest, w.Code, w.Body.String())
+	var body struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	require.Equal(t, 4000, body.Code)
+	for _, kind := range []string{"json", "list", "map"} {
+		_, err = f.client.CIAttributeDefinition.UpdateOneID(def.ID).SetType(kind).SetEnumValues([]string{}).Save(ctx)
+		require.NoError(t, err)
+		for _, value := range []interface{}{[]interface{}{}, map[string]interface{}{}} {
+			w = f.postCreate(t, map[string]interface{}{"ip_address": value})
+			require.Equal(t, http.StatusBadRequest, w.Code, w.Body.String())
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+			require.Equal(t, 4000, body.Code)
+			quality := ComputeAttributeQuality([]*ConfigurationItem{{CITypeID: f.ciTypeID, Attributes: map[string]interface{}{"ip_address": value}}}, map[int][]string{f.ciTypeID: {"ip_address"}}, time.Hour, time.Now())
+			require.Equal(t, 1, quality.Incomplete)
+		}
+	}
+	n, err := f.client.ConfigurationItem.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Zero(t, n)
 }

@@ -20,6 +20,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/cicertificationtask"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -42,7 +43,7 @@ var ErrCITaskAlreadyPending = fmt.Errorf("该配置项已有待办的数据认�
 var ErrCINotOwned = fmt.Errorf("配置项不存在或不属于当前租户")
 
 // ErrCITaskAlreadyConfirmed 认证任务已完成（幂等拒绝重复确认）。
-var ErrCITaskAlreadyConfirmed = fmt.Errorf("该认证任务已完成")
+var ErrCITaskAlreadyConfirmed = fmt.Errorf("任务已被其他人确认")
 
 // ErrCICertificationActorMissing 缺少可签名的操作人身份。
 var ErrCICertificationActorMissing = fmt.Errorf("认证缺少操作人身份")
@@ -75,6 +76,16 @@ func (s *CICertificationService) CreateTask(ctx context.Context, tenantID, actor
 	}
 	if pending {
 		return nil, ErrCITaskAlreadyPending
+	}
+
+	if req.AssigneeID > 0 {
+		owned, err := s.client.User.Query().Where(user.ID(req.AssigneeID), user.TenantID(tenantID)).Exist(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if !owned {
+			return nil, common.NewValidationError("责任人不存在或不属于当前租户", nil)
+		}
 	}
 
 	create := s.client.CICertificationTask.Create().
@@ -140,6 +151,7 @@ func (s *CICertificationService) ConfirmTask(ctx context.Context, tenantID, acto
 	}()
 
 	upd := tx.CICertificationTask.UpdateOneID(task.ID).
+		Where(cicertificationtask.TenantID(tenantID), cicertificationtask.StatusEQ("pending")).
 		SetStatus("confirmed").
 		SetConfirmedBy(actorID).
 		SetConfirmedAt(now)
@@ -148,6 +160,9 @@ func (s *CICertificationService) ConfirmTask(ctx context.Context, tenantID, acto
 	}
 	updated, err = upd.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrCITaskAlreadyConfirmed
+		}
 		return nil, err
 	}
 

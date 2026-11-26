@@ -7,6 +7,8 @@ package dto
 import (
 	"context"
 	"errors"
+	"reflect"
+	"strings"
 )
 
 // ErrCIAttributeValidation 标记「属性值不符合该 CI 类型的定义」（缺必填、类型/枚举不通过、唯一冲突）。
@@ -56,4 +58,20 @@ type ProvisioningCIProjectionResult struct {
 
 type ProvisioningCIProjector interface {
 	ProjectProvisionedResource(ctx context.Context, req ProvisioningCIProjectionRequest) ProvisioningCIProjectionResult
+}
+
+// IsBlankCIAttribute is shared by write validation and governance completeness.
+// Nil, whitespace strings and empty collections represent missing values; zero/false do not.
+func IsBlankCIAttribute(value interface{}) bool {
+	if value == nil {
+		return true
+	}
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
+	case reflect.String:
+		return strings.TrimSpace(v.String()) == ""
+	case reflect.Slice, reflect.Map, reflect.Array:
+		return v.Len() == 0
+	}
+	return false
 }

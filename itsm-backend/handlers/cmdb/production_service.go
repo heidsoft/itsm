@@ -832,6 +832,11 @@ func (c *ProductionService) GetCITopology(ctx *gin.Context) {
 			common.NotFound(ctx, "配置项不存在")
 			return
 		}
+		var appErr *common.AppError
+		if errors.As(err, &appErr) && appErr.Code == common.ErrCodeValidation {
+			common.BadRequestWithErr(ctx, err, appErr.Message)
+			return
+		}
 		c.logger.Errorw("Get CI topology failed", "errorClass", "internal", "ciId", ciID, "tenantId", tenantID)
 		common.InternalError(ctx, "获取CI拓扑失败")
 		return
@@ -871,6 +876,11 @@ func (c *ProductionService) GetCIImpactAnalysis(ctx *gin.Context) {
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.NotFound(ctx, "配置项不存在")
+			return
+		}
+		var appErr *common.AppError
+		if errors.As(err, &appErr) && appErr.Code == common.ErrCodeValidation {
+			common.BadRequestWithErr(ctx, err, appErr.Message)
 			return
 		}
 		c.logger.Errorw("Get CI impact analysis failed", "errorClass", "internal", "ciId", ciID, "tenantId", tenantID)

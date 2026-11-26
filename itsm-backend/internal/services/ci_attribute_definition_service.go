@@ -3,7 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
+	"reflect"
+	"sort"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ciattributedefinition"
@@ -37,8 +41,8 @@ func (s *CIAttributeDefinitionService) CreateCIAttributeDefinition(ctx context.C
 	if !exists {
 		return nil, fmt.Errorf("CI type not found")
 	}
-	if req.Type == "enum" && len(req.EnumValues) == 0 {
-		return nil, fmt.Errorf("enumValues is required for enum attributes")
+	if err := validateDefinitionRules(req.Type, req.EnumValues, req.ValidationRules); err != nil {
+		return nil, err
 	}
 
 	attr, err := s.client.CIAttributeDefinition.Create().
@@ -154,6 +158,24 @@ func (s *CIAttributeDefinitionService) resolveTypeChain(ctx context.Context, ciT
 
 // UpdateCIAttributeDefinition 更新CI属性定义
 func (s *CIAttributeDefinitionService) UpdateCIAttributeDefinition(ctx context.Context, id, tenantID int, req *dto.UpdateCIAttributeDefinitionRequest) (*dto.CIAttributeDefinitionResponse, error) {
+	current, err := s.client.CIAttributeDefinition.Query().Where(ciattributedefinition.IDEQ(id), ciattributedefinition.TenantIDEQ(tenantID)).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	kind, enums, rules := current.Type, current.EnumValues, current.ValidationRules
+	if req.Type != nil {
+		kind = *req.Type
+	}
+	if req.EnumValues != nil {
+		enums = *req.EnumValues
+	}
+	if req.ValidationRules != nil {
+		rules = *req.ValidationRules
+	}
+	if err := validateDefinitionRules(kind, enums, rules); err != nil {
+		return nil, err
+	}
+
 	update := s.client.CIAttributeDefinition.UpdateOneID(id).
 		Where(ciattributedefinition.TenantIDEQ(tenantID))
 
@@ -224,5 +246,61 @@ func (s *CIAttributeDefinitionService) DeleteCIAttributeDefinition(ctx context.C
 	}
 
 	s.logger.Infow("CI attribute definition deleted successfully", "attr_id", id, "tenant_id", tenantID)
+	return nil
+}
+
+// validateDefinitionRules validates structure, not regular expressions: pattern is literal Contains.
+func validateDefinitionRules(kind string, enums []string, raw string) error {
+	rules, err := parseValidationRules(raw)
+	invalid := func() error {
+		return common.NewValidationError("属性验证规则结构无效或枚举定义不一致", nil)
+	}
+	if err != nil {
+		return invalid()
+	}
+	for key, value := range rules {
+		switch key {
+		case "pattern":
+			if _, ok := value.(string); !ok {
+				return invalid()
+			}
+		case "enum_values":
+			list, ok := value.([]interface{})
+			if !ok {
+				return invalid()
+			}
+			for _, item := range list {
+				if _, ok := item.(string); !ok {
+					return invalid()
+				}
+			}
+		case "min", "max", "min_length", "max_length":
+			n, ok := value.(float64)
+			if !ok || ((key == "min_length" || key == "max_length") && (n < 0 || math.Trunc(n) != n)) {
+				return invalid()
+			}
+		default:
+			return invalid()
+		}
+	}
+	legacy := stringListFromRule(rules, "enum_values")
+	if _, hasLegacy := rules["enum_values"]; len(enums) > 0 && hasLegacy {
+		a, b := append([]string(nil), enums...), append([]string(nil), legacy...)
+		sort.Strings(a)
+		sort.Strings(b)
+		if !reflect.DeepEqual(a, b) {
+			return invalid()
+		}
+	}
+	for _, pair := range [][2]string{{"min", "max"}, {"min_length", "max_length"}} {
+		lo, lok := numericRuleValue(rules, pair[0])
+		hi, hik := numericRuleValue(rules, pair[1])
+		if lok && hik && lo > hi {
+			return invalid()
+		}
+	}
+	if kind == "enum" && len(enums) == 0 && len(legacy) == 0 {
+		return invalid()
+	}
 	return nil
 }

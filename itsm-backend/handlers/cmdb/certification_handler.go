@@ -139,24 +139,19 @@ func (h *CICertificationHandler) ListTasks(c *gin.Context) {
 	common.Success(c, result)
 }
 
-// respondError 把领域 sentinel 映射成 400/4000，其余按 classifyError 兜底。
-//
-// 用 errors.Is 而非 ==：服务层用 fmt.Errorf("%w") 包装过 sentinel，
-// 直接比较会漏判并退化成 500，客户端拿到「服务器错误」而实际上是自己传错了。
-//
-// 每个 sentinel 用**各自的具体消息**而不是共用调用点的 msg：曾统一传 msg，
-// 导致「该任务已完成」被改写为「完成认证失败」——客户端看到的是笼统的失败，
-// 无法区分「操作出错该重试」与「状态已变更别重试」。状态码同为 400，
-// 但 message 是唯一能让人（和前端提示文案）区分二者的字段。
+// respondError preserves specific domain messages; confirmation races are 409 conflicts.
+// Ownership/identity failures retain their existing validation response contract.
 func (h *CICertificationHandler) respondError(c *gin.Context, err error, msg string) {
 	var publicMsg string
 	switch {
 	case errors.Is(err, ErrCITaskAlreadyPending):
-		publicMsg = ErrCITaskAlreadyPending.Error()
+		common.FailWithErr(c, common.NewStateConflictError(ErrCITaskAlreadyPending.Error(), "pending certification exists"), ErrCITaskAlreadyPending.Error())
+		return
 	case errors.Is(err, ErrCINotOwned):
 		publicMsg = ErrCINotOwned.Error()
 	case errors.Is(err, ErrCITaskAlreadyConfirmed):
-		publicMsg = ErrCITaskAlreadyConfirmed.Error()
+		common.FailWithErr(c, common.NewStateConflictError(ErrCITaskAlreadyConfirmed.Error(), "certification status CAS"), ErrCITaskAlreadyConfirmed.Error())
+		return
 	case errors.Is(err, ErrCICertificationActorMissing):
 		publicMsg = ErrCICertificationActorMissing.Error()
 	default:

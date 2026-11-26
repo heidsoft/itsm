@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -148,4 +149,47 @@ func TestListTasks_DerivesOverdueFromDueAt(t *testing.T) {
 	assert.Equal(t, 1, pending)
 	assert.Equal(t, 1, overdue, "due_at 已过的 pending 必须计入逾期")
 	assert.Equal(t, 0, confirmed)
+}
+
+func TestCertificationAuditAssigneeTenant(t *testing.T) {
+	f := newCertificationFixture(t)
+	other := f.svc.client.Tenant.Create().SetName("other").SetCode("other").SetDomain("other.test").SaveX(f.ctx)
+	foreign := f.svc.client.User.Create().SetName("foreign").SetUsername("foreign").SetEmail("foreign@test.com").SetPasswordHash("test").SetTenantID(other.ID).SaveX(f.ctx)
+	_, err := f.svc.CreateTask(f.ctx, f.tenantID, 7, &dto.CreateCICertificationRequest{CIID: f.ciID, AssigneeID: foreign.ID})
+	require.Error(t, err)
+	n, err := f.svc.client.CICertificationTask.Query().Count(f.ctx)
+	require.NoError(t, err)
+	require.Zero(t, n)
+	own := f.svc.client.User.Create().SetName("own").SetUsername("own").SetEmail("own@test.com").SetPasswordHash("test").SetTenantID(f.tenantID).SaveX(f.ctx)
+	task, err := f.svc.CreateTask(f.ctx, f.tenantID, 7, &dto.CreateCICertificationRequest{CIID: f.ciID, AssigneeID: own.ID})
+	require.NoError(t, err)
+	require.Equal(t, own.ID, task.AssigneeID)
+}
+
+func TestCertificationAuditCASPreservesFirstSignature(t *testing.T) {
+	f := newCertificationFixture(t)
+	task, err := f.svc.CreateTask(f.ctx, f.tenantID, 7, &dto.CreateCICertificationRequest{CIID: f.ciID})
+	require.NoError(t, err)
+	// Inject a winner after the losing request reads pending but before it starts its transaction.
+	injected := false
+	f.svc.client.CICertificationTask.Intercept(ent.InterceptFunc(func(next ent.Querier) ent.Querier {
+		return ent.QuerierFunc(func(ctx context.Context, q ent.Query) (ent.Value, error) {
+			result, err := next.Query(ctx, q)
+			if err == nil && !injected {
+				injected = true
+				_, writeErr := f.svc.client.CICertificationTask.UpdateOneID(task.ID).SetStatus("confirmed").SetConfirmedBy(11).SetEvidence("first signature").SetConfirmedAt(time.Now()).Save(ctx)
+				require.NoError(t, writeErr)
+			}
+			return result, err
+		})
+	}))
+	_, err = f.svc.ConfirmTask(f.ctx, f.tenantID, 12, task.ID, &dto.ConfirmCICertificationRequest{Evidence: "loser"})
+	require.ErrorIs(t, err, ErrCITaskAlreadyConfirmed)
+	saved, err := f.svc.client.CICertificationTask.Get(f.ctx, task.ID)
+	require.NoError(t, err)
+	require.Equal(t, 11, saved.ConfirmedBy)
+	require.Equal(t, "first signature", saved.Evidence)
+	ci, err := f.svc.client.ConfigurationItem.Get(f.ctx, f.ciID)
+	require.NoError(t, err)
+	require.Zero(t, ci.ConfirmedBy)
 }
