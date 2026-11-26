@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -210,5 +211,91 @@ func TestCMDBImportIdentityAndDatesRejectUnsafeRows(t *testing.T) {
 				client.CMDBImportTask.UpdateOneID(task.ID).SetStatus("pending").ExecX(ctx)
 			}
 		})
+	}
+}
+
+func TestImportIdentitySaveRegression(t *testing.T) {
+	for _, mode := range []string{"create", "overwrite", "merge"} {
+		for _, identity := range []string{"asset", "cloud", "success"} {
+			t.Run(mode+"/"+identity, func(t *testing.T) {
+				client, ctx, service, tenantID, operatorID, ciTypeID := cmdbJobFixture(t)
+				_, err := client.ConfigurationItem.Create().SetTenantID(tenantID).SetName("occupied").SetCiTypeID(ciTypeID).SetAssetTag("occupied").SetCloudProvider("aliyun").SetCloudAccountID("account").SetCloudResourceID("occupied").Save(ctx)
+				require.NoError(t, err)
+				targetID := 0
+				if mode != "create" {
+					target, err := client.ConfigurationItem.Create().SetTenantID(tenantID).SetName("original").SetCiTypeID(ciTypeID).SetAssetTag("incoming").Save(ctx)
+					require.NoError(t, err)
+					targetID = target.ID
+				}
+				db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?mode=memory&cache=shared&_fk=1", strings.ReplaceAll(t.Name(), "/", "-")))
+				require.NoError(t, err)
+				defer db.Close()
+				_, err = db.ExecContext(ctx, `CREATE UNIQUE INDEX ci_asset_tag_tenant_unique ON configuration_items (tenant_id, asset_tag) WHERE asset_tag IS NOT NULL AND asset_tag <> ''`)
+				require.NoError(t, err)
+				_, err = db.ExecContext(ctx, `CREATE UNIQUE INDEX ci_cloud_identity_unique ON configuration_items (tenant_id, cloud_provider, cloud_account_id, cloud_resource_id) WHERE cloud_provider <> '' AND cloud_resource_id <> ''`)
+				require.NoError(t, err)
+				// Change the identity after lookup to reproduce a competing identity write.
+				// The real SQLite index rejects it, and the service transaction must roll back.
+				if identity != "success" {
+					client.ConfigurationItem.Use(func(next ent.Mutator) ent.Mutator {
+						return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+							mutation := m.(*ent.ConfigurationItemMutation)
+							if identity == "asset" {
+								mutation.SetAssetTag("occupied")
+							} else {
+								mutation.SetCloudProvider("aliyun")
+								mutation.SetCloudAccountID("account")
+								mutation.SetCloudResourceID("occupied")
+							}
+							return next.Mutate(ctx, m)
+						})
+					})
+				}
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					_, _ = fmt.Fprintf(w, "Name,CI Type ID,Status,Asset Tag\nupdated,%d,active,incoming\n", ciTypeID)
+				}))
+				defer server.Close()
+				updateMode := mode
+				if mode == "create" {
+					updateMode = "overwrite"
+				}
+				_, err = service.CreateImportTask(ctx, &dto.ImportCIRequest{FileURL: server.URL, FileType: "csv", UpdateMode: updateMode}, tenantID, operatorID, "operator")
+				require.NoError(t, err)
+				command, err := client.OperationalCommand.Query().Where(operationalcommand.CommandTypeEQ(commandbus.CommandProcessCMDBImport)).Only(ctx)
+				require.NoError(t, err)
+				require.NoError(t, service.HandleImportCommand(ctx, command))
+				task, err := client.CMDBImportTask.Query().Only(ctx)
+				require.NoError(t, err)
+				if identity == "success" {
+					require.Zero(t, task.FailedCount)
+					require.Equal(t, 1, task.SuccessCount)
+				} else {
+					require.Equal(t, 1, task.FailedCount)
+					require.Zero(t, task.SuccessCount)
+					require.Len(t, task.Errors, 1)
+					expected := "asset_tag 已被其他 CI 占用（同租户）"
+					if identity == "cloud" {
+						expected = "云身份已被其他 CI 占用"
+					}
+					require.Equal(t, expected, task.Errors[0]["message"])
+				}
+				count, err := client.ConfigurationItem.Query().Count(ctx)
+				require.NoError(t, err)
+				expectedCount := 2
+				if mode == "create" && identity != "success" {
+					expectedCount = 1
+				}
+				require.Equal(t, expectedCount, count)
+				if targetID != 0 {
+					target, err := client.ConfigurationItem.Get(ctx, targetID)
+					require.NoError(t, err)
+					expectedName := "original"
+					if identity == "success" {
+						expectedName = "updated"
+					}
+					require.Equal(t, expectedName, target.Name)
+				}
+			})
+		}
 	}
 }

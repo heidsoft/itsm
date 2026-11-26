@@ -390,7 +390,7 @@ func (s *CMDBImportExportService) processImportTask(parent context.Context, task
 			errors = append(errors, dto.CIImportError{
 				RowNumber: rowNumber,
 				FieldName: "",
-				Message:   fmt.Sprintf("保存CI失败: %v", err),
+				Message:   importCISaveError(err),
 			})
 			continue
 		}
@@ -1537,4 +1537,19 @@ func safeExcelizeGetRows(filePath, sheetName string) (rows [][]string, err error
 		return nil, fmt.Errorf("读取Sheet失败: %w", err)
 	}
 	return rows, nil
+}
+
+// importCISaveError classifies only identity-key unique violations. Other
+// constraints retain their original failure semantics rather than claiming occupancy.
+func importCISaveError(err error) string {
+	msg := err.Error()
+	if ent.IsConstraintError(err) && (strings.Contains(msg, "23505") || strings.Contains(msg, "violates unique constraint") || strings.Contains(msg, "UNIQUE constraint failed")) {
+		switch {
+		case strings.Contains(msg, "ci_asset_tag_tenant_unique"), strings.Contains(msg, "configuration_items.asset_tag"):
+			return "asset_tag 已被其他 CI 占用（同租户）"
+		case strings.Contains(msg, "ci_cloud_identity_unique"), strings.Contains(msg, "configuration_items.cloud_resource_id"):
+			return "云身份已被其他 CI 占用"
+		}
+	}
+	return fmt.Sprintf("保存CI失败: %v", err)
 }
