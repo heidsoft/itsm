@@ -1,15 +1,20 @@
 name: frontend-ci
 
+# Purpose:
+#   Validate frontend changes before they reach main.
+#   Push events stay path-scoped to save CI minutes, but pull_request is
+#   intentionally unfiltered: main branch protection requires Frontend on EVERY
+#   PR. A path-filtered PR trigger makes backend/docs PRs permanently BLOCKED
+#   because the required check never reports (2026-11-26 PR #133/#134 incident).
+
 on:
   push:
     branches: [main, develop]
     paths:
       - 'itsm-frontend/**'
       - '.github/workflows/frontend-ci.yml'
+  # No path filter: required check must report on every PR (see header).
   pull_request:
-    paths:
-      - 'itsm-frontend/**'
-      - '.github/workflows/frontend-ci.yml'
   workflow_dispatch:
 
 permissions:
