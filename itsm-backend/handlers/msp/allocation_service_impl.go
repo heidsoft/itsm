@@ -25,7 +25,7 @@ import (
 // 或不属于当前 MSP 租户。handler 据此映射 404，不得降级成静默成功。
 var ErrMSPAllocationNotFound = errors.New("msp allocation not active")
 
-// ErrMSPAllocationForbidden 表示操作者与目标 MSP 租户无从属关系，handler 据此映射 403。
+// ErrMSPAllocationForbidden 表示操作者归属或客户委托关系不合法，handler 据此映射 403。
 var ErrMSPAllocationForbidden = errors.New("operator is not affiliated with the target msp tenant")
 
 // MSPAllocationHistoryFilter 分配历史查询条件。
@@ -75,29 +75,21 @@ func (s *MSPAllocationService) Create(
 		}
 	}
 
-	// 1. 验证 MSP 用户必须是 MSP 租户（管理员除外）
-	if !isAdmin {
-		u, err := s.client.User.Query().
-			Where(user.IDEQ(mspUserID)).
-			WithTenant().
-			Only(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("MSP用户不存在: %w", err)
-		}
-		if u.Edges.Tenant == nil || !tenantmode.IsMSPProviderTenantType(string(u.Edges.Tenant.Type)) {
-			return nil, fmt.Errorf("用户不属于MSP租户")
-		}
+	// 平台 super_admin/sysadmin 可跨服务商管理，但不能创建客户委托关系。
+	// msp_provider_id 由租户管理接口维护；分配只能细化已有委托。
+	target, err := s.client.User.Query().Where(user.IDEQ(mspUserID)).WithTenant().Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("MSP用户不存在: %w", err)
 	}
-
-	// 2. 验证客户租户（管理员除外，需要是 customer 类型）
-	cust, err := s.client.Tenant.Query().
-		Where(tenant.IDEQ(customerTenantID)).
-		Only(ctx)
+	cust, err := s.client.Tenant.Get(ctx, customerTenantID)
 	if err != nil {
 		return nil, fmt.Errorf("客户租户不存在: %w", err)
 	}
-	if !isAdmin && !tenantmode.IsCustomerTenantType(string(cust.Type)) {
-		return nil, fmt.Errorf("目标租户不是客户类型")
+	if target.Edges.Tenant == nil ||
+		!tenantmode.IsMSPProviderTenantType(string(target.Edges.Tenant.Type)) ||
+		!tenantmode.IsCustomerTenantType(string(cust.Type)) ||
+		cust.MspProviderID == 0 || cust.MspProviderID != target.Edges.Tenant.ID {
+		return nil, ErrMSPAllocationForbidden
 	}
 
 	// 3. 检查是否已存在有效的未解除分配

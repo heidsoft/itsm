@@ -257,6 +257,12 @@ func (h *Handler) GetAllCustomers(c *gin.Context) {
 		return
 	}
 
+	mspCtx, ok := middleware.GetMSPContext(c)
+	if !ok || !mspCtx.IsMSP {
+		common.Forbidden(c, "非MSP用户")
+		return
+	}
+
 	customers, err := h.mspAllocationService.GetMSPCustomers(c.Request.Context(), userID)
 	if err != nil {
 		h.logger.Errorw("Failed to list customers", "error", err, "user_id", userID)
@@ -266,6 +272,11 @@ func (h *Handler) GetAllCustomers(c *gin.Context) {
 
 	customerDTOs := make([]*dto.CustomerDTO, 0, len(customers))
 	for _, customer := range customers {
+		// 客户目录与工单访问使用同一份已验证的 provider / 生命周期范围。
+		if !mspCtx.IsCustomerAllowed(customer.ID) {
+			continue
+		}
+
 		customerDTOs = append(customerDTOs, &dto.CustomerDTO{
 			ID:   customer.ID,
 			Code: customer.Code,

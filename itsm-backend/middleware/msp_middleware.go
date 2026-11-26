@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
@@ -72,7 +73,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 		u, err := client.User.Query().
 			Where(user.IDEQ(userID)).
 			WithTenant(func(q *ent.TenantQuery) {
-				q.Select(tenant.FieldID, tenant.FieldCode, tenant.FieldName, tenant.FieldType)
+				q.Select(tenant.FieldID, tenant.FieldCode, tenant.FieldName, tenant.FieldType, tenant.FieldStatus, tenant.FieldExpiresAt)
 			}).
 			Only(c.Request.Context())
 		if err != nil {
@@ -102,6 +103,11 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 
 		tenantObj := tenants
+		if message := mspTenantLifecycleError(tenantObj, time.Now()); message != "" {
+			common.Forbidden(c, message)
+			c.Abort()
+			return
+		}
 
 		// 3. 判断是否为 MSP 员工
 		isMSP := IsMSPStaff(string(tenantObj.Type), string(u.MspRole))
@@ -120,7 +126,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 					mspallocation.DeassignedAtIsNil(),
 				).
 				WithCustomerTenant(func(q *ent.TenantQuery) {
-					q.Select(tenant.FieldID, tenant.FieldCode, tenant.FieldName)
+					q.Select(tenant.FieldID, tenant.FieldCode, tenant.FieldName, tenant.FieldStatus, tenant.FieldExpiresAt, tenant.FieldMspProviderID, tenant.FieldType)
 				}).
 				All(c.Request.Context())
 			if err != nil {
@@ -132,10 +138,20 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 				return
 			}
 
+			unavailableCustomers := make(map[int]string)
 			allowedCustomers := make([]int, 0, len(allocations))
 			for _, alloc := range allocations {
 				if alloc.Edges.CustomerTenant != nil {
-					allowedCustomers = append(allowedCustomers, alloc.Edges.CustomerTenant.ID)
+					customer := alloc.Edges.CustomerTenant
+					// 历史非法分配或客户改换服务商后，分配本身不能继续授予访问权。
+					if customer.MspProviderID != tenantObj.ID || !tenantmode.IsCustomerTenantType(string(customer.Type)) {
+						continue
+					}
+					if message := mspTenantLifecycleError(customer, time.Now()); message != "" {
+						unavailableCustomers[customer.ID] = message
+						continue
+					}
+					allowedCustomers = append(allowedCustomers, customer.ID)
 				}
 			}
 
@@ -155,6 +171,11 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 					return
 				}
 
+				if message := unavailableCustomers[targetTenantID]; message != "" {
+					common.Forbidden(c, "客户"+message)
+					c.Abort()
+					return
+				}
 				hasAccess := false
 				for _, allowedID := range allowedCustomers {
 					if allowedID == targetTenantID {
@@ -163,15 +184,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 					}
 				}
 				if !hasAccess {
-					c.JSON(http.StatusForbidden, gin.H{
-						"code":    http.StatusForbidden,
-						"message": "MSP员工无权访问此客户租户",
-						"data": gin.H{
-							"msp_user_id":       userID,
-							"target_customer":   targetTenantID,
-							"allowed_customers": allowedCustomers,
-						},
-					})
+					common.Forbidden(c, "MSP员工无权访问此客户租户")
 					c.Abort()
 					return
 				}
@@ -193,4 +206,16 @@ func MSPFilterByCustomer(ctx context.Context, client *ent.Client, query *ent.Tic
 		return query, nil
 	}
 	return query.Where(ticket.TenantIDEQ(tenantID)), nil
+}
+
+// mspTenantLifecycleError 与 TenantMiddleware 的生命周期口径一致。
+// MSP 跨租户只改变访问范围，服务商和客户都不能豁免生命周期。
+func mspTenantLifecycleError(t *ent.Tenant, now time.Time) string {
+	if t.Status != "active" {
+		return "租户已被暂停或过期"
+	}
+	if !t.ExpiresAt.IsZero() && t.ExpiresAt.Before(now) {
+		return "租户已过期"
+	}
+	return ""
 }
