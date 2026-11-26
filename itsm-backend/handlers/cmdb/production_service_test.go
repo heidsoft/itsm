@@ -2,15 +2,24 @@ package cmdb
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"itsm-backend/common"
+	"itsm-backend/database"
+	"itsm-backend/dto"
+	"itsm-backend/ent/configurationitem"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/internal/services"
 	"itsm-backend/middleware"
 
@@ -233,4 +242,156 @@ func TestProductionService_TenantIsolation(t *testing.T) {
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
 	assert.Equal(t, float64(0), response["code"])
+}
+
+// Exercises the production Handler -> ProductionService -> internal service -> Ent chain.
+func TestCMDBAuditBusinessReadScope(t *testing.T) {
+	_, production, client := setupTestProductionService(t)
+	defer client.Close()
+	ctx := context.Background()
+	typ := client.CIType.Create().SetName("audit-server").SetTenantID(1).SaveX(ctx)
+	makeCI := func(name string, owner, tenant int) *ent.ConfigurationItem {
+		b := client.ConfigurationItem.Create().SetName(name).SetCiTypeID(typ.ID).SetTenantID(tenant)
+		if owner > 0 {
+			b.SetOwnerID(owner)
+		}
+		return b.SaveX(ctx)
+	}
+	owned := makeCI("audit-owned", 1, 1)
+	hidden := makeCI("audit-hidden", 2, 1)
+	public := makeCI("audit-public", 0, 1)
+	foreign := makeCI("audit-foreign", 0, 2)
+	for _, target := range []*ent.ConfigurationItem{hidden, public, foreign} {
+		client.CIRelationship.Create().SetTenantID(1).SetSourceCiID(owned.ID).SetTargetCiID(target.ID).SetRelationshipType("depends_on").SetIsActive(true).SaveX(ctx)
+	}
+	handler := NewHandler(NewService(NewEntRepository(client), production, zaptest.NewLogger(t).Sugar()))
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("tenant_id", 1)
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
+		c.Set("user_id", 1)
+		c.Set("role", "agent")
+		if c.GetHeader("X-Test-Admin") == "yes" {
+			c.Set("role", "admin")
+		}
+		if c.GetHeader("X-Test-No-Actor") == "yes" {
+			c.Set("user_id", 0)
+		}
+	})
+	r.GET("/cis", handler.ListCIs)
+	r.POST("/cis/search", handler.SearchCI)
+	r.GET("/cis/:id", handler.GetCI)
+	r.GET("/cis/:id/topology", handler.GetCITopology)
+	r.GET("/cis/:id/impact-analysis", handler.GetCIImpactAnalysis)
+	r.GET("/cis/:id/relationships", handler.ListCIRelationshipsByCIID)
+	r.GET("/relationships", handler.ListCIRelationships)
+	r.GET("/relationships/:id", handler.GetCIRelationship)
+	r.GET("/cis/:id/history", handler.GetCIHistory)
+	r.GET("/stats", handler.GetCIStats)
+	call := func(method, path, role string) (int, int, string) {
+		req := httptest.NewRequest(method, path, strings.NewReader(`{"page":1,"pageSize":20,"filters":{},"scopeAll":true}`))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(role, "yes")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		var env struct {
+			Code int             `json:"code"`
+			Data json.RawMessage `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env))
+		for _, forbidden := range []string{`"tenant_id":`, `"owner_id":`, `"password":`, `"apiKey":`} {
+			assert.NotContains(t, w.Body.String(), forbidden)
+		}
+		return w.Code, env.Code, string(env.Data)
+	}
+	for _, suffix := range []string{"", "/topology", "/impact-analysis", "/relationships", "/history"} {
+		for _, ci := range []*ent.ConfigurationItem{hidden, foreign} {
+			status, code, _ := call("GET", fmt.Sprintf("/cis/%d%s", ci.ID, suffix), "")
+			assert.Equal(t, http.StatusNotFound, status, suffix)
+			assert.Equal(t, common.NotFoundCode, code)
+		}
+		status, code, body := call("GET", fmt.Sprintf("/cis/%d%s", owned.ID, suffix), "")
+		assert.Equal(t, http.StatusOK, status, body)
+		assert.Zero(t, code)
+		assert.NotContains(t, body, hidden.Name)
+		assert.NotContains(t, body, foreign.Name)
+		if suffix == "" {
+			assert.Contains(t, body, `"ciTypeId":`)
+			assert.Contains(t, body, `"ownerId":`)
+		}
+	}
+	for _, path := range []string{"/cis?withRelations=true", "/relationships", fmt.Sprintf("/cis/%d?withRelations=true", owned.ID)} {
+		status, code, body := call("GET", path, "")
+		assert.Equal(t, http.StatusOK, status, body)
+		assert.Zero(t, code)
+		assert.NotContains(t, body, hidden.Name)
+		assert.NotContains(t, body, foreign.Name)
+		assert.Contains(t, body, public.Name)
+	}
+	status, code, body := call("POST", "/cis/search", "")
+	assert.Equal(t, http.StatusOK, status, body)
+	assert.Zero(t, code)
+	assert.NotContains(t, body, hidden.Name)
+	assert.NotContains(t, body, foreign.Name)
+	assert.Contains(t, body, owned.Name)
+	assert.Contains(t, body, public.Name)
+	status, code, _ = call("GET", fmt.Sprintf("/cis/%d", hidden.ID), "X-Test-Admin")
+	assert.Equal(t, http.StatusOK, status)
+	assert.Zero(t, code)
+	status, code, _ = call("GET", fmt.Sprintf("/cis/%d", foreign.ID), "X-Test-Admin")
+	assert.Equal(t, http.StatusNotFound, status)
+	assert.Equal(t, common.NotFoundCode, code)
+	status, code, _ = call("GET", fmt.Sprintf("/cis/%d", public.ID), "X-Test-No-Actor")
+	assert.Equal(t, http.StatusNotFound, status)
+	assert.Equal(t, common.NotFoundCode, code)
+	status, code, body = call("GET", "/stats", "")
+	assert.Equal(t, http.StatusOK, status, body)
+	assert.Zero(t, code)
+	var stats dto.CIStatsResponse
+	require.NoError(t, json.Unmarshal([]byte(body), &stats))
+	assert.Equal(t, 2, stats.Total)
+	for _, rel := range client.CIRelationship.Query().AllX(ctx) {
+		status, code, _ := call("GET", fmt.Sprintf("/relationships/%d", rel.ID), "")
+		if rel.TargetCiID == public.ID {
+			assert.Equal(t, http.StatusOK, status)
+			assert.Zero(t, code)
+		} else {
+			assert.Equal(t, http.StatusNotFound, status)
+			assert.Equal(t, common.NotFoundCode, code)
+		}
+	}
+	// A trusted internal call does not inherit HTTP scope implicitly.
+	ci, err := production.ciService.GetCIByID(datascope.WithActor(ctx, datascope.Actor{UserID: 1, Role: "agent", TenantID: 1}), hidden.ID, 1, false)
+	require.NoError(t, err)
+	require.NotNil(t, ci)
+}
+
+func TestCMDBAuditGovernanceIncludesRetiredWithSecurity(t *testing.T) {
+	_, production, client := setupTestProductionService(t)
+	defer client.Close()
+	database.RegisterSecurityInterceptors(client, "off")
+	ctx := context.Background()
+	typ := client.CIType.Create().SetName("audit-governance").SetTenantID(1).SaveX(ctx)
+	active := client.ConfigurationItem.Create().SetName("active").SetCiTypeID(typ.ID).SetTenantID(1).SaveX(ctx)
+	retired := client.ConfigurationItem.Create().SetName("retired").SetCiTypeID(typ.ID).SetTenantID(1).SetLifecycleStatus(common.CILifecycleStatusScrapped).SaveX(ctx)
+	foreign := client.ConfigurationItem.Create().SetName("foreign").SetCiTypeID(typ.ID).SetTenantID(2).SetLifecycleStatus(common.CILifecycleStatusScrapped).SaveX(ctx)
+	items, err := NewEntRepository(client).ListCIsForGovernance(ctx, 1)
+	require.NoError(t, err)
+	ids := []int{}
+	for _, ci := range items {
+		ids = append(ids, ci.ID)
+	}
+	assert.ElementsMatch(t, []int{active.ID, retired.ID}, ids)
+	assert.NotContains(t, ids, foreign.ID)
+	list, err := production.ciService.ListCIs(ctx, 1, &dto.ListCIRequest{})
+	require.NoError(t, err)
+	require.Len(t, list.Items, 1)
+	assert.Equal(t, active.ID, list.Items[0].ID)
+	ci, err := production.ciService.GetCIByID(ctx, retired.ID, 1, false)
+	require.NoError(t, err)
+	assert.Nil(t, ci)
+	// The opt-in is query-local: ordinary raw Ent reads still filter retirement.
+	visible, err := client.ConfigurationItem.Query().Where(configurationitem.TenantIDEQ(1)).IDs(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, []int{active.ID}, visible)
 }

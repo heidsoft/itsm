@@ -57,6 +57,8 @@ func cmdbTopologyRouter(t *testing.T) (*gin.Engine, *ent.Client) {
 				tenantID = v
 			}
 		}
+		c.Set("user_id", 1)
+		c.Set("role", "admin")
 		c.Set("tenant_id", tenantID)
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
 		c.Next()

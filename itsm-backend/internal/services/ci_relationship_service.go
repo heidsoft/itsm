@@ -188,7 +188,11 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 
 // GetCIRelationshipByID 根据ID获取CI关系
 func (s *CIRelationshipService) GetCIRelationshipByID(ctx context.Context, id, tenantID int) (*dto.CIRelationshipResponse, error) {
-	relation, err := s.client.CIRelationship.Query().
+	relationScope, scopeErr := ciReadRelationshipPredicates(ctx, s.client, tenantID)
+	if scopeErr != nil {
+		return nil, scopeErr
+	}
+	relation, err := s.client.CIRelationship.Query().Where(relationScope...).
 		Where(cirelationship.IDEQ(id), cirelationship.TenantIDEQ(tenantID)).
 		WithSourceCi().
 		WithTargetCi().
@@ -206,10 +210,14 @@ func (s *CIRelationshipService) GetCIRelationshipByID(ctx context.Context, id, t
 
 // ListCIRelationshipsByCIID 根据CI ID获取关系列表
 func (s *CIRelationshipService) ListCIRelationshipsByCIID(ctx context.Context, ciID, tenantID int, direction string) ([]*dto.CIRelationshipResponse, error) {
+	relationScope, scopeErr := ciReadRelationshipPredicates(ctx, s.client, tenantID)
+	if scopeErr != nil {
+		return nil, scopeErr
+	}
 	// 未知 CI 不能返回 ok:true + []：调用方（CLI/MCP/agent）无法区分
 	// 「该 CI 确实没有关系」与「CI 不存在 / 跨租户 / ID 写错」。
 	// 存在性口径与 GetCIByID 一致：同租户且未报废。
-	exists, err := s.client.ConfigurationItem.Query().
+	exists, err := scopedCIQuery(ctx, s.client, tenantID).
 		Where(
 			configurationitem.IDEQ(ciID),
 			configurationitem.TenantIDEQ(tenantID),
@@ -224,7 +232,7 @@ func (s *CIRelationshipService) ListCIRelationshipsByCIID(ctx context.Context, c
 		return nil, common.NewNotFoundError("配置项")
 	}
 
-	query := s.client.CIRelationship.Query().
+	query := s.client.CIRelationship.Query().Where(relationScope...).
 		Where(cirelationship.TenantIDEQ(tenantID), cirelationship.IsActiveEQ(true))
 
 	if direction == "outgoing" {
@@ -255,6 +263,10 @@ func (s *CIRelationshipService) ListCIRelationshipsByCIID(ctx context.Context, c
 
 // ListAllCIRelationships 获取所有CI关系列表
 func (s *CIRelationshipService) ListAllCIRelationships(ctx context.Context, tenantID int, page, pageSize int, relationType string) (*dto.CIRelationshipListResponse, error) {
+	relationScope, scopeErr := ciReadRelationshipPredicates(ctx, s.client, tenantID)
+	if scopeErr != nil {
+		return nil, scopeErr
+	}
 	if page < 1 {
 		page = 1
 	}
@@ -265,7 +277,7 @@ func (s *CIRelationshipService) ListAllCIRelationships(ctx context.Context, tena
 		pageSize = 100
 	}
 
-	query := s.client.CIRelationship.Query().
+	query := s.client.CIRelationship.Query().Where(relationScope...).
 		Where(cirelationship.TenantIDEQ(tenantID), cirelationship.IsActiveEQ(true))
 
 	if relationType != "" {
@@ -398,6 +410,10 @@ func topologyEdgeFromRelationship(rel *ent.CIRelationship) dto.TopologyEdge {
 
 // GetCITopology 返回统一的图结构，并对租户、深度和环路做强制约束。
 func (s *CIRelationshipService) GetCITopology(ctx context.Context, ciID, tenantID, maxDepth int) (*dto.TopologyGraph, error) {
+	relationScope, scopeErr := ciReadRelationshipPredicates(ctx, s.client, tenantID)
+	if scopeErr != nil {
+		return nil, scopeErr
+	}
 	if tenantID <= 0 {
 		return nil, fmt.Errorf("tenant ID is required")
 	}
@@ -407,7 +423,7 @@ func (s *CIRelationshipService) GetCITopology(ctx context.Context, ciID, tenantI
 	if maxDepth > maxCIImpactAnalysisDepth {
 		maxDepth = maxCIImpactAnalysisDepth
 	}
-	root, err := s.client.ConfigurationItem.Query().
+	root, err := scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.IDEQ(ciID), configurationitem.TenantIDEQ(tenantID)).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get topology root CI: %w", err)
@@ -418,7 +434,7 @@ func (s *CIRelationshipService) GetCITopology(ctx context.Context, ciID, tenantI
 	visited := map[int]bool{root.ID: true}
 	frontier := []int{root.ID}
 	for depth := 0; depth < maxDepth && len(frontier) > 0; depth++ {
-		relations, err := s.client.CIRelationship.Query().Where(
+		relations, err := s.client.CIRelationship.Query().Where(relationScope...).Where(
 			cirelationship.TenantIDEQ(tenantID), cirelationship.IsActiveEQ(true),
 			cirelationship.Or(cirelationship.SourceCiIDIn(frontier...), cirelationship.TargetCiIDIn(frontier...)),
 		).All(ctx)
@@ -438,7 +454,7 @@ func (s *CIRelationshipService) GetCITopology(ctx context.Context, ciID, tenantI
 		if len(nextIDs) == 0 {
 			break
 		}
-		cis, err := s.client.ConfigurationItem.Query().
+		cis, err := scopedCIQuery(ctx, s.client, tenantID).
 			Where(configurationitem.IDIn(nextIDs...), configurationitem.TenantIDEQ(tenantID)).All(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query topology CIs: %w", err)
@@ -484,7 +500,7 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 		maxDepth = maxCIImpactAnalysisDepth
 	}
 	// 检查CI是否存在
-	root, err := s.client.ConfigurationItem.Query().
+	root, err := scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.IDEQ(ciID), configurationitem.TenantIDEQ(tenantID)).
 		First(ctx)
 	if err != nil {
@@ -580,6 +596,10 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 func (s *CIRelationshipService) traverseImpactLayers(ctx context.Context, tenantID, rootID, maxDepth int, direction string) (
 	[]dto.ImpactAnalysisItem, []dto.TopologyNode, []dto.TopologyEdge, []dto.ImpactAnalysisItem, error,
 ) {
+	relationScope, scopeErr := ciReadRelationshipPredicates(ctx, s.client, tenantID)
+	if scopeErr != nil {
+		return nil, nil, nil, nil, scopeErr
+	}
 	visited := map[int]bool{rootID: true}
 	type queueItem struct {
 		ciID  int
@@ -603,7 +623,7 @@ func (s *CIRelationshipService) traverseImpactLayers(ctx context.Context, tenant
 			continue
 		}
 
-		query := s.client.CIRelationship.Query().
+		query := s.client.CIRelationship.Query().Where(relationScope...).
 			Where(
 				cirelationship.TenantIDEQ(tenantID),
 				cirelationship.IsActiveEQ(true),
@@ -638,7 +658,7 @@ func (s *CIRelationshipService) traverseImpactLayers(ctx context.Context, tenant
 		if len(nextIDs) == 0 {
 			continue
 		}
-		cis, err := s.client.ConfigurationItem.Query().
+		cis, err := scopedCIQuery(ctx, s.client, tenantID).
 			Where(configurationitem.IDIn(nextIDs...), configurationitem.TenantIDEQ(tenantID)).
 			All(ctx)
 		if err != nil {

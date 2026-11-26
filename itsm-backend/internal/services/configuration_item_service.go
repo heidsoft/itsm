@@ -18,6 +18,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
+	"itsm-backend/ent/predicate"
 	entticket "itsm-backend/ent/ticket"
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/internal/datascope"
@@ -357,14 +358,22 @@ func (s *ConfigurationItemService) ciNumberExistsRaw(ctx context.Context, candid
 
 // GetCIByID 根据ID获取配置项
 func (s *ConfigurationItemService) GetCIByID(ctx context.Context, id, tenantID int, withRelations bool) (*dto.CIResponse, error) {
-	query := s.client.ConfigurationItem.Query().
+	var relationScope []predicate.CIRelationship
+	if withRelations {
+		var scopeErr error
+		relationScope, scopeErr = ciReadRelationshipPredicates(ctx, s.client, tenantID)
+		if scopeErr != nil {
+			return nil, scopeErr
+		}
+	}
+	query := scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
 	if withRelations {
 		query = query.WithOutgoingRelations(func(q *ent.CIRelationshipQuery) {
-			q.Where(cirelationship.IsActiveEQ(true)).WithTargetCi()
+			q.Where(relationScope...).Where(cirelationship.IsActiveEQ(true)).WithTargetCi()
 		}).WithIncomingRelations(func(q *ent.CIRelationshipQuery) {
-			q.Where(cirelationship.IsActiveEQ(true)).WithSourceCi()
+			q.Where(relationScope...).Where(cirelationship.IsActiveEQ(true)).WithSourceCi()
 		})
 	}
 
@@ -385,17 +394,26 @@ func (s *ConfigurationItemService) GetCIByID(ctx context.Context, id, tenantID i
 // 覆盖原 ListCIs（简单过滤）+ SearchCI（关键词宽模糊/SortBy/TagIDs/DateFrom/DateTo/关系预加载）。
 // CISearchFilter / CISearchRequest 已 deprecated，handler 内部转 ListCIRequest 后统一走此处。
 func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, req *dto.ListCIRequest) (*dto.CIListResponse, error) {
+	var relationScope []predicate.CIRelationship
+	if req.WithRelations {
+		var scopeErr error
+		relationScope, scopeErr = ciReadRelationshipPredicates(ctx, s.client, tenantID)
+		if scopeErr != nil {
+			return nil, scopeErr
+		}
+	}
 	// 页长只在这里归一一次：HTTP 入口用 common.GetPaginationFromQuery 决定生效值，非 HTTP
 	// 调用方（AI 工具注册表、导出任务）传 0/负数/超大值时由本层兜住。不归一的后果在 Ent 侧
 	// 是静默的——Limit(0) 等于不加 LIMIT 直接返回整表，page<=0 会算出负 OFFSET。
 	req.Page, req.PageSize = common.ValidatePagination(req.Page, req.PageSize)
 
-	query := s.client.ConfigurationItem.Query().
+	query := scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
-	// 行级数据权限：只有 HTTP handler 显式注入 ScopeConfigured 才应用过滤。
+	// 行级数据权限：HTTP 显式 context scope 在 scopedCIQuery 应用；
+	// AI 工具保留显式 ListCIRequest.ScopeConfigured 注入。
 	// 治理看板走 ListCIsForGovernance（全局质量视图），刻意不接本谓词；
-	// AI 工具/导出等内部调用方走同一 service 但不带 scope，保持租户级旧语义。
+	// AI 工具显式注入 scope；导出等可信内部调用不带 scope，保持租户级旧语义。
 	// 一旦 handler 注入，ScopeUserID<=0（如 service 主体）由 ApplyCIFilter 安全收窄为空集。
 	if req.ScopeConfigured {
 		ds := datascope.DataScopeOwnedOrAssigned
@@ -505,10 +523,10 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 			WithCiTypeRef().
 			WithTags().
 			WithOutgoingRelations(func(q *ent.CIRelationshipQuery) {
-				q.WithTargetCi()
+				q.Where(relationScope...).WithTargetCi()
 			}).
 			WithIncomingRelations(func(q *ent.CIRelationshipQuery) {
-				q.WithSourceCi()
+				q.Where(relationScope...).WithSourceCi()
 			})
 	}
 
@@ -863,7 +881,7 @@ func (s *ConfigurationItemService) staleCIStateErrorInTx(ctx context.Context, tx
 // GetCIStats 获取配置项统计
 func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int) (*dto.CIStatsResponse, error) {
 	// 总数量
-	total, err := s.client.ConfigurationItem.Query().
+	total, err := scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped)).
 		Count(ctx)
 	if err != nil {
@@ -890,7 +908,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 
 	// 按状态统计
 	var statusStats []statusCount
-	err = s.client.ConfigurationItem.Query().
+	err = scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID)).
 		GroupBy(configurationitem.FieldStatus).
 		Aggregate(ent.Count()).
@@ -902,7 +920,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 
 	// 按类型统计
 	var typeStats []ciTypeCount
-	err = s.client.ConfigurationItem.Query().
+	err = scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID)).
 		GroupBy(configurationitem.FieldCiType).
 		Aggregate(ent.Count()).
@@ -914,7 +932,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 
 	// 按环境统计
 	var envStats []environmentCount
-	err = s.client.ConfigurationItem.Query().
+	err = scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID)).
 		GroupBy(configurationitem.FieldEnvironment).
 		Aggregate(ent.Count()).
@@ -926,7 +944,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 
 	// 按重要性统计
 	var criticalityStats []criticalityCount
-	err = s.client.ConfigurationItem.Query().
+	err = scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID)).
 		GroupBy(configurationitem.FieldCriticality).
 		Aggregate(ent.Count()).
@@ -1949,7 +1967,7 @@ func (s *ConfigurationItemService) BatchUpdateLifecycleStatus(ctx context.Contex
 
 // GetLifecycleHistory 获取CI生命周期变更历史
 func (s *ConfigurationItemService) GetLifecycleHistory(ctx context.Context, id int, tenantID int) ([]map[string]interface{}, error) {
-	_, err := s.client.ConfigurationItem.Query().
+	_, err := scopedCIQuery(ctx, s.client, tenantID).
 		Where(
 			configurationitem.ID(id),
 			configurationitem.TenantID(tenantID),
@@ -2127,4 +2145,38 @@ func (s *ConfigurationItemService) ListCITickets(ctx context.Context, tenantID, 
 		})
 	}
 	return result, nil
+}
+
+func scopedCIQuery(ctx context.Context, client *ent.Client, tenantID int) *ent.ConfigurationItemQuery {
+	q := client.ConfigurationItem.Query().Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
+	if actor, ok := database.CIReadScopeFromContext(ctx); ok {
+		if actor.TenantID != tenantID {
+			return q.Where(configurationitem.IDEQ(-1))
+		}
+		q = datascope.ApplyCIFilter(q, actor.UserID, actor.DepartmentID, datascope.ForCIReader(actor.Role))
+	}
+	return q
+}
+
+// Both endpoints must be readable, including legacy cross-tenant relations.
+// The scope predicate is pushed into an EXISTS subquery so large tenants never
+// materialize the visible CI id list into an IN clause with unbounded parameters.
+func ciReadRelationshipPredicates(ctx context.Context, _ *ent.Client, tenantID int) ([]predicate.CIRelationship, error) {
+	actor, ok := database.CIReadScopeFromContext(ctx)
+	if !ok {
+		return nil, nil
+	}
+	preds := []predicate.ConfigurationItem{
+		configurationitem.TenantIDEQ(tenantID),
+		configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+	}
+	if actor.TenantID != tenantID {
+		preds = []predicate.ConfigurationItem{configurationitem.IDEQ(-1)}
+	} else {
+		preds = append(preds, datascope.CIFilterPredicates(actor.UserID, actor.DepartmentID, datascope.ForCIReader(actor.Role))...)
+	}
+	return []predicate.CIRelationship{
+		cirelationship.HasSourceCiWith(preds...),
+		cirelationship.HasTargetCiWith(preds...),
+	}, nil
 }

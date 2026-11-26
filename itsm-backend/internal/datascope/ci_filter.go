@@ -27,12 +27,19 @@ import (
 // 安全收窄：userID<=0（如 service 主体）或未知 scope 一律返回空集，
 // 与工单侧 IDEQ(-1) 同口径——绝不能因为「算不出范围」就放行全租户资产。
 func ApplyCIFilter(query *ent.ConfigurationItemQuery, userID, departmentID int, ds DataScope) *ent.ConfigurationItemQuery {
+	return query.Where(CIFilterPredicates(userID, departmentID, ds)...)
+}
+
+// CIFilterPredicates 是 ApplyCIFilter 的谓词形态，语义完全同源。
+// 关系读把同一谓词下推到 HasSourceCiWith/HasTargetCiWith 的 EXISTS 子查询，
+// 避免先把可见 CI 全量物化成 ID 列表再 IN（大租户会撞 SQL 参数数量上限）。
+func CIFilterPredicates(userID, departmentID int, ds DataScope) []predicate.ConfigurationItem {
 	switch ds {
 	case DataScopeAll:
-		return query
+		return nil
 	case DataScopeDepartment:
 		if userID <= 0 {
-			return query.Where(configurationitem.IDEQ(-1))
+			return []predicate.ConfigurationItem{configurationitem.IDEQ(-1)}
 		}
 		wheres := []predicate.ConfigurationItem{
 			// 本人持有
@@ -48,19 +55,19 @@ func ApplyCIFilter(query *ent.ConfigurationItemQuery, userID, departmentID int, 
 		if departmentID > 0 {
 			wheres = append(wheres, configurationitem.DepartmentIDEQ(departmentID))
 		}
-		return query.Where(configurationitem.Or(wheres...))
+		return []predicate.ConfigurationItem{configurationitem.Or(wheres...)}
 	case DataScopeOwnedOrAssigned:
 		if userID <= 0 {
-			return query.Where(configurationitem.IDEQ(-1))
+			return []predicate.ConfigurationItem{configurationitem.IDEQ(-1)}
 		}
-		return query.Where(configurationitem.Or(
+		return []predicate.ConfigurationItem{configurationitem.Or(
 			configurationitem.OwnerIDEQ(userID),
 			configurationitem.And(
 				configurationitem.OwnerIDIsNil(),
 				configurationitem.DepartmentIDIsNil(),
 			),
-		))
+		)}
 	default:
-		return query.Where(configurationitem.IDEQ(-1))
+		return []predicate.ConfigurationItem{configurationitem.IDEQ(-1)}
 	}
 }

@@ -31,6 +31,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
+	"itsm-backend/internal/datascope"
 
 	// 各实体谓词包，用于软删过滤
 	"itsm-backend/ent/application"
@@ -76,7 +77,9 @@ func registerSoftDeleteInterceptor(client *ent.Client) {
 				q.Where(application.DeletedAtIsNil())
 			case *ent.ConfigurationItemQuery:
 				// CI 无 deleted_at 列，退役语义为 lifecycle_status = scrapped
-				q.Where(configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
+				if include, _ := ctx.Value(includeRetiredCIsKey{}).(bool); !include {
+					q.Where(configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
+				}
 			case *ent.DepartmentQuery:
 				q.Where(department.DeletedAtIsNil())
 			case *ent.KnowledgeArticleQuery:
@@ -146,4 +149,28 @@ func registerTenantWriteGuard(client *ent.Client) {
 			return next.Mutate(ctx, m)
 		})
 	}))
+}
+
+type includeRetiredCIsKey struct{}
+
+// WithIncludeRetiredCIs is an internal governance query opt-in. It only skips
+// the CI retirement filter; tenant predicates and database RLS remain active.
+// No HTTP header, query parameter or body is mapped to this private typed key.
+func WithIncludeRetiredCIs(ctx context.Context) context.Context {
+	return context.WithValue(ctx, includeRetiredCIsKey{}, true)
+}
+
+// ciReadScopeKey distinguishes explicit business reads from trusted internal reads.
+type ciReadScopeKey struct{}
+
+// WithCIReadScope opts an authenticated business read into CI row filtering.
+// Merely carrying an actor (e.g. in a background job) does not enable it.
+func WithCIReadScope(ctx context.Context, actor datascope.Actor) context.Context {
+	return context.WithValue(ctx, ciReadScopeKey{}, actor)
+}
+
+// CIReadScopeFromContext returns only an explicitly configured CI read scope.
+func CIReadScopeFromContext(ctx context.Context) (datascope.Actor, bool) {
+	actor, ok := ctx.Value(ciReadScopeKey{}).(datascope.Actor)
+	return actor, ok
 }
