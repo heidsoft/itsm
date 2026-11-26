@@ -1,9 +1,13 @@
 name: backend-ci
 
 # Purpose:
-#   Validate backend-only changes before they reach main.
-#   This workflow is intentionally scoped by paths so documentation,
-#   frontend-only changes, and release tags do not waste backend CI minutes.
+#   Validate backend changes before they reach main.
+#   Push events stay path-scoped to save backend CI minutes, but pull_request
+#   is intentionally unfiltered: main branch protection requires Lint/Build/Test
+#   on EVERY PR. A path-filtered PR trigger makes frontend/docs PRs permanently
+#   BLOCKED because those required checks never report (2026-11-26 PR #133).
+#   This workflow file is itself in the push path filter, so changing the
+#   trigger still gets a backend CI run on the merge push.
 # Checks:
 #   - gofumpt formatting
 #   - staticcheck with the project Go version
@@ -18,11 +22,8 @@ on:
       - 'itsm-backend/**'
       - 'Makefile'
       - '.github/workflows/backend-ci.yml'
+  # No path filter: required checks must report on every PR (see header).
   pull_request:
-    paths:
-      - 'itsm-backend/**'
-      - 'Makefile'
-      - '.github/workflows/backend-ci.yml'
   workflow_dispatch:
 
 permissions:
