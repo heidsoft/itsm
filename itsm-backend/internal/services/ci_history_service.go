@@ -186,6 +186,12 @@ func (s *CIHistoryService) GetCIHistory(ctx context.Context, ciID, tenantID int,
 
 // RevertCIVersion 回滚CI到指定版本
 func (s *CIHistoryService) RevertCIVersion(ctx context.Context, ciID, tenantID, operatorID int, operatorName string, req *dto.RevertCIVersionRequest) (*dto.CIResponse, error) {
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = tx.Rollback() }()
+	s = NewCIHistoryService(tx.Client(), s.logger)
 	// 获取指定版本的历史记录
 	history, err := s.client.ConfigurationItemHistory.Query().
 		Where(
@@ -218,7 +224,18 @@ func (s *CIHistoryService) RevertCIVersion(ctx context.Context, ciID, tenantID, 
 	// 键按 camelCase 契约读取，并兼容旧快照的列名键（见 snapshotValue）；
 	// 整数字段必须兼容 JSON 反序列化后的 float64，否则会静默跳过。
 	after := history.After
-	update := s.client.ConfigurationItem.UpdateOneID(ciID)
+	effective := *currentCI
+	if typeID, ok := snapshotInt(after, "ciTypeId"); ok {
+		effective.CiTypeID = typeID
+	}
+	if attrs, ok := snapshotJSONMap(after, "attributes"); ok {
+		effective.Attributes = attrs
+	}
+	validator := NewConfigurationItemService(s.client, s.logger, s, nil)
+	if err := validator.validateCIWrite(ctx, &effective, tenantID, true); err != nil {
+		return nil, fmt.Errorf("回滚属性校验失败: %w", err)
+	}
+	update := s.client.ConfigurationItem.UpdateOneID(ciID).Where(configurationitem.TenantIDEQ(tenantID), configurationitem.VersionEQ(currentCI.Version)).SetVersion(currentCI.Version + 1).SetAttributes(effective.Attributes)
 
 	// 恢复字段
 	if name, ok := snapshotString(after, "name"); ok {
@@ -266,9 +283,6 @@ func (s *CIHistoryService) RevertCIVersion(ctx context.Context, ciID, tenantID, 
 	if source, ok := snapshotString(after, "source"); ok {
 		update.SetSource(source)
 	}
-	if attributes, ok := snapshotJSONMap(after, "attributes"); ok {
-		update.SetAttributes(attributes)
-	}
 	if cloudProvider, ok := snapshotString(after, "cloudProvider"); ok {
 		update.SetCloudProvider(cloudProvider)
 	}
@@ -307,6 +321,9 @@ func (s *CIHistoryService) RevertCIVersion(ctx context.Context, ciID, tenantID, 
 	// 保存更新
 	updatedCI, err := update.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, validator.staleCIStateErrorInTx(ctx, tx, ciID, tenantID, currentCI.Version)
+		}
 		s.logger.Errorw("Failed to revert CI version", "error", err, "ci_id", ciID, "version", req.Version)
 		return nil, fmt.Errorf("failed to revert version: %w", err)
 	}
@@ -324,7 +341,7 @@ func (s *CIHistoryService) RevertCIVersion(ctx context.Context, ciID, tenantID, 
 		updatedCI,
 	)
 	if err != nil {
-		s.logger.Warnw("Failed to record revert history", "error", err, "ci_id", ciID)
+		return nil, fmt.Errorf("记录回滚历史失败: %w", err)
 	}
 
 	// 重新加载CI数据
@@ -340,6 +357,10 @@ func (s *CIHistoryService) RevertCIVersion(ctx context.Context, ciID, tenantID, 
 	if err != nil {
 		s.logger.Errorw("Failed to reload reverted CI", "error", err, "ci_id", ciID)
 		return nil, fmt.Errorf("failed to reload CI: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
 
 	s.logger.Infow("CI reverted successfully", "ci_id", ciID, "version", req.Version, "tenant_id", tenantID)

@@ -224,7 +224,7 @@ func TestSPRGatesStayStrongAfterRelocation(t *testing.T) {
 	pb := sprReadRepo(t, "scripts", "docs-gate", "product-surface-baseline.txt")
 	// 钉值随基线实测走：2026-11-25 权限批次补账后基线为 371（measure=ls internal/services/*.go 同口径），
 	// 旧钉值 332（7063011e5 登记时的实测）已过期；改基线值须同 commit 同步本钉值。
-	for _, needle := range []string{"service_go_files=0", "shared_services_go_files=371"} {
+	for _, needle := range []string{"service_go_files=0", "shared_services_go_files=372"} {
 		if !strings.Contains(pb, needle) {
 			t.Errorf("C.6.4 基线缺少 %q（不得留旧上界或漏登记新目录）", needle)
 		}
