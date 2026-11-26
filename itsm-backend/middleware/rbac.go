@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/ent"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/role"
@@ -573,7 +574,9 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		if extraRoles := userEntity.Edges.Roles; len(extraRoles) > 0 {
 			roleCodes := make([]string, 0, len(extraRoles))
 			for _, r := range extraRoles {
-				if r != nil && r.IsActive && r.TenantID == tenantID {
+				// 附加角色不可授予平台超管：历史上租户可伪造该码，触发字符串直通。
+				// super_admin 只能来自 users.role 主角色，不能通过 user_roles 叠加。
+				if r != nil && r.IsActive && r.TenantID == tenantID && r.Code != domainrole.SuperAdmin {
 					roleCodes = append(roleCodes, r.Code)
 				}
 			}

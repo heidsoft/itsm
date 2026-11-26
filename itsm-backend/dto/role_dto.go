@@ -65,7 +65,6 @@ type CreateRoleRequest struct {
 	Description string   `json:"description"`
 	Permissions []string `json:"permissions"`
 	Status      string   `json:"status"`
-	IsSystem    bool     `json:"isSystem"`
 }
 
 // UpdateRoleRequest represents the request for updating a role

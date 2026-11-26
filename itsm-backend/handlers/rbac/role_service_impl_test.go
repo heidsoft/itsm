@@ -35,7 +35,6 @@ func TestCreateRole_DefaultIsActiveTrue(t *testing.T) {
 		Name:        "TestRole",
 		Code:        "test_role",
 		Description: "Test Description",
-		IsSystem:    false,
 	}
 	resp, err := svc.CreateRole(ctx, req, tenant.ID)
 	assert.NoError(t, err)
