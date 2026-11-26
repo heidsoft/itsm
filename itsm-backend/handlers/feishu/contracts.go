@@ -3,8 +3,24 @@ package feishu
 import (
 	"context"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 )
+
+// InboundTriageAdvisor 是入站建单后生成分诊建议的窄契约。
+//
+// 不直接 import handlers/ai 或 internal/services：前者会形成域间强耦合，
+// 后者被 Gate C.8 禁止。实现由 bootstrap 注入 *service.TriageService。
+// 建议只做决策支持，绝不自动改写工单字段。
+type InboundTriageAdvisor interface {
+	SuggestForTenant(ctx context.Context, title, description string, tenantID int) dto.TriageResult
+}
+
+// InboundDecisionAuditor 把服务端产出的建议写入 ai_feedbacks 决策底账
+// （item_type='ai_audit'，accepted=NULL），供操作者经 PATCH /ai/audit-logs/:id 人工确认。
+type InboundDecisionAuditor interface {
+	RecordDecisionAudit(ctx context.Context, tenantID, userID int, reqID, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error)
+}
 
 // TicketWorkflowTerminator 在「飞书侧任务被删除」导致工单进入终态时，
 // 终止关联的 BPMN 流程实例。

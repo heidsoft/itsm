@@ -163,4 +163,63 @@ func TestFeishuInboundMessageCreatesTicketThroughRealRoute(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, unknown.Code)
 }
 
+// 未映射发送者 / 未配置自动化账号时，HTTP 层必须分别返回 403/2003 与 503/5003，
+// 而不是把两类失败压成 500。这里走真实路由与真实错误映射。
+func TestFeishuInboundMessageErrorSemantics(t *testing.T) {
+	r, client, _ := newFeishuInboundTicketRouteWithoutRequester(t, 32)
+
+	forbidden := postFeishuMessageEvent(t, r, "inbound-instance-32", "om-403-1", "ou-not-mapped", "未映射发送者", "nonce-403-1")
+	require.Equal(t, http.StatusForbidden, forbidden.Code, forbidden.Body.String())
+	var forbiddenResp feishuInboundEnvelope
+	require.NoError(t, json.Unmarshal(forbidden.Body.Bytes(), &forbiddenResp))
+	require.Equal(t, 2003, forbiddenResp.Code)
+	require.NotContains(t, forbidden.Body.String(), "encrypt_key")
+
+	unconfigured := postFeishuMessageEvent(t, r, "inbound-instance-32", "om-503-1", "", "无申请人", "nonce-503-1")
+	require.Equal(t, http.StatusServiceUnavailable, unconfigured.Code, unconfigured.Body.String())
+	var unconfiguredResp feishuInboundEnvelope
+	require.NoError(t, json.Unmarshal(unconfigured.Body.Bytes(), &unconfiguredResp))
+	require.Equal(t, 5003, unconfiguredResp.Code)
+
+	tickets, err := client.Ticket.Query().All(contextBackground())
+	require.NoError(t, err)
+	require.Empty(t, tickets, "拒绝路径不得建单")
+}
+
+func newFeishuInboundTicketRouteWithoutRequester(t *testing.T, seed int) (*gin.Engine, *ent.Client, int) {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+	client := enttest.Open(t, "sqlite3", fmt.Sprintf("file:feishu_inbound_route_nouser_%d_%d?mode=memory&cache=shared&_fk=1", seed, time.Now().UnixNano()))
+	t.Cleanup(func() { _ = client.Close() })
+	ctx := contextBackground()
+
+	tenant, err := client.Tenant.Create().
+		SetName(fmt.Sprintf("inbound-nouser-%d", seed)).
+		SetCode(fmt.Sprintf("inbound-nouser-%d", seed)).
+		SetDomain(fmt.Sprintf("inbound-nouser-%d.example.com", seed)).
+		SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+	_, err = client.SystemConfig.Create().
+		SetTenantID(tenant.ID).SetKey("feishu_inbound.mode").SetValue("auto_create").Save(ctx)
+	require.NoError(t, err)
+
+	manager := connector.NewManager(connector.Default(), zap.NewNop().Sugar())
+	instanceID := fmt.Sprintf("inbound-instance-%d", seed)
+	require.NoError(t, manager.Provision(ctx, connector.Config{
+		TenantID: tenant.ID, Name: "feishu", Provider: "feishu", Enabled: true,
+		Credentials: map[string]string{
+			"app_id": "app", "app_secret": "secret",
+			"verification_token": "verify-token", "encrypt_key": feishuEncryptKey,
+		},
+		Settings: map[string]interface{}{"callbackInstanceId": instanceID},
+	}))
+
+	svc := feishuHandler.NewFeishuSyncService(client, zap.NewNop().Sugar())
+	h := feishuHandler.NewHandler(manager, svc, nil, zap.NewNop().Sugar())
+	h.SetInboundDedup(connector.NewInboundDeduper(client, 5*time.Minute))
+	r := gin.New()
+	SetupFeishuRoutes(r.Group("/api/v1"), r.Group("/api/v1"), h)
+	return r, client, 0
+}
+
 func contextBackground() context.Context { return context.Background() }

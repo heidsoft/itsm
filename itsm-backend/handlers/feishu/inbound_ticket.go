@@ -180,12 +180,40 @@ func (s *FeishuSyncService) CreateTicketFromInboundMessage(ctx context.Context, 
 		s.logger.Warnw("failed to mark inbound message processed", "tenant_id", tenantID, "err", err)
 	}
 
-	return &dto.FeishuWebhookResponse{
+	resp := &dto.FeishuWebhookResponse{
 		EventType:    msg.Type,
 		Action:       "ticket_created",
 		TicketID:     ticket.ID,
 		TicketNumber: ticketNumber,
-	}, nil
+	}
+
+	// 分诊建议只做决策支持：在事务提交后调用（禁止在 DB 事务内发 LLM/ Guidance 请求），
+	// 写入服务端 AI 决策底账供人工确认，绝不自动改写工单 category/priority/assignee/status。
+	if s.triageAdvisor != nil {
+		result := s.triageAdvisor.SuggestForTenant(ctx, ticket.Title, ticket.Description, tenantID)
+		resp.TriageSuggestion = &result
+		if s.decisionAuditor != nil {
+			suggestion := map[string]interface{}{
+				"category": result.Category, "priority": result.Priority,
+				"confidence": result.Confidence, "explanation": result.Explanation,
+				"model": result.Model, "promptVersion": result.PromptVersion,
+				"degraded": result.Degraded,
+			}
+			auditID, auditErr := s.decisionAuditor.RecordDecisionAudit(
+				ctx, tenantID, requesterID, "", "feishu_inbound_triage",
+				fmt.Sprintf("ticket:%d", ticket.ID), result.PromptVersion, result.Model,
+				result.Confidence, suggestion)
+			if auditErr != nil {
+				// 建议失败不影响已建工单：这是 decision support，不是业务不变量。
+				s.logger.Warnw("failed to record inbound triage decision ledger",
+					"tenant_id", tenantID, "ticket_id", ticket.ID, "err", auditErr)
+			} else {
+				resp.TriageAuditID = auditID
+			}
+		}
+	}
+
+	return resp, nil
 }
 
 func (s *FeishuSyncService) inboundRuntimeConfig(ctx context.Context, tenantID int) (string, int, error) {

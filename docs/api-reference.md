@@ -4965,11 +4965,18 @@ provider，可让所有租户的安装按钮全部失败。因此目录写独立
    同一个 `ent.Tx` 提交；命令幂等键为
    `feishu-inbound-ticket:<tenant>:<messageId>:<ticketId>`。审计只写不可变标识，
    不写消息正文；provider 原始错误不进入响应。
+6. **分诊建议（决策支持，非自动执行）**：事务提交后、在事务外调用 Guidance → LLM → keyword
+   降级链生成 `triageSuggestion`（category / priority / confidence / explanation /
+   model / promptVersion / degraded），并把服务端决策底账写入 `ai_feedbacks`
+   （`item_type='ai_audit'`，`accepted=NULL`），响应携带 `triageAuditId`。
+   操作者经 `PATCH /api/v1/ai/audit-logs/:id`（`ai:write`）翻转 `accepted`，
+   再由工单详情采纳 category/priority（带 `version` 乐观锁）。
+   **建议绝不自动改写工单字段**； advisor / auditor 未装配或落账失败时工单照常创建，仅缺建议字段。
 
 成功响应（统一 `{code,message,data}` 信封）：
 
 ```json
-{"code":0,"message":"success","data":{"eventType":"im.message.receive_v1","action":"ticket_created","ticketId":123,"ticketNumber":"TKT-FS-3-2147483647"}}
+{"code":0,"message":"success","data":{"eventType":"im.message.receive_v1","action":"ticket_created","ticketId":123,"ticketNumber":"TKT-FS-3-2147483647","triageSuggestion":{"category":"network","priority":"high","confidence":0.91,"model":"keyword","promptVersion":"triage-v1"},"triageAuditId":88}}
 ```
 
 该能力仍为 **Preview**：已完成单测与真实路由 E2E，但未与真实飞书租户做生产收发验收，

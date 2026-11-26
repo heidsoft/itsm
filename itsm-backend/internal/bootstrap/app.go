@@ -891,6 +891,9 @@ func NewApplication() *Application {
 	// 实例还在 running，待办完成后沿 ticket_general_flow 的回环继续造新待办
 	// （F1 在连接器域的同一条分叉）。
 	feishuSyncService.SetWorkflowTerminator(ticketWorkflowService)
+	// 入站建单后的分诊建议只写决策底账（accepted=NULL），由操作者经
+	// PATCH /ai/audit-logs/:id 人工确认；绝不自动改工单字段。
+	feishuSyncService.SetInboundAdvisors(triageService, aiTelemetryService)
 	inboundDedup := connector.NewInboundDeduper(client, 5*time.Minute)
 	feishuHTTPHandler := feishuHandler.NewHandler(connectorManager, feishuSyncService, marketplaceSvc, sugar)
 	feishuHTTPHandler.SetInboundDedup(inboundDedup)
