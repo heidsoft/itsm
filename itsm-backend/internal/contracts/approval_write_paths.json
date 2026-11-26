@@ -8,10 +8,10 @@
     {"file":"handlers/service_request/repository_impl.go","owner":"service-request","models":["ServiceRequestApproval"],"mode":"legacy-runtime"},
     {"file":"pkg/seeder/seeder.go","owner":"initialization","models":["ApprovalWorkflow"],"mode":"template-only"},
     {"file":"pkg/seeder/tenant_provisioner.go","owner":"initialization","models":["ApprovalWorkflow"],"mode":"template-only"},
-    {"file":"service/approval_chain_service.go","owner":"approval-template","models":["ApprovalChain"],"mode":"template-only"},
-    {"file":"service/approval_service.go","owner":"legacy-approval","models":["ApprovalWorkflow"],"mode":"compatibility"},
-    {"file":"service/bpmn_process_engine.go","owner":"workflow","models":["ProcessApprovalDecision"],"mode":"authoritative"},
-    {"file":"service/bpmn_process_executor.go","owner":"workflow","models":["ProcessApprovalDecision"],"mode":"authoritative"},
-    {"file":"service/bpmn_task_service.go","owner":"workflow","models":["ProcessApprovalDecision"],"mode":"authoritative"}
+    {"file":"internal/services/approval_chain_service.go","owner":"approval-template","models":["ApprovalChain"],"mode":"template-only"},
+    {"file":"internal/services/approval_service.go","owner":"legacy-approval","models":["ApprovalWorkflow"],"mode":"compatibility"},
+    {"file":"internal/services/bpmn_process_engine.go","owner":"workflow","models":["ProcessApprovalDecision"],"mode":"authoritative"},
+    {"file":"internal/services/bpmn_process_executor.go","owner":"workflow","models":["ProcessApprovalDecision"],"mode":"authoritative"},
+    {"file":"internal/services/bpmn_task_service.go","owner":"workflow","models":["ProcessApprovalDecision"],"mode":"authoritative"}
   ]
 }

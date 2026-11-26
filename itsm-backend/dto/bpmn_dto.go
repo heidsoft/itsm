@@ -72,13 +72,21 @@ func ToBPMNProcessDefinitionResponse(p *ent.ProcessDefinition) *BPMNProcessDefin
 }
 
 // ToBPMNProcessDefinitionListResponse 批量转换
+//
+// 列表项不携带 BPMN XML：单份十几 KB，一页 20 条就是几百 KB，而预览/设计器
+// 都按 key 走详情接口取 XML，列表载荷没有任何消费者（前端 admin/workflows
+// 详情按需 getWorkflow、workflow-api 的 getWorkflows 注释均按此契约适配）。
 func ToBPMNProcessDefinitionListResponse(definitions []*ent.ProcessDefinition) []*BPMNProcessDefinitionResponse {
 	if definitions == nil {
 		return []*BPMNProcessDefinitionResponse{}
 	}
 	result := make([]*BPMNProcessDefinitionResponse, 0, len(definitions))
 	for _, p := range definitions {
-		result = append(result, ToBPMNProcessDefinitionResponse(p))
+		item := ToBPMNProcessDefinitionResponse(p)
+		if item != nil {
+			item.BpmnXML = ""
+		}
+		result = append(result, item)
 	}
 	return result
 }
