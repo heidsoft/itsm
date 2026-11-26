@@ -66,6 +66,13 @@ func TestCreateTask_PendingDeduplication(t *testing.T) {
 	assert.False(t, first.DueAt.IsZero(), "未指定截止时间时应由服务端给默认值")
 	assert.True(t, first.DueAt.After(time.Now()), "默认截止时间应在未来")
 
+	// 第二次必须在快速查询处拒绝，不能依赖默认 enttest 并不存在的唯一索引。
+	f.svc.client.CICertificationTask.Use(func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			t.Error("已有 pending 时不应再次尝试插入")
+			return next.Mutate(ctx, m)
+		})
+	})
 	// 第二条同 CI 的未决任务必须被拒。
 	_, err = f.svc.CreateTask(f.ctx, f.tenantID, 7, &dto.CreateCICertificationRequest{CIID: f.ciID})
 	assert.ErrorIs(t, err, ErrCITaskAlreadyPending, "同一 CI 只能有一条未决认证任务")

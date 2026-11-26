@@ -17,12 +17,15 @@ package cmdb
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -171,4 +174,80 @@ func TestCertificationAuditPendingConflict(t *testing.T) {
 	require.Equal(t, http.StatusConflict, status)
 	require.Equal(t, 4090, code)
 	require.Equal(t, ErrCITaskAlreadyPending.Error(), msg)
+}
+
+// 屏障强制两个请求均通过 Exist，再串行落库，排除 SQLite 写锁噪声。
+// 显式安装迁移等价索引：默认 enttest schema 没有 pending 唯一约束。
+func TestCertificationPendingConcurrentConstraint(t *testing.T) {
+	f := newCertHandlerFixture(t)
+	dsn := "file:" + strings.ReplaceAll(t.Name(), "/", "_") + "?mode=memory&cache=shared&_fk=1"
+	db, err := sql.Open("sqlite3", dsn)
+	require.NoError(t, err)
+	defer db.Close()
+	_, err = db.ExecContext(t.Context(), "CREATE UNIQUE INDEX ci_cert_pending_unique ON ci_certification_tasks (tenant_id, ci_id) WHERE status = 'pending'")
+	require.NoError(t, err)
+	ready := make(chan struct{}, 2)
+	release := make(chan struct{})
+	var writes sync.Mutex
+	f.client.CICertificationTask.Use(func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			ready <- struct{}{}
+			select {
+			case <-release:
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+			writes.Lock()
+			defer writes.Unlock()
+			return next.Mutate(ctx, m)
+		})
+	})
+	results := make(chan *httptest.ResponseRecorder, 2)
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	defer cancel()
+	for range 2 {
+		go func() {
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/certification/tasks", strings.NewReader(
+				"{\"ciId\":"+strconv.Itoa(f.ciID)+"}")).WithContext(ctx)
+			req.Header.Set("Content-Type", "application/json")
+			f.router.ServeHTTP(w, req)
+			results <- w
+		}()
+	}
+	for range 2 {
+		select {
+		case <-ready:
+		case <-ctx.Done():
+			close(release)
+			t.Fatal("requests did not reach insert barrier")
+		}
+	}
+	close(release)
+	successes, conflicts := 0, 0
+	for range 2 {
+		w := <-results
+		var response struct {
+			Code int                    `json:"code"`
+			Data map[string]interface{} `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+		switch w.Code {
+		case http.StatusOK:
+			require.Equal(t, 0, response.Code)
+			require.EqualValues(t, f.ciID, response.Data["ciId"])
+			require.NotContains(t, response.Data, "tenant_id")
+			successes++
+		case http.StatusConflict:
+			require.Equal(t, 4090, response.Code)
+			conflicts++
+		default:
+			t.Errorf("expected success or pending conflict, got %d: %s", w.Code, w.Body.String())
+		}
+	}
+	require.Equal(t, 1, successes)
+	require.Equal(t, 1, conflicts)
+	count, err := f.client.CICertificationTask.Query().Count(t.Context())
+	require.NoError(t, err)
+	require.Equal(t, 1, count, "two silent successes must never pass")
 }

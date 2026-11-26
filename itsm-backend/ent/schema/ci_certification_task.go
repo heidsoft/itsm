@@ -66,6 +66,10 @@ func (CICertificationTask) Edges() []ent.Edge {
 }
 
 // Indexes of the CICertificationTask.
+// Ent v0.14.6 没有 index.Partial；entsql.IndexWhere 需要重新生成迁移元数据。
+// 本批保持普通联合索引，pending 唯一约束以 20261126_certification_pending_unique.sql
+// 为唯一事实源。enttest 测试客户端不带该约束，并发窗口测试只在 PostgreSQL
+// 或显式安装等价部分唯一索引的 SQLite 上有意义。
 func (CICertificationTask) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("tenant_id", "ci_id"),
