@@ -733,6 +733,13 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		if t.ticket == nil {
 			return nil, fmt.Errorf("ticket service not initialized")
 		}
+		// 写路径必须与 HTTP 更新同一行级范围：actor 只能来自服务器在鉴权后
+		// 写入的 context，模型参数里的 userId/role 不得参与判定；缺失或租户
+		// 不匹配时 fail-closed，禁止再以 (0, "") 走「系统操作」跳过 DataScope。
+		actor, ok := datascope.ActorFromContext(ctx, tenantID)
+		if !ok {
+			return nil, fmt.Errorf("update_ticket: authenticated actor context is missing or tenant mismatch")
+		}
 		ticketID := 0
 		if v, ok := args["ticketId"].(float64); ok {
 			ticketID = int(v)
@@ -773,7 +780,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			AssigneeID: assigneeID,
 			Version:    version,
 		}
-		updated, err := t.ticket.UpdateTicket(ctx, ticketID, req, tenantID, 0, "") // 0=系统操作，跳过 DataScope
+		updated, err := t.ticket.UpdateTicket(ctx, ticketID, req, tenantID, actor.UserID, actor.Role)
 		if err != nil {
 			return nil, err
 		}
