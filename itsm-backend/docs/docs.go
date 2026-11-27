@@ -26879,9 +26879,6 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "isSystem": {
-                    "type": "boolean"
-                },
                 "name": {
                     "type": "string"
                 },

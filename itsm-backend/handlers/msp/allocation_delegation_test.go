@@ -22,9 +22,12 @@ func TestAllocationDelegation(t *testing.T) {
 		role     string
 		status   int
 	}{
-		{"foreign", "b", "tenant_admin", 403}, {"own", "a", "tenant_admin", 200},
-		{"unowned", "", "tenant_admin", 403}, {"platform_foreign", "b", "super_admin", 403},
-		{"platform_unowned", "", "sysadmin", 403}, {"platform_valid", "a", "sysadmin", 200},
+		{"foreign", "b", "tenant_admin", 403},
+		{"own", "a", "tenant_admin", 200},
+		{"unowned", "", "tenant_admin", 403},
+		{"platform_foreign", "b", "super_admin", 403},
+		{"platform_unowned", "", "sysadmin", 403},
+		{"platform_valid", "a", "sysadmin", 200},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			client := enttest.Open(t, "sqlite3", "file:delegation_"+tc.name+"?mode=memory&cache=shared&_fk=1")

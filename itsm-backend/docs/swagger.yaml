@@ -2857,8 +2857,6 @@ definitions:
         type: string
       description:
         type: string
-      isSystem:
-        type: boolean
       name:
         type: string
       permissions:
