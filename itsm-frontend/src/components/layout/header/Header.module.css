@@ -22,7 +22,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .collapseButton {
@@ -52,6 +53,23 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+
+.breadcrumb :global(.ant-breadcrumb),
+.breadcrumb :global(.ant-breadcrumb li) {
+  min-width: 0;
+}
+
+.breadcrumb :global(.ant-breadcrumb ol) {
+  flex-wrap: nowrap;
+}
+
+.breadcrumb :global(.ant-breadcrumb-link) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .breadcrumbSeparator {
@@ -87,6 +105,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .searchInput {
@@ -446,6 +465,7 @@
   .left,
   .right {
     min-width: 0;
+    flex-shrink: 1;
     gap: 2px;
   }
 
