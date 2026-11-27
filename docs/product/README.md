@@ -12,6 +12,7 @@
 - [商业化能力契约](./itsm-commercial-capability-contract.md)
 - [ServiceNow 差距分析](./servicenow-gap-analysis.md)
 - [工作流控制台诊断与设计](./workflow-console-diagnosis-and-design.md)
+- [变更单绑定 BPMN 流程及 PoC 验收](./change-bpmn-operator-guide.md)
 - [AI + 自动化产品功能矩阵（v1.6.x）](./ai-automation-status.md)
 - [业务快照（2026-09-24）](./business-snapshot-2026-09-24.md)
 
