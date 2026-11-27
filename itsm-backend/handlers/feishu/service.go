@@ -17,9 +17,18 @@ import (
 )
 
 type FeishuSyncService struct {
-	client     *ent.Client
-	logger     *zap.SugaredLogger
-	terminator TicketWorkflowTerminator
+	client          *ent.Client
+	logger          *zap.SugaredLogger
+	terminator      TicketWorkflowTerminator
+	triageAdvisor   InboundTriageAdvisor
+	decisionAuditor InboundDecisionAuditor
+}
+
+// SetInboundAdvisors 注入入站建单后的分诊建议与决策底账能力。
+// 任一为 nil 时对应步骤跳过；建议永远不自动应用到工单。
+func (s *FeishuSyncService) SetInboundAdvisors(advisor InboundTriageAdvisor, auditor InboundDecisionAuditor) {
+	s.triageAdvisor = advisor
+	s.decisionAuditor = auditor
 }
 
 func NewFeishuSyncService(client *ent.Client, logger *zap.SugaredLogger) *FeishuSyncService {

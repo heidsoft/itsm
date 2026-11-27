@@ -201,17 +201,49 @@ CMDB、AI、RAG、连接器和外部通知首先接入；基础 ITIL 页面不�
 - 不在业务 Controller 中新增临时 goroutine、直连第三方 SDK或第二套流程引擎；
 - 不用演示数据或前端本地状态证明功能可用。
 
-## OPEN QUESTIONS
+## OPEN QUESTIONS → 决策记录（DECISION LOG，2026-11-25）
 
-以下产品决策不会阻止 P0 架构收敛，但进入定价和客户试点前需要确认：
+> **本轮不做商业决策。** 下表 7 项全部为 `待决策`。“建议选项”是 AI 基于仓库证据的初筛建议，**不是已批准的决定**。
+> 全仓没有客户名、LOI、签署 PoC 或付款凭证：任何一项都不得升格为 `Verified Demand`（当前 0 条）。
+> 决策人填写真实姓名与日期后方可改为 `已决策`；AI 不得代填。
 
-1. 首个付费客户主要是内部 IT 服务台、运维中心，还是 MSP？三者的首页、权限和报表不同。
-2. 首个部署形态是私有化单租户、私有化多租户，还是 SaaS？`env://`、SecretProvider、升级和运维边界取决于此。
-3. 首个企业消息渠道是否确定为飞书？建议只选择一个做生产闭环。
-4. 商业 MVP 是否要求 SSO/LDAP/组织同步？如果要求，它属于 P0 而非连接器市场的普通条目。
-5. 自动化交付首个真实场景是什么：阿里云 ECS、账号权限、软件安装，还是通用 Webhook？
-6. 开源版与商业版是同一核心加企业插件，还是统一功能、商业支持收费？需要形成明确能力矩阵。
-7. 开源版与企业版的分界是否按「自检/诊断（开源引流）」与「治理/编排/承诺（商业收费）」切分？该决策直接决定 Upgrade Guard / Doctor / Isolation Proof 的代码边界。
+| ID | 问题（原文） | 状态 | 建议选项（未批准） | 证据等级 | 决策人角色 | 所需输入 | 影响模块 | 下一步 |
+|:---|:---|:---|:---|:---|:---|:---|:---|:---|
+| Q1 | 首个付费客户主要是内部 IT 服务台、运维中心，还是 MSP？ | **待决策** | 先以内部 IT 服务台/运维中心为首发 ICP，MSP 作为第二阶段 | Hypothesis | 商业负责人 | ≥3 家真实客户访谈纪要 | 首页、权限、报表 | 访谈后回填 ICP 文件，不得沿用占位符 |
+| Q2 | 首个部署形态是私有化单租户、私有化多租户，还是 SaaS？ | **待决策** | 私有化单租户先行，SaaS 后置 | Hypothesis | 交付 + 架构负责人 | 客户 IT 政策、网络隔离要求 | `env://`、SecretProvider、升级与运维边界 | 在 SOW 中确认部署条款 |
+| Q3 | 首个企业消息渠道是否确定为飞书？ | **待决策** | 飞书先行（已有入站→工单闭环代码），企微/钉钉后置 | Observed Problem | 产品负责人 | 客户实际使用的 IM 渠道 | `connector.feishu` / `wecom` / `dingtalk` | 真实租户收发 + 一次死信重放演练后人工签字 |
+| Q4 | 商业 MVP 是否要求 SSO/LDAP/组织同步？ | **待决策** | 若首发客户为企业，则列为 EE 候选 P0 | Doc-only | 商业 + 架构负责人 | 客户身份源与目录同步要求 | `identity.oidc`、RBAC、租户创建 | 确认是否需要 LDAP（当前仅有 OIDC） |
+| Q5 | 自动化交付首个真实场景：ECS、账号权限、软件安装，还是通用 Webhook？ | **待决策** | 通用 Webhook 先行（覆盖广、成本低），ECS 作行业 PoC | Observed Problem | 产品 + 交付负责人 | 客户已有自动化平台与权限模型 | `provisioning`、`automation_rule`、连接器 | 确认首发场景并写进 PoC SOW |
+| Q6 | 开源版与商业版是同一核心加企业插件，还是统一功能、商业支持收费？ | **待决策** | 同一核心 + 企业能力矩阵；不锁死安全底线/租户隔离/基本审计 | Conflicting drafts | 商业负责人 | 交付成本、目标客单价验证 | capability registry、marketplace、打包 | 批准下方 CE/EE/Industry 矩阵后才可写报价 |
+| Q7 | 是否按「自检/诊断（引流）」与「治理/编排/承诺（收费）」切分？ | **待决策** | 建议按此切分，但 Upgrade Guard / Doctor / Isolation Proof 需明确归 EE 或 CE 并经客户验证 | Proposal only | 商业 + 架构负责人 | 付费意愿验证 | 代码边界与能力门控 | 与 Q6 一并决策，决定是否需要 edition gate |
+
+> Q3 与 Q5 存在证据冲突：行业分析与路线图倾向飞书先行，但 `POC_PLAYBOOK.md:8` 把 Email-to-Ticket 作为首个 PoC 场景。两者均未获客户确认，不得择一宣称已定。
+
+## 版本边界建议矩阵（CE / EE / Industry）— 全部待批准
+
+**代码现状（必须先看）**：仓库中**不存在** CE/EE/license 门控代码（无 `ITSM_EDITION`、`isEnterprise`、license enforcement）。
+后端 28 个能力中 15 GA / 13 Pilot、0 disabled；`GET /api/v1/capabilities` 的 `maturity` / `deploymentReady` /
+`readinessEnv` **全部是报告字段**，不拦截任何 action。前端另有静态 `PRODUCT_CAPABILITIES` 7 个 flag（5 个被契约测试当作
+禁用白名单，只有 `mspAllocationHistory` 被页面消费）与运行时 `capability-api.ts` 两套并行系统。
+因此下表 **Proposed Edition 一律是建议**：当前所有已 built 能力在 CE 默认可用，不得对外宣称“企业版限制已实现”。
+
+| 能力（代码 key） | 代码现状 | 建议归属 | 依据与理由 | 代码门控现状 |
+|:---|:---|:---|:---|:---|
+| `ticket` / `incident` / `problem` / `change` / `cmdb` / `cmdb.*` / `sla` / `notification` / `project` / `application` / `template` | GA（built） | **CE** | ITIL 核心流程与基本审计是开源可用底线（§3.2/§6.2） | 无 edition gate；全量可用 |
+| `marketplace` | GA（built） | **CE** | 目录/版本/连接器与技能交付；插件明确不交付 | 无 edition gate；技能 entitlement 是安装态而非版本态 |
+| `serviceRequest` | Pilot | **CE（预览）** | 核心流程但仅 ECS、无自动回滚、无真实开通验收 | 无 edition gate；Pilot 仅报告 |
+| `workflow`（BPMN + 审批） | Pilot | **EE 候选** | 跨域签字未完成；高级审批/编排是商业价值点 | 无 edition gate；签名仅报告 |
+| `report` | Pilot | **EE 候选** | MSP 聚合与导出审计属于管理治理 | 无 edition gate |
+| `knowledge` / `cmdbDiscovery` / `cmdbReconciliation` / `cmdb.certification` | Pilot | **CE（基础）+ EE 候选（高级）** | 基础知识与检索开源；真实对账/定期认证需交付背书 | 静态 flag `knowledgeAdvancedActions=false` 仅做契约白名单，非真实门控 |
+| `ai` | Pilot（`ITSM_AI_READY`） | **EE 候选** | 执行治理、评测与模型验收是治理/承诺范畴 | readinessEnv 报告-only；无 action 门控 |
+| `connector.feishu` / `wecom` / `dingtalk` | Pilot（READY env） | **EE 候选（生产验收后）** | 入站→工单闭环已实现但无真实租户验收 | 无 edition gate；`feishu_inbound.mode` 是唯一真实开关（默认 observe_only） |
+| `identity.oidc` | Pilot | **EE 候选** | 企业身份集成是 Enterprise 典型能力 | 无 edition gate |
+| Agent Runtime / 声明式 ActionFlow / Agent Memory | Missing | **EE 候选（未实现）** | 不应写进可交付承诺 | 无代码 |
+| 字段级基线三方合并 / 全量 RLS / K8s HA | Missing / Partial | **EE 候选（未实现）** | 私有化升级与合规治理的交付成本项 | 无代码 / 部分试点 |
+| 行业包（物流 / 制造 / 电商 / MSP NOC） | Missing（产品化） | **Industry 候选（未实现）** | 仅有行业分析文档，无行业模板与真实客户 | 无代码 |
+
+**门禁要求**：Q6/Q7 决策前，不得把任何“EE 候选”写成已交付；决策后若要真实分版，必须新增服务端 edition gate 与配套测试，
+不能只改文档或用前端隐藏替代授权。
 
 ## HANDOFF
 

@@ -7,8 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/connector"
 	feishuConn "itsm-backend/connector/builtin/feishu"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	entTicket "itsm-backend/ent/ticket"
@@ -227,4 +229,130 @@ func TestInboundTicket_DedupRowKeepsStableErrorClass(t *testing.T) {
 	require.Len(t, rows, 1)
 	require.Equal(t, "ok", rows[0].ResponseStatus)
 	require.Equal(t, inboundMessageDedupConnector, rows[0].ConnectorName)
+}
+
+// 用不匹配的 tenantctx 让 commandbus 的跨租户守卫在业务 INSERT 之后报错：
+// 这会真实触发 enqueue 失败路径，验证建单/审计/命令同生同死，且去重行被释放。
+func TestInboundTicket_EnqueueFailureRollsBackAllWrites(t *testing.T) {
+	client, svc := newInboundFixture(t, "enqueue-rollback")
+	tenantID := seedInboundTenant(t, client, 20)
+	seedInboundUser(t, client, tenantID, "ou-rb")
+	seedInboundConfig(t, client, tenantID, inboundModeConfigKey, inboundModeAutoCreate)
+
+	mismatchedCtx := tenantctx.WithTenantID(context.Background(), tenantID+1)
+	msg := inboundMessage("om-rb-1", "ou-rb", "入箱失败必须整体回滚")
+	_, err := svc.CreateTicketFromInboundMessage(mismatchedCtx, tenantID, &feishuConn.Feishu{}, msg)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "enqueue inbound ticket notification")
+
+	// 业务写入、审计、命令都不应残留。
+	tickets, err := client.Ticket.Query().All(context.Background())
+	require.NoError(t, err)
+	require.Empty(t, tickets, "enqueue 失败后工单必须回滚")
+	audits, err := client.AuditLog.Query().All(context.Background())
+	require.NoError(t, err)
+	require.Empty(t, audits, "enqueue 失败后审计必须回滚")
+	commands, err := client.OperationalCommand.Query().All(context.Background())
+	require.NoError(t, err)
+	require.Empty(t, commands, "enqueue 失败后不得残留命令")
+
+	// 去重行被释放，平台重投可以重新接管，不会永久丢事件。
+	rows, err := client.ConnectorInboundDedup.Query().All(context.Background())
+	require.NoError(t, err)
+	require.Empty(t, rows)
+
+	// 用正确租户上下文重投必须成功（反向证明回滚没有毒化状态）。
+	resp, err := svc.CreateTicketFromInboundMessage(context.Background(), tenantID, &feishuConn.Feishu{}, msg)
+	require.NoError(t, err)
+	require.Equal(t, "ticket_created", resp.Action)
+}
+
+type inboundTestAdvisor struct {
+	calls  int
+	result dto.TriageResult
+}
+
+func (a *inboundTestAdvisor) SuggestForTenant(_ context.Context, _, _ string, _ int) dto.TriageResult {
+	a.calls++
+	return a.result
+}
+
+type inboundDecisionRecord struct {
+	tenantID, userID     int
+	scenario, inputRef   string
+	promptVersion, model string
+	confidence           float64
+	suggestion           map[string]interface{}
+}
+
+type inboundTestAuditor struct {
+	records []inboundDecisionRecord
+	err     error
+}
+
+func (a *inboundTestAuditor) RecordDecisionAudit(_ context.Context, tenantID, userID int, _, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error) {
+	if a.err != nil {
+		return 0, a.err
+	}
+	a.records = append(a.records, inboundDecisionRecord{
+		tenantID: tenantID, userID: userID, scenario: scenario, inputRef: inputRef,
+		promptVersion: promptVersion, model: model, confidence: confidence, suggestion: suggestion,
+	})
+	return int64(len(a.records)), nil
+}
+
+func TestInboundTicket_TriageSuggestionIsLedgerOnly(t *testing.T) {
+	client, svc := newInboundFixture(t, "triage")
+	ctx := context.Background()
+	tenantID := seedInboundTenant(t, client, 21)
+	requester := seedInboundUser(t, client, tenantID, "ou-tri")
+	seedInboundConfig(t, client, tenantID, inboundModeConfigKey, inboundModeAutoCreate)
+
+	advisor := &inboundTestAdvisor{result: dto.TriageResult{
+		Category: "network", Priority: "high", Confidence: 0.91,
+		Explanation: "关键词命中网络故障", Model: "keyword", PromptVersion: "triage-v1",
+	}}
+	auditor := &inboundTestAuditor{}
+	svc.SetInboundAdvisors(advisor, auditor)
+
+	resp, err := svc.CreateTicketFromInboundMessage(ctx, tenantID, &feishuConn.Feishu{}, inboundMessage("om-tri-1", "ou-tri", "网络中断"))
+	require.NoError(t, err)
+	require.NotNil(t, resp.TriageSuggestion)
+	require.Equal(t, "high", resp.TriageSuggestion.Priority)
+	require.EqualValues(t, 1, resp.TriageAuditID)
+	require.Equal(t, 1, advisor.calls)
+	require.Len(t, auditor.records, 1)
+
+	rec := auditor.records[0]
+	require.Equal(t, tenantID, rec.tenantID)
+	require.Equal(t, requester, rec.userID)
+	require.Equal(t, "feishu_inbound_triage", rec.scenario)
+	require.Equal(t, fmt.Sprintf("ticket:%d", resp.TicketID), rec.inputRef)
+	require.Equal(t, "triage-v1", rec.promptVersion)
+	require.Equal(t, 0.91, rec.confidence)
+	require.Equal(t, "high", rec.suggestion["priority"])
+
+	// 建议不得自动应用：工单 priority 保持 schema 默认（建议为 high）。
+	ticket, err := client.Ticket.Query().Where(entTicket.ID(resp.TicketID)).Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, "medium", ticket.Priority)
+	require.Equal(t, "ticket", ticket.Type)
+}
+
+func TestInboundTicket_TriageLedgerFailureDoesNotBreakTicket(t *testing.T) {
+	client, svc := newInboundFixture(t, "triage-ledger-fail")
+	ctx := context.Background()
+	tenantID := seedInboundTenant(t, client, 22)
+	seedInboundUser(t, client, tenantID, "ou-tlf")
+	seedInboundConfig(t, client, tenantID, inboundModeConfigKey, inboundModeAutoCreate)
+
+	svc.SetInboundAdvisors(
+		&inboundTestAdvisor{result: dto.TriageResult{Category: "db", Priority: "high"}},
+		&inboundTestAuditor{err: errors.New("ledger unavailable")},
+	)
+	resp, err := svc.CreateTicketFromInboundMessage(ctx, tenantID, &feishuConn.Feishu{}, inboundMessage("om-tlf-1", "ou-tlf", "数据库慢查询"))
+	require.NoError(t, err, "建议落账失败不应让已建工单失败")
+	require.Equal(t, "ticket_created", resp.Action)
+	require.NotNil(t, resp.TriageSuggestion)
+	require.Zero(t, resp.TriageAuditID)
 }

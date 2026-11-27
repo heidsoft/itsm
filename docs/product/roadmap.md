@@ -253,3 +253,90 @@ git diff --check
 ### 回滚
 
 新增文件可直接删除；`handler.go` 分支与 DTO 增补字段可按文件回退；无需数据库 schema/迁移变更，去重与命令复用现有表。若需关闭能力，把租户 `SystemConfig.feishu_inbound.mode` 设回 `observe_only` 即可停止建单，无需发版。
+
+---
+
+## 10. Slice C 执行记录（2026-11-25）
+
+用户以“C”选择 Slice C。会话账本 `20261124-commercial-boundary-c`。
+
+### 实际变更
+
+- `docs/product/itsm-commercial-capability-contract.md`：7 个开放问题改为决策记录（状态全部 `待决策`，含建议选项、证据等级、决策人角色、所需输入、影响模块、下一步）；新增 CE/EE/Industry 建议矩阵，逐行标注代码现状与“无 edition gate”事实。
+- `docs/business/PRICING_AND_PACKAGING.md`：状态改为“待商业决策 — 禁止对外报价”，历史数字移入作废附录。
+- `docs/product/poc-demo-script-feishu-inbound.md`（新增）：真实演示链路、前置条件、证据清单、版本归属建议、人工签字栏。
+- `docs/product/README.md` 增补索引；`README.en.md` 修两处与中文版的事实漂移（云发现水位线、管理者统一视图）；`CHANGELOG.md` [Unreleased] 补记。
+
+### 验收标准逐条状态
+
+| # | 标准 | 状态 | 说明 |
+|:---|:---|:---|:---|
+| 1 | 7 个开放问题逐条有决策记录 | **部分达成** | 每条都有状态/建议/证据/决策人角色/输入/影响/下一步；但没有真实决策人签字，不能标“已决策”——这是证据纪律要求，不是遗漏 |
+| 2 | 能力矩阵标 CE/EE/Industry 且与代码一致 | **达成** | 逐行给出代码现状与建议归属；明确无 edition gate、readiness 仅报告、两套前端开关，未制造错配 |
+| 3 | 定价改为明确决策状态 | **达成** | “待商业决策 — 禁止对外报价”，历史价标作废且不得引用 |
+| 4 | PoC 演示脚本（含分诊建议→人工确认） | **部分达成** | 脚本基于真实已接线链路；AI 分诊建议与人工确认明确标注**未接线**，不虚构演示步骤 |
+| 5 | 标注证据等级、无 Verified Demand | **达成** | 全部标 Hypothesis / Observed Problem / Doc-only / Proposal；Verified Demand = 0 |
+| 6 | 对外发布需人工审批 | **达成** | 未改官网、未发报价、未对外发布；`website/index.html` 用户 WIP 只读 |
+
+### 未执行 / 需人工
+
+- 官网与销售材料的任何发布：需用户明确授权并人工审批。
+- 7 项商业决策：需真实决策人填写姓名与日期；AI 未代填。
+- 真实客户访谈、PoC SOW、付费意愿验证：无仓库证据，必须由人执行。
+
+### 回滚
+
+本片全部为文档变更，无代码/Schema/配置改动；按文件 `git checkout -- <file>` 即可回退，新增文件直接删除。
+
+---
+
+## 11. Slice B 补强执行记录（2026-11-25）
+
+### 实际变更
+
+- **HTTP 错误语义**：新增真实路由测试，未映射发送者 → `403/2003`、无申请人且未配置自动化账号 → `503/5003`，均不建单。
+- **enqueue 失败回滚**：新增红绿用例，用不匹配的 `tenantctx` 触发 commandbus 跨租户守卫，在业务 INSERT 之后真实令 enqueue 失败；断言工单/审计/命令全部回滚、去重行释放，且用正确租户重投成功。反向探针：临时忽略 enqueue 错误 → 测试红（Expected error but got nil）；恢复 → 绿。
+- **分诊建议 → 人工确认（接线完成）**：
+  - `handlers/feishu/contracts.go` 新增窄契约 `InboundTriageAdvisor` / `InboundDecisionAuditor`，避免 handlers→internal/services 层次倒置。
+  - `FeishuSyncService.SetInboundAdvisors` 由 bootstrap 注入 `triageService` 与 `aiTelemetryService`。
+  - 建单事务提交后在事务外生成分诊建议（Guidance→LLM→keyword 降级链），写 `ai_feedbacks` 决策底账（`item_type='ai_audit'`、`accepted=NULL`），响应新增 `triageSuggestion` / `triageAuditId`；操作者经既有 `PATCH /ai/audit-logs/:id` 确认，工单详情采纳 category/priority（带 version）。**建议不自动改写工单字段**，落账失败不影响建单。
+  - 测试注入 fake advisor/auditor：断言建议溯源字段、底账 scenario/inputRef/confidence、工单 priority 保持默认（证明无 silent authority）、落账失败不阻断建单。
+- 文档：`docs/api-reference.md`、`docs/product/poc-demo-script-feishu-inbound.md` 同步为已接线口径；PoC 脚本移除“未接线”表述。
+
+### 验证结果
+
+| 命令 | 结果 |
+|:---|:---|
+| `go build ./...` | exit 0 |
+| `go test ./handlers/feishu/... ./router/... -count=1` | 两包全绿 |
+| 反向探针（忽略 enqueue 错误） | 目标测试 FAIL（Expected error but got nil），恢复后 PASS |
+| `git diff --check` | exit 0 |
+
+### 仍待人工
+
+生产飞书租户收发与死信重放演练签字栏留空；AI 模型真实语料评测（`cmd/ai-eval -mode llm`）未执行；能力维持 Preview。
+
+---
+
+## 12. 生产验收准备包（2026-11-26）
+
+用户以“2”选择生产验收准备。产物：`docs/acceptance/feishu-inbound-production-acceptance.md`。
+
+### 内容
+
+- 审批边界表：文档可由 AI 产出；凭证配置/密钥轮换/生产部署/故障注入/签字均标为人工审批。
+- Step A 能力面基线（只读 `GET /api/v1/capabilities`，记录 `connector.feishu` 的 maturity/pilotReason/acceptanceVersion）。
+- Step B 连接器配置与 `rotate-secret` 的精确路径、字段与脱敏判定（并要求 `credentials` 全为 `******`）。
+- Step C 真实租户收发 + 工单/审计/命令/AI 底账取证 + 403/409 重放拒绝。
+- Step D 受控故障 + 死信重放演练：`prod-dead-letter-check.sh`、`GET/POST /admin/operations/commands`（replay 保留幂等键、递增 fencing token）、通知投递重试、中止条件。
+- Step E 建议确认：`PATCH /ai/audit-logs/:id`（`ai:write`），采纳 category/priority 带 version。
+- E1–E8 证据清单（只留脱敏字段）、空白签字表、回滚步骤。
+
+### 本轮未执行（人工边界）
+
+未配置真实回调、未轮换密钥、未访问生产、未注入故障、未重放命令、未部署、未签字。
+本文件只是准备包，不能作为验收结论。能力维持 `pilot`，`ITSM_FEISHU_READY` 由运维按部署策略申报。
+
+### 回滚
+
+纯文档产物；按文件 `git checkout -- <file>` 回退，新增文件直接删除。
