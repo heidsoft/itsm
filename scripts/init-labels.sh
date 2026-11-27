@@ -99,21 +99,39 @@ CREATED=0
 SKIPPED=0
 FAILED=0
 
+# GitHub 的 label color 是不带 `#` 的 6 位 hex。数据表里为了可读性写成 `#1D76DB`，
+# 但把 `#` 原样送进 API 会被判 `code: invalid, field: color` —— 同样是 HTTP 422，
+# 与「名称已存在」的 422 无法靠状态码区分。历史上这里正是如此：422 一律当成
+# 「已存在」→ 转 PATCH 更新 → 标签从没被创建过 → 404 → 打印 ⚠️ 后仍 exit 0，
+# 47 个带斜杠/带前缀的标签从未真正同步，而工作流一直显示「成功」。
+# 因此下面显式归一化颜色，并且 422 必须按响应体里的 errors[].code 分流。
+strip_color() {
+  local c="${1#"#"}"
+  printf '%s' "$c"
+}
+
 for entry in "${LABELS[@]}"; do
   IFS='|' read -r name color desc <<< "$entry"
+  color=$(strip_color "$color")
 
   if [[ "$DRY_RUN" == "true" ]]; then
-    echo "[DRY-RUN] would ensure label: $name"
+    echo "[DRY-RUN] would ensure label: $name (color=$color)"
     continue
   fi
 
-  # GitHub API：POST 创建（已存在返回 422），PUT 更新
-  http_code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST \
+  # 标签名可能含 `/`（area/backend 等）。路径里的 `/` 会被当作分隔符，
+  # 必须编码成 %2F，否则 PATCH/DELETE 都定位不到该资源（实测 404）。
+  encoded_name=$(printf '%s' "$name" | sed 's|/|%2F|g')
+
+  payload=$(printf '{"name":"%s","color":"%s","description":"%s"}' "$name" "$color" "$desc")
+  resp=$(curl -sS -w '\n%{http_code}' -X POST \
     -H "Authorization: Bearer ${GH_TOKEN:-}" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
     "https://api.github.com/repos/${REPO}/labels" \
-    -d "$(printf '{"name":"%s","color":"%s","description":"%s"}' "$name" "$color" "$desc")" 2>/dev/null || echo "000")
+    -d "$payload" 2>/dev/null || printf '\n000')
+  http_code=${resp##*$'\n'}
+  body=${resp%$'\n'*}
 
   case "$http_code" in
     201)
@@ -121,19 +139,26 @@ for entry in "${LABELS[@]}"; do
       CREATED=$((CREATED+1))
       ;;
     422)
-      # 已存在 — 通过 PATCH 更新描述和颜色
-      patch_code=$(curl -sS -o /dev/null -w "%{http_code}" -X PATCH \
-        -H "Authorization: Bearer ${GH_TOKEN:-}" \
-        -H "Accept: application/vnd.github+json" \
-        -H "X-GitHub-Api-Version: 2022-11-28" \
-        "https://api.github.com/repos/${REPO}/labels/${name}" \
-        -d "$(printf '{"color":"%s","description":"%s"}' "$color" "$desc")" 2>/dev/null || echo "000")
-      if [[ "$patch_code" == "200" ]]; then
-        echo "♻️  updated: $name"
-        SKIPPED=$((SKIPPED+1))
+      # 422 有两种含义，必须按 errors[].code 区分，不能一律当「已存在」：
+      #   already_exists → 名称冲突，转到 PATCH 更新元数据
+      #   其它（invalid/color 等）→ 是请求本身有问题，必须计失败并暴露
+      if printf '%s' "$body" | grep -q '"code": *"already_exists"'; then
+        patch_code=$(curl -sS -o /dev/null -w "%{http_code}" -X PATCH \
+          -H "Authorization: Bearer ${GH_TOKEN:-}" \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "https://api.github.com/repos/${REPO}/labels/${encoded_name}" \
+          -d "$(printf '{"color":"%s","description":"%s"}' "$color" "$desc")" 2>/dev/null || echo "000")
+        if [[ "$patch_code" == "200" ]]; then
+          echo "♻️  updated: $name"
+          SKIPPED=$((SKIPPED+1))
+        else
+          echo "❌ exists but update failed (HTTP $patch_code): $name"
+          FAILED=$((FAILED+1))
+        fi
       else
-        echo "⚠️  exists but update failed (HTTP $patch_code): $name"
-        SKIPPED=$((SKIPPED+1))
+        echo "❌ invalid payload (HTTP 422): $name — $(printf '%s' "$body" | tr -d '\n' | cut -c1-160)"
+        FAILED=$((FAILED+1))
       fi
       ;;
     401|403)
@@ -150,12 +175,19 @@ done
 echo
 echo "===================="
 echo "Created:  $CREATED"
-echo "Skipped:  $SKIPPED (already existed, metadata updated)"
+echo "Updated:  $SKIPPED (already existed, metadata refreshed)"
 echo "Failed:   $FAILED"
 echo "===================="
 
 if [[ "$DRY_RUN" == "true" ]]; then
   echo "(Dry run, no changes made)"
+fi
+
+# 有失败必须以非零退出。此前无论失败多少都 exit 0，导致 label 同步长期静默
+# 无效而工作流恒绿——「静默做错」比红更危险，这里改成有失败即失败。
+if [[ "$FAILED" -gt 0 ]]; then
+  echo "❌ $FAILED label(s) failed to sync"
+  exit 1
 fi
 
 exit 0
