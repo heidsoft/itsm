@@ -52,7 +52,10 @@ func (h *Handler) Webhook(c *gin.Context) {
 		common.Fail(c, common.NotImplementedCode, "企业微信连接器实例未实现入站接收能力")
 		return
 	}
-	rawData, _ := c.GetRawData()
+	rawData, ok := connectorDomain.ReadInboundCallbackBody(c)
+	if !ok {
+		return
+	}
 	headers := map[string]string{}
 	for k, v := range c.Request.Header {
 		if len(v) > 0 {
