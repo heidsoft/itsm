@@ -1,6 +1,10 @@
 package lifecycle
 
-import "testing"
+import (
+	"testing"
+
+	"itsm-backend/common"
+)
 
 func TestStatusToPhase(t *testing.T) {
 	tests := []struct {
@@ -107,5 +111,17 @@ func TestAllDomains(t *testing.T) {
 	domains := AllDomains()
 	if len(domains) != 6 {
 		t.Errorf("AllDomains() returned %d domains, want 6", len(domains))
+	}
+}
+
+func TestTicketStatusVocabularyHasLifecyclePhase(t *testing.T) {
+	statuses, ok := common.StatusVocabularyFor("tickets", "status")
+	if !ok {
+		t.Fatal("missing tickets.status vocabulary")
+	}
+	for _, status := range statuses {
+		if StatusToPhase(DomainTicket, status) == PhaseUnknown {
+			t.Errorf("tickets.status %q has no lifecycle phase", status)
+		}
 	}
 }

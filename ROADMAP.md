@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-11-27（v1.6.61 发布：本批合并 #131 AI 工具写路径行级范围、#132 Run Manifest 骨架、#135 CMDB 审计 13 项收口、#136 飞书入站 HITL 与商业边界记录；版本面同步至 v1.6.61，未部署生产）。上次同步 2026-11-25（本批能力—场景对应修复：能力域归属映射守卫接入、scenario8 正名；docs-gate 实测 8/8 通过。上次同步 2026-11-24 的版本口径对账：tag / CHANGELOG 最新发布 / 后端兜底 / 前端包 / 示例环境 / 治理文档 / GA readiness / swagger / MCP 兜底 / K8s 示例标签统一至 v1.6.60；RAG 评测阈值表述修正为 ≥0.8；README Go 版本对齐 go.mod 1.26.10）。上次同步 2026-11-15（F1 收口补全：关闭工单的收敛点从「详情页 handler」下移到工单域 service 层，`CloseTicket` / `UpdateStatus(closed)` 同事务终止 BPMN 实例；同时更正 2026-11-14 记录里「F1 已修复」的过宽结论——原修复只覆盖 `POST /tickets/workflow/close` 一条路径。飞书同步关闭与 F2 剩余一半（triage 缓存回放带 `accepted`）落在在途 connectors / AI 审计批次，未在本批修改，已登记为已知缺口）。上次同步 2026-11-08（事实漂移修正：「当前未发布改进」同步至 CHANGELOG [Unreleased] 最新口径；「当前收敛项」过期「剩余」改写为真实阻断；v1.7 两项提前收口在正文勾选。service/ 迁移收口条目仍待团队评审，本批不登记）。上次同步 2026-11-03：应用市场交付语义闭环并晋升「可用」，能力矩阵 `marketplace` 行同步摘除 pilotReason。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
+> what is parked.** Updated as part of every release. Last synced: 2026-11-27（工作台工单生命周期映射）。上次同步 2026-11-27（v1.6.61 发布：本批合并 #131 AI 工具写路径行级范围、#132 Run Manifest 骨架、#135 CMDB 审计 13 项收口、#136 飞书入站 HITL 与商业边界记录；版本面同步至 v1.6.61，未部署生产）。上次同步 2026-11-25（本批能力—场景对应修复：能力域归属映射守卫接入、scenario8 正名；docs-gate 实测 8/8 通过。上次同步 2026-11-24 的版本口径对账：tag / CHANGELOG 最新发布 / 后端兜底 / 前端包 / 示例环境 / 治理文档 / GA readiness / swagger / MCP 兜底 / K8s 示例标签统一至 v1.6.60；RAG 评测阈值表述修正为 ≥0.8；README Go 版本对齐 go.mod 1.26.10）。上次同步 2026-11-15（F1 收口补全：关闭工单的收敛点从「详情页 handler」下移到工单域 service 层，`CloseTicket` / `UpdateStatus(closed)` 同事务终止 BPMN 实例；同时更正 2026-11-14 记录里「F1 已修复」的过宽结论——原修复只覆盖 `POST /tickets/workflow/close` 一条路径。飞书同步关闭与 F2 剩余一半（triage 缓存回放带 `accepted`）落在在途 connectors / AI 审计批次，未在本批修改，已登记为已知缺口）。上次同步 2026-11-08（事实漂移修正：「当前未发布改进」同步至 CHANGELOG [Unreleased] 最新口径；「当前收敛项」过期「剩余」改写为真实阻断；v1.7 两项提前收口在正文勾选。service/ 迁移收口条目仍待团队评审，本批不登记）。上次同步 2026-11-03：应用市场交付语义闭环并晋升「可用」，能力矩阵 `marketplace` 行同步摘除 pilotReason。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
@@ -15,6 +15,7 @@
 - AI 评测：摘要评分改为调用候选生成器，空摘要、无关摘要和混合质量输出均有回归测试；仍是离线评测基础，不作为生产模型验收。
 - 知识库：堵住更新文章与恢复历史版本两条绕过评审的发布旁路，恢复版本重置为草稿并同事务清理旧索引。
 - CMDB：对账应用差异前校验资源快照新鲜度，指纹已变化时拒绝覆写（409），避免用过期快照盖掉更新的云上事实。
+- 工作台已落地：按数据库工单状态词表补齐生命周期展示与筛选。`TestQueryTicketLifecycleIncludesPersistedStatuses` 覆盖原始状态、筛选总数和租户隔离。
 - 报表：`slaCompliance` 改按权威 SLA 违规记录计算，不再用解决率冒充合规率；工作台读取 SLA 失败上抛而非静默填零。
 - 流程引擎：部署带定时启动的流程时，定时器注册失败不再用 `fmt.Printf` 静默吞掉，改为结构化告警（含流程 key/租户/错误），与设计器发布口径一致；部署本身不阻断，重新部署可重建时间表。
 - 身份与连接器：SSO（OIDC）发起按语义分类失败（503/404/400）；飞书 OAuth 回调补一次性 state 防 CSRF；企微入站回调真正解密（URL 验证返回明文 echo、事件解出结构化字段），入站日志不再打印消息正文；钉钉入站验签缺头一律拒绝（无签名探活不再放行）并改常量时间比较。
