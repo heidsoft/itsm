@@ -320,8 +320,11 @@ func TestWorkflowStart_ChangeRouting_DepartmentSnapshot(t *testing.T) {
 	}
 
 	for _, tc := range []struct{ code, want string }{
-		{"ops", "ops"}, {"apps", "apps"}, {"foreign", "change_normal_flow"},
-		{"deleted", "change_normal_flow"}, {"legacy", "change_normal_flow"},
+		{"ops", "ops"},
+		{"apps", "apps"},
+		{"foreign", "change_normal_flow"},
+		{"deleted", "change_normal_flow"},
+		{"legacy", "change_normal_flow"},
 	} {
 		t.Run(tc.code, func(t *testing.T) {
 			ch, err := createRouteTestChange(ctx, client, tenant.ID, "normal", "high")
@@ -349,7 +352,6 @@ func TestWorkflowStart_ChangeRouting_DepartmentSnapshot(t *testing.T) {
 
 			require.NoError(t, handler.Handle(ctx, cmd))
 			require.Len(t, trigger.reqs, 1, "重试不得创建第二个流程")
-
 		})
 	}
 }

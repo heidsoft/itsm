@@ -155,7 +155,6 @@ func TestNotificationDeliveryWorkerDoesNotTreatConstraintAsSuccessfulDelivery(t 
 	delivery, err := client.NotificationDelivery.Query().Only(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "sent", delivery.Status)
-
 }
 
 // TestNotificationDeliveryHandlerSkipsWhenPreferenceDisabled 核心契约：偏好表对
