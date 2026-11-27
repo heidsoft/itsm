@@ -20,6 +20,7 @@
 | AUDIT-011 | 服务请求两菜单用 `ticket:read` | `confirmed` | PR-02：基线码改 `service_request:read` | 低风险（仅显示） |
 | AUDIT-012 | `/workflow/audit` 用 `audit:read` | `confirmed` | PR-02：基线码改 `bpmn:read` | 低风险（仅显示） |
 | AUDIT-013 | 存量租户 AI 归位/重命名依赖手动端点 | `confirmed` | PR-02：迁移补 `name/parent_id` 修正 + 双租户测试 | 数据迁移，需审批 |
+| AUDIT-070 | AI/MCP `update_ticket` 工具写路径跳过行级范围 | `resolved`（Run `cm-auto-20261125-01`） | 可信 actor 注入 + 租户/fail-closed 校验，见 PR #131 | 低风险（代码层，不改权限策略）；Run cm-auto-20261125-01: PR #131：可信 actor 注入 + fail-closed，红/绿测试与 CI 包级通过（red exit 1 -> green exit 0; backend-ci internal/services ok 41.502s） |
 | AUDIT-020 | 权限停用不作用于人工 RBAC | `resolved`（本批已验证） | 人工路径解码策略信封跳过停用码；策略写入同步清缓存；真实 DB 回归 + 反向验证 | 已完成 |
 | AUDIT-021 | DBOnly L3 回退到编译期默认值 | `resolved`（本批已验证） | L3 改走 AuthorizeResource 单一真源；真实 DB 回归含反向验证 | 已完成 |
 | AUDIT-022 | 策略/ACL 缓存无跨实例广播 | `resolved`（本地与发布路径已验证；Redis 端到端待环境） | 独立频道广播 + 本地失效；解析与本地用例绿，Redis e2e 跳过 | 已完成实现 |

@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://heidsoft.dev/schemas/cloudmesh-run-manifest-1.0.json",
+  "title": "CloudMesh Autonomous Run Manifest",
+  "description": "Machine-readable evidence contract for one autonomous engineering run. Validated by scripts/parallel/run-manifest.py with a stdlib subset validator (type/required/properties/items/enum/pattern/minLength/minimum/minItems).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "generated_at",
+    "status",
+    "repository",
+    "base_commit",
+    "branch",
+    "task",
+    "tests",
+    "ci",
+    "security",
+    "approvals",
+    "risks",
+    "blockers",
+    "deployment",
+    "rollback"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0"] },
+    "run_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$" },
+    "generated_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}" },
+    "status": { "type": "string", "enum": ["success", "partial", "blocked"] },
+    "repository": { "type": "string", "minLength": 1 },
+    "base_commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+    "worktree": { "type": "string" },
+    "branch": { "type": "string", "minLength": 1 },
+    "commits": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" }
+    },
+    "pull_request": {
+      "type": "object",
+      "required": ["number", "url"],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1 },
+        "url": { "type": "string", "pattern": "^https://github.com/" },
+        "head": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" }
+      }
+    },
+    "task": {
+      "type": "object",
+      "required": ["id", "title", "rationale", "evidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["path", "fact"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "lines": { "type": "string" },
+              "fact": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["command", "exit_code"],
+        "properties": {
+          "command": { "type": "string", "minLength": 1 },
+          "exit_code": { "type": "integer" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "ci": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "status"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["pass", "fail", "pending", "skipped"] },
+          "run_id": { "type": "string" },
+          "baseline": { "type": "boolean" }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "required": ["policy_changed", "db_migration", "deploy"],
+      "properties": {
+        "policy_changed": { "type": "boolean" },
+        "db_migration": { "type": "boolean" },
+        "deploy": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "approvals": {
+      "type": "object",
+      "required": ["required"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "pending": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "risks": { "type": "array", "items": { "type": "string" } },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "deployment": {
+      "type": "object",
+      "required": ["performed"],
+      "properties": { "performed": { "type": "boolean" } }
+    },
+    "rollback": { "type": "string", "minLength": 1 },
+    "backlog_updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "note", "evidence"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Z]+-[0-9]+$" },
+          "status": { "type": "string", "enum": ["confirmed", "suspected", "resolved", "blocked"] },
+          "note": { "type": "string", "minLength": 1 },
+          "evidence": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "backlog_snapshot_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "ledger_snapshot_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}
