@@ -886,6 +886,48 @@
   box-shadow: var(--shadow-xl);
 }
 
+/* 弹窗高度边界（共享 shell）：
+   Ant Design v6 默认 top:100px 且不限制高度，1280x720 下内容稍高的表单会把
+   底部操作区推到视口外。这里只约束 shell 高度：header/footer 固定，body 滚动。 */
+/* 用 `html` 前缀提高一层特异性，保证覆盖 antd 运行时注入的
+   `:where(.css-*).ant-modal-*` 规则；不使用 !important。 */
+html .ant-modal {
+  max-height: calc(100vh - 128px);
+  max-height: calc(100dvh - 128px);
+}
+
+html .ant-modal-container {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 128px);
+  max-height: calc(100dvh - 128px);
+}
+
+html .ant-modal-header,
+html .ant-modal-footer {
+  flex: 0 0 auto;
+}
+
+html .ant-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-height: 640px) {
+  html .ant-modal {
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+  }
+
+  html .ant-modal-container {
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+  }
+}
+
 /* 增强的表格样式 */
 .ant-table {
   border-radius: 8px;
