@@ -167,6 +167,26 @@
   line-height: 1.5;
 }
 
+/* 紧凑工具栏与表格标识：短标签、权限码、能力键不允许逐字符折行。
+   html 前缀用于覆盖 antd 运行时的 :where(.css-*).ant-typography{word-break:break-word}，
+   不需要 !important，也不改变长文本段落的换行行为。 */
+html .field-label,
+html .code-token {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+html .field-label {
+  flex: 0 0 auto;
+}
+
+/* 表格标识列的最小宽度：table-layout=fixed 时仍给浏览器一个下限，
+   避免后续有人移除列宽声明后标识列再次塌缩成单字宽。 */
+html .capability-key-cell {
+  min-width: 260px;
+}
+
 /* 引用文本 */
 .blockquote {
   @apply border-l-4 border-blue-500 pl-4 italic text-gray-700;
