@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fix**：飞书、企业微信和钉钉入站回调统一限制请求体为 1 MiB，超限返回 413，读取失败返回 400。
 
 - **Fix**：变更创建时将创建人的同租户部门写入流程启动命令，启用部门级 BPMN 路由；缺失或失效部门沿用租户级规则与内置兜底。
+- 修复工作台阶段筛选。指定阶段在某一业务域没有对应状态时，该域不贡献结果或分页总数。
+
 - **Fix**：我的工作台补齐工单的生命周期映射，`new` 归为已提交，`pending` 和 `approved` 归为处理中，`rejected` 归为已关闭。阶段筛选与分页使用同一映射，响应保留原始工单状态和无法识别时的 `unknown`。
 
 - **Feat**：AI-Native 软件工程闭环补上 CI 红项归因消费者（`scripts/parallel/ci-attribution.py` + `ci-attribution-map.json`）。`attribute` 读取 `gh pr checks` 与 base commit check-runs，把状态归一为 pass/fail/pending/skipped，并以 base 同名同 workflow 是否失败判定 baseline；只有命中显式规则且 backlog ID 已存在才生成 `backlog_updates`，未知失败进入 `unattributed`，`--strict-unattributed` 可硬失败。`merge` 将结果并入 Run Manifest 并清除旧快照摘要，继续由 `run-manifest.py` 校验/回写。新增 8 个标准库测试覆盖状态归一、基线判定、未知归属、ID 缺失、归并去重与 CLI 严格模式；文档同步到 `docs/engineering/autonomous-engineering-loop.md`。未接入 CI 强制门禁，不合并 PR、不部署、不迁移、不改权限策略。

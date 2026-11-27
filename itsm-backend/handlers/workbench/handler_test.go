@@ -259,6 +259,25 @@ func TestQueryPhaseFilterBeforePaging(t *testing.T) {
 	assert.Equal(t, 1, list.TotalPages)
 }
 
+func TestQueryPhaseFilterSkipsDomainsWithoutMatchingStatuses(t *testing.T) {
+	f := setupWorkbenchTest(t)
+	status, env := doWorkbench(t, f.handler, f.tenantA, "?recordType=ticket&phase=draft&page=2&pageSize=1")
+	require.Equal(t, http.StatusOK, status)
+	require.Zero(t, env.Code)
+	assert.JSONEq(t, `{"items":[],"total":0,"page":2,"pageSize":1,"totalPages":0}`, string(env.Data))
+
+	status, env = doWorkbench(t, f.handler, f.tenantA, "?phase=draft&pageSize=1")
+	require.Equal(t, http.StatusOK, status)
+	require.Zero(t, env.Code)
+	page := decodeList(t, env)
+	require.Len(t, page.Items, 1)
+	assert.Equal(t, 1, page.Total)
+	assert.Equal(t, 1, page.TotalPages)
+	assert.Equal(t, f.tenantA, page.Items[0].TenantID)
+	assert.Equal(t, "change", page.Items[0].RecordType)
+	assert.Equal(t, "draft", page.Items[0].Phase)
+}
+
 // TestQueryListContract 锁定响应契约：{items,total,page,pageSize,totalPages} + camelCase item，
 // 且空结果必须是 []。
 func TestQueryListContract(t *testing.T) {
