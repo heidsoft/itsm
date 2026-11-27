@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Fix**：`Sync Labels` 工作流四次触发四次全红——`scripts/init-labels.sh` 在 git 索引中为 mode `100644`，而 `label-sync.yml:29` 以 `./scripts/init-labels.sh` 直接执行（Actions 不回落 `bash`），实测 `exit code 126`。本次仅改索引 mode 为 `100755`，文件内容 blob `59920e4b` 零变更；新增 `scripts/__tests__/workflow-script-mode.test.js` 守卫：扫描 `.github/workflows/*.yml` 中无解释器前缀的直启脚本，断言 `git ls-files -s` 的**索引 mode**必须 `100755`（读索引而非文件系统权限位，避免 macOS/Windows checkout 失真），含扫描面自检与解析器语义反向断言。反向验证 `--chmod=-x` 后精确红在 `label-sync.yml:29 … mode=100644`。**未 push**，真实 CI 效果待推送后确认。
+
+- **Docs**：产品现状四件套快进到 `origin/main`（`830efdd98`）后的复核更正——`current-state.md` 度量基线整表按 git 跟踪口径重测（非 ent 1,786 = 生产 844 / 测试 943；ent 1,118；schema 137；迁移 99；域包 69；路由文件 92；前端页 173；前端用例 323 单测 + 68 E2E = 393 全口径；后端测试 943），并新增「测试口径分离」说明——`tests/e2e/` 目录 85 个文件里 17 个是 `fixtures/`、`harness.ts` 等辅助件而非用例，直数会虚高；`§11.2` 加**归属更正**：能力矩阵修复由维护者 `830efdd98` 独立完成，本轮在 `87cf29416` 上的同款提交 `ef5b098ef` 快进后作废为重复劳动、未 push；`roadmap.md §13.4a` 记入返工根因（动手前未 `git fetch` 核对远端是否已推进）与下一轮强制规则。
+
 - **Fix**：v1.6.61 发版后能力矩阵验收基线补账（2026-11-27）——`handlers/capability` 的 `acceptanceVersion` 与商业能力契约同步到 `2026.11.27`，与本次发布日对齐；docs-gate 8/8 复核能力 registry / README / 契约口径一致。该修正发生在 tag/Release 之后，不改动已发布产物。
 
 - **Docs**：飞书入站生产验收准备包（验收准备，非验收结论）——新增 `docs/acceptance/feishu-inbound-production-acceptance.md`：审批边界、能力面只读基线、连接器配置与 `rotate-secret` 步骤（凭证只由运维注入、响应脱敏）、真实收发取证、受控故障 + 死信重放演练（命令 replay 保留幂等键、递增 fencing token）、建议人工确认与空白签字表；PoC 脚本与四周计划交叉引用。未配置真实凭证、未访问生产、未注入故障、未部署、未代签，能力维持 Pilot。

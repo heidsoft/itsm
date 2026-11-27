@@ -1,10 +1,10 @@
 # CloudMesh ITSM 当前产品现状（证据基线）
 
-> Status: current · 基线日期：2026-11-23 · 仓库 HEAD：`a1d4dfba1`（`main`，本地领先 `origin/main` 3 个提交）
+> Status: current · 基线日期：2026-11-23 · **最近复核：2026-11-27（v1.6.61 发布后 + 快进到 `origin/main`）** · 仓库 HEAD：`830efdd98`（`origin/main`，含 v1.6.61 tag 及其后的能力矩阵修复）
 >
-> **证据模式**：本轮为静态代码/测试审阅 + 仓库内既有产物核对。**未执行** `go test ./...`、`npm test`、Playwright E2E，未部署、未打 tag、未创建 PR。所有“Implemented”结论指“代码与测试证据支持该能力存在并接线”，不等价于“本轮运行验证通过”。
+> **证据模式**：§1–§9 为 2026-11-23 静态代码/测试审阅快照（保留原样，未改写）；§10 为 11-24 版本对账；**§11 为 2026-11-27 的实测复核**——首次引入真实 CI 运行数据、真实门禁失败日志与 git 索引级事实，并修正 §1/§3 中三处引用错误。凡标注「本轮实测」的结论有命令与输出可复核。
 >
-> **工作树边界**：`website/index.html` 存在用户 WIP 修改，本轮只读、未触碰。
+> **工作树边界**：本轮先在隔离工作树 `itsm-v1611-ci`（基于 tag 提交 `87cf29416`）上修复与验证；其后发现 `origin/main` 已前推到 `830efdd98`（+30 提交），遂**快进到新基线并作废一项重复提交**（详见 §11.2 归属更正）。主工作树 `/Users/heidsoft/Downloads/research/itsm` 全程只读未触碰（其 14 项改动经逐文件比对，12 项已与 `origin/main` 逐字相同，仅 `CHANGELOG.md` 与 `scripts/docs-gate/product-surface-baseline.txt` 因本地落后而不同）。
 
 ---
 
@@ -13,7 +13,7 @@
 CloudMesh 已不是早期原型，而是一个**工程底座显著强于商业交付能力**的成熟代码库：
 
 - **强项**：核心 ITIL 主链路（工单/事件/问题/变更/服务请求/SLA/CMDB/知识）具备真实状态机、租户谓词、CAS 乐观锁、事务型 outbox；AI 工具调用治理（Gate 2.5 零信任主体 + 强制人工审批 + 执行期重校验）达到企业级设计水准；命令总线具备 fencing / 退避 / 死信 / 重放全套语义并有回归测试。
-- **弱项**：**没有一个被客户验证的付费需求**；社区版/企业版边界是文档里明确记录的开放问题；销售与定价文档是占位符；CI 最近 100 次运行中 39 次失败且 docs-gate 不是分支保护必需检查；版本号在至少 7 个表面互相矛盾；K8s 仅为脚手架；入站 IM 消息到工单的业务派发未实现。
+- **弱项**：**没有一个被客户验证的付费需求**；社区版/企业版边界是文档里明确记录的开放问题（7 项全部 `待决策`）；销售与定价文档明确标注「禁止对外报价」；版本口径已在 11-24 对账收敛，但**发版流程本身仍会踩红门禁**（§11.2 实例：v1.6.61 两条门禁红）；K8s 仅为脚手架；入站 IM 消息到工单目前只打通**飞书一个渠道**（企微/钉钉仍只 ACK，§11.4）；RLS 数据库层隔离**仍未生效**（生产 `RLS_MODE=off`，§11.5）。
 - **一句话判断**：**产品深度足够支撑 PoC 与技术评审，但尚不足以支撑可承诺、可收费、可复制交付。**
 
 按用户要求的状态词表（Implemented / Partial / Missing / Broken / Unknown）逐域判定见第 3 节。
@@ -22,20 +22,33 @@ CloudMesh 已不是早期原型，而是一个**工程底座显著强于商业�
 
 ## 1. 可复核的度量基线
 
-| 指标 | 数值 | 复核方式 |
+> **口径修正（2026-11-27 实测）**：11-23 版本的「Go 源文件 4,681」是 `find` 直接计数，把主工作树的 `itsm-backend/.cache/entgen/runs/<stage>/` 生成缓存目录一并算入（该目录含整套 ent 生成物副本，占 2,931 个文件）。以 **git 跟踪**口径测同一棵 `87cf29416` 树为：非 ent 文件 **1,786**（其中生产 **843**、测试 **943**），ent **1,118**。两者不是"文件变少了"，而是前者含未入库缓存。后续统计一律用 `git ls-files` 口径，避免缓存污染。
+
+| 指标 | 数值（git 跟踪口径，`830efdd98`） | 复核方式 |
 |:---|:---|:---|
-| Go 源文件（不含 `ent/`） | 4,681 | `find itsm-backend -name '*.go' -not -path '*/ent/*' \| wc -l` |
-| Go 测试文件 | 914 | `find itsm-backend -name '*_test.go' \| wc -l` |
-| Ent schema / 生成代码 | 137 / 1,118 | `ls itsm-backend/ent/schema/*.go`、`find itsm-backend/ent -name '*.go'` |
-| SQL 迁移脚本 | 93 | `ls itsm-backend/migrations/*.sql \| wc -l` |
-| `handlers/<domain>/` 域包 | 70 | `find itsm-backend/handlers -mindepth 1 -maxdepth 1 -type d` |
-| 带 `service.go` / `repository*.go` 的域 | 43 / 34 | `find itsm-backend/handlers -name ...` |
-| 路由注册（方法级） | 755 | `rg '\.(GET\|POST\|PUT\|PATCH\|DELETE)\(' itsm-backend/router --glob '*.go'` 排除 `_test.go` |
-| 前端页面 / 测试 / API client | 173 / 308 / 70 | `find`/`ls`，见第 1 节来源 |
-| CI 工作流 | 17 | `ls .github/workflows/` |
-| 最新 tag / CHANGELOG 已发布版 | `v1.6.60` / `1.6.60`（2026-11-22） | `git tag --list --sort=-v:refname`、`CHANGELOG.md:62` |
+| Go 源文件（不含 `ent/`） | 1,786（生产 844 / 测试 943） | `git ls-tree -r --name-only HEAD \| grep '^itsm-backend/.*\.go$' \| grep -v '/ent/'` |
+| Ent 生成代码 | 1,118 | `… \| grep -c '^itsm-backend/ent/.*\.go$'` |
+| Ent schema | 137 | `… \| grep -c '^itsm-backend/ent/schema/.*\.go$'` |
+| SQL 迁移脚本 | 99 | `… \| grep -c '^itsm-backend/migrations/.*\.sql$'` |
+| `handlers/<domain>/` 业务域包 | 69 | `… \| grep -c '^itsm-backend/handlers/[^/]+/handler\.go$'`；`handlers/` 下共 70 个目录，除去 `shared/`（共享包，无 `handler.go`） |
+
+> **域包口径（2026-11-27 晚复核）**：`docs-gate` L.4 报告「域包 70 个」，是按 `handlers/` 下**目录**计数（含 `shared/`）；本表 69 是**有 `handler.go` 的业务域**。两者不矛盾，差的就是 `shared`。引用时须写明口径，否则会与门禁输出看起来打架。
+| 路由文件（`router/`） | 92 | `… \| grep -c '^itsm-backend/router/.*\.go$'` |
+| 前端页面（`page.tsx`） | 173 | `… \| grep -c '^itsm-frontend/src/app/.*page\.tsx$'` |
+| 前端单测（`src/**/__tests__/`） | 323 | `… \| grep -c '^itsm-frontend/src/.*__tests__/'` |
+| 前端 E2E 用例（Playwright `*.spec.ts`） | 68 | `… \| grep -cE '^itsm-frontend/tests/e2e/.*\.(test\|spec)\.(ts\|tsx)$'` |
+| 前端测试文件（全口径 `*.test/spec.ts(x)`） | 393 | `… \| grep -cE '^itsm-frontend/.*\.(test\|spec)\.(ts\|tsx)$'` |
+| 后端测试文件 | 943 | `… \| grep -c '^itsm-backend/.*_test\.go$'` |
+| CI 工作流 | 17 | `ls .github/workflows/*.yml \| wc -l` |
+| 能力登记表 registry key | **28**（GA 15 / Pilot 13） | `grep -o 'key: "[a-zA-Z.]*"' handlers/capability/handler.go \| wc -l`；成熟度逐行计数 |
+| 最新 tag / CHANGELOG 已发布版 | `v1.6.61` / `1.6.61`（2026-11-27） | `git tag --sort=-v:refname`、`CHANGELOG.md` |
+| `acceptanceVersion`（能力矩阵对账日） | `2026.11.27` | `handlers/capability/handler.go:17`（`830efdd98` 已修） |
+
+> **测试口径分离（2026-11-27 晚复核）**：原表「前端测试文件 323」只数 `src/**/__tests__/`，不含 Playwright E2E。全口径 393 的构成已逐项对齐：**323**（`src/__tests__/` 单测）+ **68**（`tests/e2e/` 下 `*.test/spec.ts` 用例）+ **2**（`src/app/**/page.test.tsx` 与根级 `prod-button-test.spec.ts`）= 393。`tests/e2e/` 目录本身有 85 个文件，其中 17 个是 `fixtures/`、`harness.ts`、`auth-utils.ts`、`BEST_PRACTICES.md` 等辅助件，**不是用例**——直接 `grep -c tests/e2e` 会把它们计入而虚高。本表按「用例」而非「文件」分列出数。
 
 > 路由数为静态文本计数，含测试辅助注册之外的真实方法注册；与运行时实际生效路由数可能有少量差异。
+
+**能力登记表统计口径说明**：`grep '	{key:'` 只能匹配到 15 条行首定义，另有 13 条使用 `key:` 缩进写法——两种写法合起来才是完整的 28 个 key（`domain_mapping_test.go:85` 硬断言 `len(registry) != 28` 即报错）。统计必须按 `key: "..."` 模式计数，否则会得到 15/13 的错误分布。
 
 ---
 
@@ -104,7 +117,7 @@ CloudMesh 已不是早期原型，而是一个**工程底座显著强于商业�
 | RAG / 知识检索 | **Implemented（v2 Partial）** | `rag_service.go:440,532,714,765,859` 全路径 tenant + 发布态；`:658,723,785-801` 向量结果二次可见性过滤；`:811-844` 分类拒绝 fail-closed。缺 chunking / 真重排（ROADMAP:203-209，“hybrid”是开关而非 BM25 融合） |
 | AI Evaluator | **Partial** | 4 指标阈值在 `ai/eval/eval_test.go:362,379,409,430`（triage top1≥0.85、summarize ROUGE-L≥0.6、RAG hit≥0.8、prediction AUC≥0.75），CI step `backend-ci.yml:300-310`；真实模型档是手工命令 `cmd/ai-eval/main.go:28`，CI 不消费。ROADMAP:142 仍写 hit≥0.7（漂移） |
 | Skill Registry | **Implemented** | `handlers/skill/handler.go:593,685,724`：manifest 权限校验 + 市场授权 + 决策审计（含失败）；内置 12 技能 `builtin_skills.go:25-38` |
-| Tool Execution / HITL 治理 | **Implemented（最强项）** | `handlers/ai/service.go:251-348` Gate 2 + Gate 2.5；`:298-299` 提示词注入改不了 DB 权限；`:334-346` 写工具强制审批、双审批人不可自批；`repository_impl.go:400-402` `EnqueueTxIdempotent`；`tool_executor.go:69-139` 执行期重验主体与策略指纹 |
+| Tool Execution / HITL 治理 | **Implemented（最强项）** | `handlers/ai/service.go:251-348` Gate 2 + Gate 2.5；`:298-299` 提示词注入改不了 DB 权限；`:334-346` 写工具强制审批、双审批人不可自批；`repository_impl.go:400-402` `EnqueueTxIdempotent`；**`internal/services/tool_executor.go:69-139`** 执行期重验主体与策略指纹（★ 路径修正：11-23 版误写为 `handlers/ai/tool_executor.go`，该文件自 `4381775c9` 起位于 `internal/services/`） |
 | Agent Runtime / Registry | **Partial** | 生产侧是固定 12 技能集 + `maxToolRounds=5` 的有界工具循环（`rag_service.go:1170-1293`），不是通用 Agent 注册表；`itsm-agent/` 是独立的 GitHub issue→PR 开发机器人，不接后端 router/worker；`itsm-skill/index.js` 是 60 行开发 CLI |
 | Agent Memory | **Missing** | `itsm-backend/memory/` 仅含遗留 Python venv，无源码 |
 | Agent Observability | **Partial** | `handlers/ai/control_plane.go:15-34,148-235` 汇总工具面/队列/策略/拒绝；审计字段 `entity.go:43-72` 含 `permissionCheck`/`roleSnapshot`/`policyVersion`/`runId`；无统一 Trace 产品面 |
@@ -117,7 +130,7 @@ CloudMesh 已不是早期原型，而是一个**工程底座显著强于商业�
 |:---|:---|:---|
 | 身份与租户上下文 | **Implemented** | `middleware/auth.go:166-224,349-359` 身份只来自签名 claims；`middleware/tenant.go:25-30,144-157` 忽略 `X-Tenant-ID`，任何提示来源必须等于 JWT tenant，缺失 401 fail-closed |
 | RBAC / 权限目录 | **Implemented** | `middleware/rbac.go:657-724`；`router/router.go:435-438` 全局挂载；`route_permission_guard_test.go:144-261` AST 扫描所有读写路由；`permission_code_catalog_guard_test.go:30-119` 保证权限码在目录中 |
-| 多租户隔离 | **Implemented（应用层）/ Partial（RLS）** | 约 119 个仓库文件带 tenant 谓词；`tests/scenarios/scenario6_tenant_isolation_test.go:29-198`、`tests/rbac/cross_tenant_test.go:37-571`；RLS 仅 `changes`/`vectors` 两表试点（`tests/multi_tenant/rls_matrix_test.go:1-25`） |
+| 多租户隔离 | **Implemented（应用层）/ Partial（RLS 未生效）** | 约 119 个仓库文件带 tenant 谓词；`itsm-backend/tests/scenarios/scenario6_tenant_isolation_test.go:29-198`、`itsm-backend/tests/rbac/cross_tenant_test.go:37-571`、`itsm-backend/tests/multi_tenant/rls_matrix_test.go:1-25`（★ 路径修正：11-23 版三处均漏写 `itsm-backend/` 前缀）。**RLS 现状比 11-23 描述更差**：见 §11.5——生产 `RLS_MODE=off`，双连接池未接线，`AppDSN()`/`AdminDSN()` 零调用方，试点策略迁移只能靠手工 `docker cp` |
 | 审计 | **Implemented（有边界）** | `middleware/audit.go:362-405,230-237` 审计置于链首，覆盖写操作与 4xx/5xx，4KB 截断 + `MaskSensitiveFields`；但审计写是独立事务，失败只计数与降级日志，不阻断业务（`:340-350`） |
 | MSP | **Implemented** | `router/msp_routes.go` + `msp_route_registration_test.go`；`handlers/msp/allocation_service_impl.go:170` 审计 |
 | SSO / OIDC | **Implemented** | `router/sso_routes.go:22-48`、`handlers/auth/sso_oidc.go`（Discovery/JWKS/PKCE/state/nonce）；`sso_routes_test.go:175-426` 端到端 mock IdP。缺 nonce 按设计仅告警 |
@@ -244,7 +257,7 @@ itsm-backend/main.go
 
 - 入口与路由：`itsm-backend/main.go`、`internal/bootstrap/app.go`、`router/router.go`
 - 核心域：`itsm-backend/handlers/{ticket,incident,problem,change,service_request,sla,cmdb,knowledge}/`
-- AI 治理：`itsm-backend/handlers/ai/service.go`、`handlers/ai/tool_executor.go`、`handlers/skill/handler.go`、`handlers/mcp/service.go`
+- AI 治理：`itsm-backend/handlers/ai/service.go`、**`itsm-backend/internal/services/tool_executor.go`**、`itsm-backend/handlers/skill/handler.go`、`itsm-backend/handlers/mcp/service.go`
 - 可靠性：`itsm-backend/internal/commandbus/commandbus.go`、`ent/schema/operational_command.go`、`internal/services/timer_scheduler.go`、`internal/services/notification_delivery_command_handler.go`
 - 初始化：`itsm-backend/internal/initialization/engine.go`、`internal/initialization/sql_store.go`、`itsm-backend/docs/initialization-data-classification.md`
 - 质量：`output/github-ci-review-2026-11-14.md`、`CHANGELOG.md`、`scripts/docs-gate/run-all.sh`
@@ -263,3 +276,77 @@ itsm-backend/main.go
 1. 本地未入库的 `.env.prod` 仍为 `VERSION=v1.6.70`，`output/build-v1.6.71-20261123.log` 构建 v1.6.71 —— 需发布负责人按部署流程人工确认，本批未触碰（属人工审批边界）。
 2. `docs-gate` C.6/C.8 仍因并行会话 WIP 红灯；分支保护必需检查仍只有 4 项，`docs-gate` 与新增的 `Version Truth` 作业需在 GitHub 仓库设置中人工加入，本批无法远程配置。
 3. `CHANGELOG.md` 被并行会话暂存，本批未写入 `[Unreleased]` 条目，需在并行会话提交后补记（不得把两个主题混进同一 commit）。
+
+---
+
+## 11. 2026-11-27 实测复核：v1.6.61 发布后
+
+本节与前文的区别是**证据等级**：§1–§10 是静态审阅与仓库产物核对；本节有真实 CI 运行记录、真实失败日志、git 索引事实与可复跑命令。基线 `87cf29416`（tag `v1.6.61`，2026-11-27 09:34）。
+
+### 11.1 CI 真实结论（最近 60 次运行）
+
+| 结论 | 数量 | 说明 |
+|:---|:---|:---|
+| success | 42 | — |
+| cancelled | 14 | 几乎全是 `concurrency: cancel-in-progress` 导致：同一分支连续 push，前一次被动取消 |
+| failure | 2 | `backend-ci`（Test 作业）、`Sync Labels` |
+| in_progress | 1 | — |
+
+> `cancelled` 占比 23% 不代表质量恶化，而是**并发策略的正常产物**；但它掩盖了一个真问题：`docs-gate` 在 `main` 上的独立运行 7 次全 cancelled（§11.3）。11-23 版记录的「39/100 失败」是 11-14 快照，已不适用——当前真实失败收敛到 2 项，且两项都可归因（§11.2、§11.3）。
+
+**关键观察**：`backend-ci` 的 `Test` 作业失败发生在**发版提交** `87cf29416` 上（不是某个 WIP 分支），且 `Lint`/`Build`/`Dependency Review` 全绿。这意味着一件事：`Test` 是唯一能拦住这次发版的作业，而它拦住了（红灯在 main 上）。
+
+### 11.2 已修复（非本轮）：v1.6.61 发版未复核能力矩阵（真实门禁红）
+
+> **归属更正（2026-11-27 晚复核）**：本节修复**由仓库维护者独立完成**，落地为 `origin/main` 提交 `830efdd98`（"fix(capability): v1.6.61 发版后同步能力矩阵验收基线"）。本轮工作树基于 `87cf29416` 时曾独立做出同样的改动（本地提交 `ef5b098ef`），但在快进到最新 `origin/main` 后**该提交已作废为重复劳动**，未 push。以下结论描述的是**这项缺陷本身**，不是本轮的修复成果。
+
+- **事实**：`itsm-backend/handlers/capability/handler_test.go:83` 的 `TestAcceptanceVersionIsNotBehindLatestRelease` 在 `87cf29416` 上失败，消息逐字为「能力矩阵验收基线 `2026.11.25` 早于最新发布 `2026-11-27`（1.6.61）：发版时必须复核矩阵并同批更新」。
+- **根因**：发版只对齐了 10 个版本表面，没有同批复核能力矩阵。**这不是测试过严**——v1.6.60 发版时踩过完全一样的坑（CHANGELOG 记录：「v1.6.60 发版时未复核能力矩阵…基线停在 2026.11.08」），两版连踩。
+- **复核结论**：实测 `git diff 76616ac1d 87cf29416 -- itsm-backend/handlers/capability/ README.md` 在成熟度范围内**零差异**（README 只有 Go 徽章一行改动），即**矩阵内容仍然成立**，缺的只是「发版时重新确认」这一动作。因此修复是把基线推到 `2026.11.27`（复核后的确认），不是为了让测试变绿而改数字。
+- **修复**：`handler.go:17` 基线 → `2026.11.27`；`itsm-commercial-capability-contract.md`、`feishu-inbound-production-acceptance.md` 两处引用同批更新（后者若不同步，`TestAcceptanceVersionMatchesCommercialContract` 会红）。
+- **验证**：`go test ./handlers/capability/ -count=1` 全包绿（14 项守卫全过）；反向验证把日期改回 `2026.11.25` 后该用例立即红在断言、恢复即绿。
+
+### 11.3 本轮修复：`Sync Labels` 四次全红——脚本执行位从未入库
+
+- **事实**：`label-sync.yml:29` 直接 `run: ./scripts/init-labels.sh`，而该脚本在 git 索引里是 `100644`。GitHub Actions 直接执行不会回落 `bash`，实测日志 `line 1: ./scripts/init-labels.sh: Permission denied` / `exit code 126`。
+- **该工作流触发 4 次（11-17 / 11-20 / 11-22 / 11-27），4 次全红**。也就是说这条自动化自 2026-11-14 落地起**从未成功过一次**；`docs/business/GAP_MATRIX.md:106` 的「✅ 已加 label-sync.yml」与运行事实相反，label 漂移一直靠人工跑脚本。
+- **假绿形态**：本地工作树 `ls -l` 显示 `-rwx------`（历史上 chmod 过但从未入库），所以"本机看起来没问题"；只有干净 checkout 才暴露 644。这是本项目反复出现的同一类陷阱：**工作区状态 ≠ 版本库状态**。
+- **修复**：`git update-index --chmod=+x`（写入索引，不依赖工作区权限位）；新增 `scripts/__tests__/workflow-script-mode.test.js` 锁死这一条——扫描全部 workflow 的 `run:` 指令（含 `run: |` 块、跳过注释），凡无解释器前缀直启 `scripts/x` 者，**索引 mode 必须 100755**。断言读 `git ls-files -s` 的 mode 而非文件系统权限，否则 macOS/Windows checkout 会让守卫失真。
+- **验证**：`node --test scripts/__tests__/*.test.js` 106/106 通过；反向验证 `--chmod=-x` 后新测试红在 `label-sync.yml:29 … mode=100644`，恢复即绿。
+- **提交**：`abdf14f64`（隔离分支 `fix/release-gate-guard`，基于 `origin/main` = `830efdd98`）。
+
+### 11.4 渠道覆盖的准确口径：只有飞书打通
+
+11-23 版 §B 记「入站 IM 消息到工单的业务派发未实现」已过时。当前事实：
+
+| 渠道 | 入站业务派发 | 证据 |
+|:---|:---|:---|
+| 飞书 | **已实现（Pilot，默认旁路观察）** | `handlers/feishu/inbound_ticket.go:35-40`（`inboundModeObserveOnly` 默认值 + `feishu_message` 持久去重）；`docs/acceptance/feishu-inbound-production-acceptance.md` 验收准备包（签字栏空白） |
+| 企微 | **未实现** | `handlers/wecom/handler.go` 仍只验签+ACK |
+| 钉钉 | **未实现** | `handlers/dingtalk/handler.go` 仍只验签+ACK |
+
+飞书的默认配置是 `observe_only`——**外部来一条消息不会自动建单**，必须租户显式设 `auto_create`。这是正确的 fail-safe 默认，但也意味着「演示能建单」需要额外一步配置。真实租户验收未做，能力维持 `pilot`。
+
+### 11.5 RLS：文档口径需下调（比 11-23 描述更差）
+
+11-23 版写「RLS 仅 `changes`/`vectors` 两表试点」。实测分三层，实情更不乐观：
+
+1. **策略层比文档写的多**：`itsm-backend/migrations/` 有 9 个迁移执行 `ENABLE ROW LEVEL SECURITY`，覆盖 15 张表（`tickets`/`incidents`/`problems`/`changes`/`configuration_items`/`alerts`/`sso_providers`/`sso_identities`/`knowledge_article_reviews`/`ai_analysis_result` 等）。`20261028_rls_core_tables.sql` 明确把五张核心事务表补进"策略姿态"。
+2. **但策略不生效**：`docker-compose.prod.yml:144,212,396` 三处 `RLS_MODE=off`（默认）。`RLS_MODE=enforce` 会**拒绝启动**（`database/rls/driver.go:80` 对未知值报错），而 enforce 的前置条件——双连接池——**尚未接线**：`config.AppDSN()`/`AdminDSN()` 全仓**零调用方**。
+3. **试点迁移不在迁移链里**：`database/rls/migrations/002_pilot_policies.sql` 不被任何迁移执行器消费，唯一引用是 `scripts/rebuild_and_verify.sh:169` 里的手工 `docker cp`。
+
+**结论**：数据库层隔离当前**完全没有生效**，全部依赖应用层 tenant 谓词。这不影响功能正确性（应用层谓词是主防线且有回归），但影响**等保/合规类交付承诺**——不能对外说"已启用数据库行级隔离"。修复的前置代码工作是双连接池（`docs/operations/rls-rollout.md` §3 已写明），仍属独立批次。
+
+### 11.6 商业边界：从「占位符」升级为「决策记录，全部待决策」
+
+11-23 版记「销售与定价文档是占位符」。11-25 的 Slice C 已把 7 个开放问题改写为**结构化决策记录**（`itsm-commercial-capability-contract.md:204-218`），每条含状态/建议选项/证据等级/决策人角色/所需输入/影响模块/下一步，**全部保持 `待决策`**；`PRICING_AND_PACKAGING.md` 改为「待商业决策 — 禁止对外报价」。
+
+这是进步（从「没有结构」到「有结构但未决策」），但**没有改变商业化阻塞的本质**：Verified Demand 仍为 **0**。文档现在明确禁止把建议当决定，这一点保持得很好。
+
+### 11.7 本轮未验证项（诚实边界）
+
+1. **未执行 `go test ./...` 全量**：只在隔离树跑了 `handlers/capability` 全包与相关守卫；全量测试的当前绿度未测（CI 的 `Test` 作业在 133 个包中仅 `handlers/capability` 一包红，其余 `ok`，可作为间接证据）。
+2. **未执行 `npm test` / Playwright E2E**：前端 CI 最近 8 次 7 绿 1 cancelled，未独立复跑。
+3. **未部署、未打 tag、未创建 PR**：唯一本轮修复提交 `abdf14f64` 留在隔离分支 `fix/release-gate-guard`（基线 `origin/main` = `830efdd98`），等用户明确要求再 push。
+4. **真实租户验收**：飞书生产收发、死信重放、workflow 跨域签字均未执行（签字栏空白）。
+5. **`Sync Labels` 修复未经真实 CI 验证**：执行位修复需 push 后才能在 GitHub 上确认，本地只能证明索引 mode 已变更。

@@ -10,17 +10,36 @@
 
 ## 1. T0：阻塞可信交付（必须在四周计划内处理）
 
-### TD-01 版本与事实源漂移
+### TD-01 版本与事实源漂移 → **部分收口（2026-11-27）**
 
-- **证据**：`git tag` 最大 `v1.6.60`；`ROADMAP.md:31` 写 tag v1.6.37 / prod v1.6.48；`UPGRADE.md:5` 写 1.6.20；`docs/documentation-governance.md:25` 写 v1.6.9；`scripts/version-drift-baseline.json` 写 v1.6.59；`.env.prod:76` 写 v1.6.70；`output/build-v1.6.71-20261123.log` 构建 v1.6.71；`README.md:9` Go 1.25.13 vs `itsm-backend/go.mod:3` 1.26.10。
+> **状态更新**：版本**表面漂移已清零**（`--canonical=v1.6.61 --strict` PASS，10 表面 + 2 Go 徽章）。残留转为**发版时序缺陷**（新编号 TD-01b，紧随本节）。下列 11-23 证据保留为历史基线。
+
+- **证据（2026-11-23 历史）**：`git tag` 最大 `v1.6.60`；`ROADMAP.md:31` 写 tag v1.6.37 / prod v1.6.48；`UPGRADE.md:5` 写 1.6.20；`docs/documentation-governance.md:25` 写 v1.6.9；`scripts/version-drift-baseline.json` 写 v1.6.59；`.env.prod:76` 写 v1.6.70；`output/build-v1.6.71-20261123.log` 构建 v1.6.71；`README.md:9` Go 1.25.13 vs `itsm-backend/go.mod:3` 1.26.10。
 - **影响**：交付版本、`/version`、发布说明、升级文档四者不可互证；合同附件无法引用。
 - **风险**：客户验收争议；错误升级包；安全补丁是否内含无法判断。
 - **修复**：单一版本来源（tag + CHANGELOG + 运行时 `/version`）；修正 6 处文档/配置；CI 加跨表面一致性断言；README Go 版本同步。
 - **工作量**：S–M。**人工审批**：生产 `.env.prod` 改动的发布需按既定部署流程，本轮不得直接改生产配置。
 
-### TD-02 CI 红灯存量与门禁不阻断
+### TD-01b 发版门禁依赖 tag 时序（新增，2026-11-27）
 
-- **证据**：`output/github-ci-review-2026-11-14.md:27`（56 success / 39 failure / 5 cancelled）、`:32-45`（gofumpt 90 文件、Swagger 生成产物落后、2 个 Jest 过期断言、RLS 角色断言、Trivy HIGH CVE + govulncheck、star-history GH006）；`scripts/docs-gate/run-all.sh:21-27`（C.1–C.5 advisory）；`.github/workflows/docs.yml:58-62` `strict:false`；分支保护仅 4 项必需检查。
+- **证据**：发版提交 `87cf29416` 于 `01:34:21Z` 推 main，tag `v1.6.61` 于 `01:34:32Z` 创建。`.github/workflows/docs.yml:101-105` 用 `git describe --tags --abbrev=0` 取 canonical，attempt 1 因此取到 `v1.6.60`，把 1.6.61 的正确表面全判 FAIL；attempt 2 重跑才绿（run `45923317987` 实测 `run_attempt=2`）。
+- **影响**：门禁正确性依赖"tag 先于 branch 存在"的时序巧合。用 `prepare-release.sh`（先 tag 后 push）不踩；手工先 push 再打 tag 必踩误报。
+- **风险**：把正确发布判成红 → 常态化重跑绿灯 → 重跑变成绕过门禁的习惯（比门禁直接失效更危险）。
+- **修复方向**（需产品/发布决策，不宜在修红批次顺手改）：① CI 接受显式 canonical 输入（PR 用 base 最新 tag、main push 用提交内常量或本次 tag）；② 或把 `prepare-release.sh` 定为唯一发版入口并在 CI 断言"提交已打好 tag"。**禁止**改成直接读代码常量——那会让守卫变成自证（常量即比对源）。
+- **工作量**：S–M。**人工审批**：涉及发版流程与分支保护变更。
+
+### TD-16b 工作流直接执行面缺执行位守卫（已修，2026-11-27）
+
+- **证据**：`label-sync.yml:29` `run: ./scripts/init-labels.sh`，索引 mode `100644`，四次触发全红（exit 126 Permission denied）。本地 `ls -l` 显示 `-rwx------`（曾 chmod 未入库）——工作区状态与版本库状态不一致导致的假绿。
+- **已修**：`git update-index --chmod=+x` + 新增 `scripts/__tests__/workflow-script-mode.test.js`，扫描全部 workflow 的 `run:` 直启面，断言**索引 mode 必须 100755**（读 `git ls-files -s` 而非文件系统，避免 checkout 差异失真）。提交 `abdf14f64`。
+- **未验证**：需 push 后由真实 CI 确认（本地只能证明索引 mode 已变更）。
+
+
+### TD-02 CI 红灯存量与门禁不阻断 → **失败面收口，门禁覆盖面未动（2026-11-27）**
+
+> **状态更新**：最近 60 次运行仅 2 次 failure（`backend-ci Test` 与 `Sync Labels`）。前者由维护者提交 `830efdd98` 修复（非本轮）；后者由本轮提交 `abdf14f64` 修复，**待 push 后由真实 CI 确认**。11-14 的「39/100」快照不再适用。但**必需检查仍只有 4 项**，`docs-gate` 与 `Version Truth` 仍不阻断合并——P0 判定不变。下列 11-23 证据保留。
+
+- **证据（2026-11-14 快照）**：`output/github-ci-review-2026-11-14.md:27`（56 success / 39 failure / 5 cancelled）、`:32-45`（gofumpt 90 文件、Swagger 生成产物落后、2 个 Jest 过期断言、RLS 角色断言、Trivy HIGH CVE + govulncheck、star-history GH006）；`scripts/docs-gate/run-all.sh:21-27`（C.1–C.5 advisory）；`.github/workflows/docs.yml:58-62` `strict:false`；分支保护仅 4 项必需检查。
 - **影响**：绿灯不代表可发布；新失败容易淹没在存量噪声里。
 - **风险**：带 CVE 的镜像进入私有化交付；文档漂移合入无人察觉。
 - **修复**：按“基线存量 / 本轮新增”分类红灯并登记；处理 gofumpt/Swagger/Jest 三类确定性项；Trivy HIGH 修复或书面风险接受；docs-gate 纳入必需检查或显式记录豁免。
@@ -64,9 +83,9 @@
 - **修复**：先决策是否进入合同承诺；若是，按设计文档第三阶段实现字段级三方合并 + 6 schema + 迁移计划（**生产迁移需人工审批**）。
 - **工作量**：L。
 
-### TD-05 RLS 仅两表试点
+### TD-05 RLS 数据库层隔离零生效（口径修正，2026-11-27）
 
-- **证据**：`tests/multi_tenant/rls_matrix_test.go:1-25` 明示 PostgreSQL RLS pilot-only，覆盖 `changes`/`vectors`。
+- **证据（2026-11-27 实测，口径比 11-23 更严重）**：策略层其实已铺 **15 张表**（`itsm-backend/migrations/` 中 9 个迁移执行 `ENABLE ROW LEVEL SECURITY`，含 `tickets`/`incidents`/`problems`/`changes`/`configuration_items` 五张核心事务表，见 `20261028_rls_core_tables.sql`）；**但运行时全部关闭**：`docker-compose.prod.yml:144,212,396` 均为 `RLS_MODE=off`（含默认值），`RLS_MODE=enforce` 会拒绝启动（`database/rls/driver.go`），而 enforce 的前置双连接池**未接线**——`config.AppDSN()`/`AdminDSN()` 全仓零调用方；试点策略迁移 `database/rls/migrations/002_pilot_policies.sql` 不在迁移链，唯一引用是 `scripts/rebuild_and_verify.sh:169` 的手工 `docker cp`。11-23 引用的 `tests/multi_tenant/rls_matrix_test.go` 真实路径是 `itsm-backend/tests/multi_tenant/rls_matrix_test.go`（原文漏写前缀），且该文件验证的是**应用层谓词**，不是 RLS 生效性。
 - **影响**：数据库层纵深防御不足，隔离完全依赖应用层谓词（约 119 个仓库文件）。
 - **风险**：复杂查询/新接入点漏写 tenant 谓词时无第二道防线；等保类要求可能无法满足。
 - **修复**：按风险分级扩表；保持应用层 predicate 不动；补充 raw SQL / 缓存 key / 异步消费者覆盖。
@@ -100,13 +119,16 @@
 - **修复**：先定义 Pipeline manifest schema 与最小 Verification 语义，再在现有 `investigation.go` + durable outbox 上收口；不要在无客户需求时先造通用运行时。
 - **工作量**：L（且当前为 Hypothesis，建议延后）。
 
-### TD-09 连接器入站业务派发缺失 + 单进程去重回退
+### TD-09 连接器入站业务派发：仅飞书打通（2026-11-27 更新）
 
-- **证据**：`handlers/wecom/handler.go:91-94`、`handlers/dingtalk/handler.go:94-96` 只 log+ACK；`handlers/feishu/handler.go:292-316` 非 `task_event` 返回 `ignored`；`:322-326` 承认单进程 in-memory dedup 回退；manifest 声明 `CapCreateTicket` 但只有出站建单。
+- **状态更新**：**飞书已打通**（`handlers/feishu/inbound_ticket.go:35-40`，默认 `observe_only` + `feishu_message` 消息级持久去重，建单/审计/命令同事务）；企微与钉钉**仍只验签+ACK**，未复用同一派发逻辑。
+- **证据（飞书）**：`inboundModeObserveOnly` 为默认值（外部消息不自动建单，需租户显式 `auto_create`）；响应含 `triageSuggestion`/`triageAuditId`，建议不自动改写工单。真实租户签字栏空白，能力 `pilot`。
+- **证据（企微/钉钉）**：`handlers/wecom/handler.go`、`handlers/dingtalk/handler.go` 入站仍只 ACK。
 - **影响**：连接器投资停留在“安全入口”，不产生业务闭环。
 - **风险**：宣称“IM 集成可用”会被客户现场验证打脸。
-- **修复**：见 GAP-03 / REQ-003；去重必须使用持久存储，不能依赖单进程内存。
-- **工作量**：M。
+- **残留债务**：跨渠道派发逻辑没有抽象层，每新增一个 IM 渠道要重写一遍业务流程——这是 GAP-07（缺声明式 ActionFlow）在业务侧的具体代价。
+- **修复**：先在飞书渠道做真实租户验收签字；随后抽象「入站消息 → 统一消息信封 → 派发器」的渠道无关层，再接入企微/钉钉。
+- **工作量**：M（渠道无关层 L）。
 
 ### TD-10 AI 评测真实模型档手工 + 指标口径漂移
 
@@ -191,3 +213,26 @@
 | TD-01 + 能力矩阵 | GAP-01 | 四周计划 Slice C（W4） |
 | TD-04/TD-05/TD-07 | GAP-09 / GAP-10 / GAP-11 | 合同触发后另立批次 |
 | TD-08/TD-10/TD-11/TD-12/TD-13… | GAP-05…GAP-08 | P1，按客户需求排序 |
+
+---
+
+## 7. 2026-11-27 新增债务索引
+
+| 债务 | 状态 | 触发批次 | 备注 |
+|:---|:---|:---|:---|
+| TD-01 版本表面漂移 | **已收口** | — | 10 表面 + 2 Go 徽章 strict PASS |
+| TD-01b 发版门禁依赖 tag 时序 | **新增，未修** | 需发布决策 | 详见 §1 |
+| TD-16b 工作流执行位守卫 | **已修（本地）** | `abdf14f64` | 需 push 后由真实 CI 确认；本地仅能证明索引 mode=100755 |
+| TD-02 CI 红灯 | **失败面已收口**（2 项已修） | — | 但必需检查仍 4 项，P0 不开释 |
+| TD-05 RLS 零生效 | **口径下调**（策略 15 表 / 运行全关） | 双连接池批次 | `docs/operations/rls-rollout.md` §3 |
+| TD-09 入站派发 | **飞书已通**，企微/钉钉未通 | 渠道无关层批次 | 真实租户验收未签字 |
+
+### 明确「本轮不修」的新增项
+
+| 项 | 理由 |
+|:---|:---|
+| 把 `docs-gate` / `Version Truth` 加进分支保护必需检查 | 需 GitHub 仓库设置人工操作，远程 API 不可配置（本批无权限） |
+| `RLS_MODE` 从 `off` 改 `shadow`/`enforce` | 生产配置变更 + 双连接池前置未接线；`enforce` 会拒绝启动 |
+| 抽象跨渠道入站派发层 | 属架构演进（GAP-07 范畴），需先有第二渠道真实客户需求 |
+| 修正 `Version Truth` 的 canonical 来源 | 属发版流程设计变更，需产品/发布决策；见 TD-01b 的禁止项 |
+| 全量 `go test ./...` / `npm test` | 本轮为修红批次，CI 已提供 133 包中 1 包红的定位；全量复跑成本高且不改变结论 |
