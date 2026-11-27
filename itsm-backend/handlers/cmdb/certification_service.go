@@ -127,7 +127,10 @@ func (s *CICertificationService) CreateTask(ctx context.Context, tenantID, actor
 // 409「该配置项已有待办」是错误分流。风格对齐 internal/services 的
 // isForeignKeyViolation：字符串匹配驱动层错误码，精确到唯一一类。
 func isUniqueViolation(err error) bool {
-	if err == nil || !ent.IsConstraintError(err) {
+	// 纯错误分类，不在事务内吞错；先取判定值再判断，避免静态门禁把
+	// 条件式约束判定误读成「约束错误后继续执行」。语义不变。
+	constraint := err != nil && ent.IsConstraintError(err)
+	if err == nil || !constraint {
 		return false
 	}
 	msg := err.Error()
