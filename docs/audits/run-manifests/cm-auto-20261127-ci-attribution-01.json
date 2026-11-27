@@ -1,0 +1,262 @@
+{
+  "approvals": {
+    "pending": [
+      "Security Scan 工具链/依赖升级",
+      "权限策略与数据库结构变更"
+    ],
+    "required": false
+  },
+  "backlog_updates": [],
+  "base_commit": "021f08c0e808be85f8fffd68c59a0012c5773e4a",
+  "blockers": [
+    "并发取消的两个 docs-gate 作业被归一为 skipped；advisory 对应作业 pass，本地 docs-gate --strict exit 0，但 CI 硬门禁副本未完成复验。"
+  ],
+  "branch": "feat/ci-red-attribution",
+  "ci": [
+    {
+      "baseline": false,
+      "name": "Ent generated code drift",
+      "run_id": "46022177685",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Build",
+      "run_id": "46022177685",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Dependency Review",
+      "run_id": "46022177685",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Test",
+      "run_id": "46022177685",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Deploy GitHub Pages",
+      "run_id": "46022177556",
+      "status": "skipped"
+    },
+    {
+      "baseline": false,
+      "name": "Trivy",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Docs Gate (advisory) / Script Guard Tests",
+      "run_id": "46022177556",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Lint",
+      "run_id": "46022177685",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Version Truth",
+      "run_id": "46022177556",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Trivy Gate (High and Critical)",
+      "run_id": "46022177568",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Build documentation",
+      "run_id": "46022177556",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Docs Gate (advisory) / Docs Gate (C.6 hard)",
+      "run_id": "46022177556",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Go Vulnerability Check",
+      "run_id": "46022177568",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Trivy Vulnerability Report",
+      "run_id": "46022177568",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Secret Detection",
+      "run_id": "46022177568",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "NPM Security Audit",
+      "run_id": "46022177568",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "pnpm Lockfile Guard",
+      "run_id": "46022177568",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Frontend",
+      "run_id": "46022177528",
+      "status": "pass"
+    },
+    {
+      "baseline": false,
+      "name": "Script Guard Tests",
+      "run_id": "46022177552",
+      "status": "skipped"
+    },
+    {
+      "baseline": false,
+      "name": "Go Security Scan",
+      "run_id": "46022177568",
+      "status": "skipped"
+    },
+    {
+      "baseline": false,
+      "name": "Docs Gate (C.6 hard)",
+      "run_id": "46022177552",
+      "status": "skipped"
+    }
+  ],
+  "commits": [
+    "e5e344dbcf5a9208d634d46c7aa96ffe0446ae2a"
+  ],
+  "deployment": {
+    "performed": false
+  },
+  "generated_at": "2026-11-27T23:30:02+08:00",
+  "pull_request": {
+    "head": "e5e344dbcf5a9208d634d46c7aa96ffe0446ae2a",
+    "number": 142,
+    "url": "https://github.com/heidsoft/itsm/pull/142"
+  },
+  "repository": "heidsoft/itsm",
+  "risks": [
+    "归因规则是显式白名单，未命中时只进入 unattributed，不会猜测 backlog ID。",
+    "merge 会清除旧快照摘要；写回前必须重新取 backlog/ledger 快照，否则 run-manifest.py 会拒绝写入。",
+    "CI 尚未强制运行本工具，当前仍是库内可验证消费者。"
+  ],
+  "rollback": "revert 本轮两个提交；删除 ci-attribution.py、ci-attribution-map.json、test_ci_attribution.py、AUDIT-071 行、文档段落、CHANGELOG 条目与 JSONL 账本记录。",
+  "run_id": "cm-auto-20261127-ci-attribution-01",
+  "schema_version": "1.0",
+  "backlog_snapshot_sha256": "b5dc06804a1b72380383a40272043a71e30f43d19f906857f242af8b7a8a5a81",
+  "ledger_snapshot_sha256": "f5a138c54f4c68dc00b004b56d04b1a3652e6f6595d66977a6839c6fde0fc323",
+  "security": {
+    "db_migration": false,
+    "deploy": false,
+    "notes": "只新增 Python 标准库工具、规则文档与测试；不合并 PR、不部署、不迁移、不改权限码或策略；CI 结果来自 gh/GitHub API 只读消费。",
+    "policy_changed": false
+  },
+  "status": "partial",
+  "task": {
+    "evidence": [
+      {
+        "fact": "已有 compute_writeback、默认 dry-run、快照摘要与按 run_id upsert；缺少 CI 结果生产者。",
+        "lines": "187-275",
+        "path": "scripts/parallel/run-manifest.py"
+      },
+      {
+        "fact": "首个闭环实例明确把 CI 红项归因列为未完成项。",
+        "lines": "83",
+        "path": "docs/engineering/autonomous-engineering-loop.md"
+      },
+      {
+        "fact": "新增 attribute/merge 两个子命令，仅观察、归并与清除旧快照，不写 backlog。",
+        "lines": "1-40",
+        "path": "scripts/parallel/ci-attribution.py"
+      }
+    ],
+    "id": "ENG-LOOP-02",
+    "rationale": "闭环骨架已有 schema/validator/writeback，但 CI 红项仍靠人工判断是否基线、人工写 backlog；本轮补一个只消费只读 CI 结果、显式规则映射、不建第二审批引擎的前置消费者。",
+    "title": "CI 红项自动归因并写回 Run Manifest 闭环"
+  },
+  "tests": [
+    {
+      "command": "python3 -m unittest discover -s scripts/__tests__ -p 'test_ci_attribution.py' -v",
+      "exit_code": 0,
+      "note": "8 tests OK"
+    },
+    {
+      "command": "python3 -m unittest discover -s scripts/__tests__ -p 'test_*.py' -v",
+      "exit_code": 0,
+      "note": "16 tests OK（含原 Run Manifest 8 个测试）"
+    },
+    {
+      "command": "python3 -m py_compile scripts/parallel/ci-attribution.py scripts/__tests__/test_ci_attribution.py",
+      "exit_code": 0,
+      "note": "语法编译通过"
+    },
+    {
+      "command": "bash scripts/docs-gate/run-all.sh --strict",
+      "exit_code": 0,
+      "note": "8 gates, 0 failed"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "note": "无空白错误或冲突标记"
+    },
+    {
+      "command": "python3 scripts/parallel/session-ledger.py diff --id 20261127-ci-red-attribution",
+      "exit_code": 0,
+      "note": "6 个本会话文件，0 个他人 WIP"
+    },
+    {
+      "command": "python3 scripts/parallel/session-ledger.py check --id 20261127-ci-red-attribution --commit",
+      "exit_code": 0,
+      "note": "提交前检查 PASS"
+    },
+    {
+      "command": "bash scripts/parallel/gate-at-head.sh",
+      "exit_code": 0,
+      "note": "判定行一致；既有红均可在 HEAD 基线复现"
+    },
+    {
+      "command": "python3 scripts/parallel/ci-attribution.py attribute --pr-checks <pr142> --base-checks <base021f08c0> --base-sha 021f08c0e808 --output <attribution>",
+      "exit_code": 0,
+      "note": "真实 PR CI 归因 smoke test：17 pass / 4 skipped / 0 fail / 0 updates / 0 unattributed"
+    },
+    {
+      "command": "python3 scripts/parallel/ci-attribution.py merge --manifest <manifest> --attribution <attribution> --output <manifest>",
+      "exit_code": 0,
+      "note": "21 条 ci 并入清单；backlog_updates 为空；旧快照摘要已清除"
+    },
+    {
+      "command": "python3 scripts/parallel/run-manifest.py validate docs/audits/run-manifests/cm-auto-20261127-ci-attribution-01.json",
+      "exit_code": 0,
+      "note": "VALID；含快照字段的最终清单通过"
+    },
+    {
+      "command": "python3 scripts/parallel/run-manifest.py writeback docs/audits/run-manifests/cm-auto-20261127-ci-attribution-01.json (dry-run)",
+      "exit_code": 0,
+      "note": "仅输出 JSONL 账本 diff；未写文件"
+    },
+    {
+      "command": "python3 scripts/parallel/run-manifest.py writeback docs/audits/run-manifests/cm-auto-20261127-ci-attribution-01.json --apply",
+      "exit_code": 0,
+      "note": "账本按 run_id upsert 至 3 条；backlog_updates=0"
+    }
+  ],
+  "worktree": "itsm-ci-attribution"
+}
