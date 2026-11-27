@@ -158,7 +158,12 @@ var errRoleInactive = errors.New("role inactive")
 // 平台超管 super_admin 的直通语义由 AuthorizeResource 单独拥有，
 // 不经由本函数；原因见该函数注释。
 func lookupEffectiveRole(ctx context.Context, client *ent.Client, roleName string, tenantID int) (*ent.Role, error) {
-	if client == nil {
+	// client 为 nil 或虽非 nil 但 Role 客户端未初始化（如 HardcodeOnly 模式测试
+	// 用的 &ent.Client{} 空壳）时，无从查询角色行，也就没有「停用」证据。
+	// 返回 (nil, nil) 让调用方维持既有判定——既不误判成停用（那会 fail-open 到
+	// 空权限集、破坏 HardcodeOnly 的硬编码表语义），也不会因 client.Role 为 nil
+	// 而在 client.Role.Query() 处 panic。
+	if client == nil || client.Role == nil {
 		return nil, nil
 	}
 	r, err := client.Role.Query().

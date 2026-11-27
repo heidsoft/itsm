@@ -20,6 +20,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"itsm-backend/ent"
 	"itsm-backend/ent/role"
 )
 
@@ -351,4 +352,36 @@ func TestRoleActivation_DeactivatedIsNotTreatedAsMissing(t *testing.T) {
 		Where(role.Code("agent"), role.TenantID(tenant.ID)).
 		CountX(ctx)
 	require.Equal(t, 1, count, "停用行仍必须存在于 roles 表")
+}
+
+// 回归守卫（PR #137 CI 全量测试暴露）：handlers/ai 的 HardcodeOnly 测试用
+// &ent.Client{} 空壳满足 Gate 2 的 client != nil 守卫。非 DBOnly 模式的停用
+// 拦截若无条件查角色行，会在 client.Role.Query() 处 nil pointer panic。
+// 空壳 client 没有 Role 客户端，不构成「停用」证据，必须安全返回 (nil, nil)
+// 让调用方维持既有硬编码判定——既不 panic，也不误判成停用而 fail-open 成空集。
+func TestRoleActivation_EmptyShellClientDoesNotPanic(t *testing.T) {
+	restoreMode := PermissionConfig.Mode
+	t.Cleanup(func() {
+		PermissionConfig.Mode = restoreMode
+		InvalidateAllPermissionCaches()
+	})
+	InvalidateAllPermissionCaches()
+
+	ctx := context.Background()
+	shell := &ent.Client{}
+
+	// 判定源直接守卫：空壳 client 返回无停用证据。
+	r, err := lookupEffectiveRole(ctx, shell, "agent", 1)
+	require.NoError(t, err)
+	require.Nil(t, r)
+
+	// 只有 HardcodeOnly 是空壳 client 的合法使用场景（handlers/ai 的 RBAC 测试
+	// 即如此：注释明确「HardcodeOnly 不使用 ent client，仅满足 != nil 守卫」）。
+	// merge/fallback 模式本身就要查库，给空壳 client 属非法前提，不在本守卫范围。
+	// 完整授权链路不得 panic，且回退到硬编码表判定。
+	PermissionConfig.Mode = PermissionConfigModeHardcodeOnly
+	InvalidateAllPermissionCaches()
+	require.NotPanics(t, func() {
+		_ = AuthorizeResource(ctx, shell, []string{"end_user"}, "ticket", "read", 1)
+	}, "空壳 client 在 HardcodeOnly 模式下不得触发 nil pointer panic")
 }
