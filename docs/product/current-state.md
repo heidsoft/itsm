@@ -293,6 +293,8 @@ itsm-backend/main.go
 | in_progress | 1 | — |
 
 > `cancelled` 占比 23% 不代表质量恶化，而是**并发策略的正常产物**；但它掩盖了一个真问题：`docs-gate` 在 `main` 上的独立运行 7 次全 cancelled（§11.3）。11-23 版记录的「39/100 失败」是 11-14 快照，已不适用——当前真实失败收敛到 2 项，且两项都可归因（§11.2、§11.3）。
+>
+> **状态更新（同日 13:22 合并后）**：上表 2 项 failure 均已闭合。`Sync Labels` 随 PR #138 修复执行位后，`main` push 运行 `45945434239` 首次 `success`（§11.3 末条）；`backend-ci` 的 `Test` 作业在 PR #137 修掉空壳 `ent.Client` 空指针后转绿并合并。上表数字保留为**修复前快照**，不回填。
 
 **关键观察**：`backend-ci` 的 `Test` 作业失败发生在**发版提交** `87cf29416` 上（不是某个 WIP 分支），且 `Lint`/`Build`/`Dependency Review` 全绿。这意味着一件事：`Test` 是唯一能拦住这次发版的作业，而它拦住了（红灯在 main 上）。
 
@@ -313,7 +315,8 @@ itsm-backend/main.go
 - **假绿形态**：本地工作树 `ls -l` 显示 `-rwx------`（历史上 chmod 过但从未入库），所以"本机看起来没问题"；只有干净 checkout 才暴露 644。这是本项目反复出现的同一类陷阱：**工作区状态 ≠ 版本库状态**。
 - **修复**：`git update-index --chmod=+x`（写入索引，不依赖工作区权限位）；新增 `scripts/__tests__/workflow-script-mode.test.js` 锁死这一条——扫描全部 workflow 的 `run:` 指令（含 `run: |` 块、跳过注释），凡无解释器前缀直启 `scripts/x` 者，**索引 mode 必须 100755**。断言读 `git ls-files -s` 的 mode 而非文件系统权限，否则 macOS/Windows checkout 会让守卫失真。
 - **验证**：`node --test scripts/__tests__/*.test.js` 106/106 通过；反向验证 `--chmod=-x` 后新测试红在 `label-sync.yml:29 … mode=100644`，恢复即绿。
-- **提交**：`abdf14f64`（隔离分支 `fix/release-gate-guard`，基于 `origin/main` = `830efdd98`）。
+- **提交**：`abdf14f64` → 经 PR #138 squash 合并为 `794ad38ef`（2026-11-27 05:22:35）。
+- **真实 CI 验证（已闭合）**：`main` push 触发 `Sync Labels` run `45945434239` = **`success`**——这是该工作流自 2026-11-14 落地以来**第一次成功**；PR 分支侧 run `45943205675` 同样 `success`。对照历史 4 次全红：`v1.6.58` `43995497507` / `v1.6.59` `44645454975` / `v1.6.60` `44996312316` / `v1.6.61` `45923353964`。成功运行的日志包含脚本内部输出 `📦 Repository: heidsoft/itsm` 与 `🔍 Dry run: false`，证明执行到达脚本业务逻辑，而非在 `exit 126` 处提前终止——这正是「mode 修复真的生效」与「工作流被跳过」的区分判据。
 
 ### 11.4 渠道覆盖的准确口径：只有飞书打通
 
@@ -345,8 +348,8 @@ itsm-backend/main.go
 
 ### 11.7 本轮未验证项（诚实边界）
 
-1. **未执行 `go test ./...` 全量**：只在隔离树跑了 `handlers/capability` 全包与相关守卫；全量测试的当前绿度未测（CI 的 `Test` 作业在 133 个包中仅 `handlers/capability` 一包红，其余 `ok`，可作为间接证据）。
-2. **未执行 `npm test` / Playwright E2E**：前端 CI 最近 8 次 7 绿 1 cancelled，未独立复跑。
-3. **未部署、未打 tag、未创建 PR**：唯一本轮修复提交 `abdf14f64` 留在隔离分支 `fix/release-gate-guard`（基线 `origin/main` = `830efdd98`），等用户明确要求再 push。
+1. **全量 `go test` 已由 CI 完成（本地未独立复跑）**：合并后 `main` 的 `backend-ci` run 全绿（含 `Test` 作业、133 个包）；本轮本地只定向跑了 `handlers/ai`、`middleware`、`handlers/rbac`、`handlers/common`、`handlers/msp` 五包与 `handlers/capability` 全包。口径区别如实写明：**绿度证据来自 CI，不是本地全量复跑**。
+2. **未执行 `npm test` / Playwright E2E**（本地）：本批两个 PR 均未改动 `itsm-frontend/`，故合并后 `main` 未触发 `frontend-ci`；最近一次运行为 2026-11-27 01:34 的 `success`。PR #137/#138 各自的 `Frontend` 必需检查均为 `SUCCESS`。
+3. **已推送并合并**：`fix/release-gate-guard`（含 `abdf14f64` 执行位修复 + `df9e54a42` 产品文档复核）已作为 PR #138 合并进 `origin/main`（squash 提交 `794ad38ef`）；组织与权限域批次 `fix/org-authz-audit-20261126` 已作为 PR #137 合并（`651091f4a`）。两条分支的远端引用已删除。
 4. **真实租户验收**：飞书生产收发、死信重放、workflow 跨域签字均未执行（签字栏空白）。
-5. **`Sync Labels` 修复未经真实 CI 验证**：执行位修复需 push 后才能在 GitHub 上确认，本地只能证明索引 mode 已变更。
+5. **`Sync Labels` 修复已由真实 CI 验证成立**：`main` push 触发 run `45945434239` = `success`（历史首次；此前 v1.6.58/59/60/61 连续 4 次 `failure`），日志含脚本内部输出 `📦 Repository: heidsoft/itsm`，证明未在 `exit 126` 处提前死亡。该项从「待验证」转为「已闭合」。
