@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Fix**：v1.6.61 发版后能力矩阵验收基线补账（2026-11-27）——`handlers/capability` 的 `acceptanceVersion` 与商业能力契约同步到 `2026.11.27`，与本次发布日对齐；docs-gate 8/8 复核能力 registry / README / 契约口径一致。该修正发生在 tag/Release 之后，不改动已发布产物。
+
 - **Docs**：飞书入站生产验收准备包（验收准备，非验收结论）——新增 `docs/acceptance/feishu-inbound-production-acceptance.md`：审批边界、能力面只读基线、连接器配置与 `rotate-secret` 步骤（凭证只由运维注入、响应脱敏）、真实收发取证、受控故障 + 死信重放演练（命令 replay 保留幂等键、递增 fencing token）、建议人工确认与空白签字表；PoC 脚本与四周计划交叉引用。未配置真实凭证、未访问生产、未注入故障、未部署、未代签，能力维持 Pilot。
 
 - **Feat**：飞书入站建议→人工确认接线（Slice B 补强）——`handlers/feishu/contracts.go` 新增 `InboundTriageAdvisor` / `InboundDecisionAuditor` 窄契约（避免 handlers→internal/services 层次倒置），bootstrap 注入现成 `triageService` 与 `aiTelemetryService`；建单提交后在事务外生成分诊建议（Guidance→LLM→keyword 降级），写 `ai_feedbacks` 决策底账（`item_type='ai_audit'`、`accepted=NULL`），响应新增 camelCase `triageSuggestion`/`triageAuditId`，操作者经既有 `PATCH /ai/audit-logs/:id` 确认后在工单详情采纳 category/priority（带 version）；建议绝不自动改写工单，落账失败不阻断建单。契约与 PoC 演示脚本同步为已接线口径。
