@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/heidsoft/itsm-frontend:1.6.60
+          image: ghcr.io/heidsoft/itsm-frontend:1.6.61
           ports: [{ containerPort: 3000 }]
           envFrom:
             - configMapRef: { name: itsm-config }

@@ -92,6 +92,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **C.6.4 棘轮基线补记（2026-11-22）**：纯 HEAD 隔离树复测 `shared_services_go_files=345>340`、`bootstrap_app_lines=2275>2268`，两项均为既有提交漏随上调，与本批无关。前者 +5 全是 `internal/services/` 顶层回归锁（`ci_type_service_test.go`、`dashboard_trend_failclosed_test.go`、`release_stats_failclosed_test.go`、`ticket_reference_validation_test.go`、`ticket_workflow_accept_owner_test.go`），零生产表面；后者 +7 是四笔既有安全链路装配净增（CI 类型删除失败分类、connector `required_permissions` 执行侧生效、已批准写工具经 Action Gateway 重判、MCP `tools/list` 发现面收敛）。基线只上调到当前实测精确值、不预留余量，棘轮继续只降不升；逐笔理由写入 `product-surface-baseline.txt` 对应行。
 - **文档门禁三条既有断链修复（2026-11-22）**：C.6 转绿后，同一 required job 中此前被掩盖的 C.3 暴露三条失效引用——`deploy/k8s/README.md` 指向根目录 `UPGRADE.md` 少写一层相对路径，`docs/business/README.md` 引用从未入库的 `output/growth/*`（仓库历史亦无该文件）。前者修正为 `../../UPGRADE.md`，后者改写为诚实说明并移除死链，不补造占位文档。
 
+## [1.6.61] - 2026-11-27
+
+### 发布说明
+
+- 本版本为**生产加固阶段**发布，**尚未 GA**。包含自 v1.6.60 以来的 CMDB 审计收口、飞书入站 HITL 接线、AI 工具行级权限修复、Run Manifest 骨架与 CI 门禁修复。
+- **CMDB**：写后门禁统一按写入后状态校验，批量写加 `id+tenant+version` CAS；业务读面统一注入行级 scope（未知 scope fail-closed），关系/拓扑过滤改 EXISTS 子查询下推；认证确认改 CAS 并新增 pending 部分唯一索引；图查询设 200 节点/400 边预算；CI 身份键唯一索引与导入占用错误分流。已知遗留：手工 `CreateCI`/`UpdateCI` 的身份唯一冲突仍返回 500，两个新迁移带 `SHARE` 锁，需预留部署窗口。
+- **飞书入站**：建单后生成分诊建议并写 `ai_feedbacks` 决策底账，经人工确认后在工单详情采纳；建议不自动改写工单，落账失败不阻断建单。生产验收准备包与商业边界决策记录已入仓，真实租户签字留空，能力维持 Pilot；`PRICING_AND_PACKAGING.md` 标注待商业决策，禁止对外报价。
+- **AI 工具与工程闭环**：`update_ticket` 写路径补行级范围，避免经 AI/MCP 改写同租户他人单据；Run Manifest 骨架支持机器可读运行记录与回写。
+- **工程门禁**：`backend-ci`/`frontend-ci` 的 PR 触发去掉路径过滤，分支保护 required checks 改为实际 check 名，纯前端 PR 不再因缺检查被阻断。
+- **已知问题**：`Go Vulnerability Check` 与 `Trivy Gate (High and Critical)` 在基线提交同款失败，本版本未处理；本地 prod 与 SaaS 演示的版本面独立，本次未部署生产。
+
 ## [1.6.60] - 2026-11-22
 
 ### 发布说明

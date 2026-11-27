@@ -2,7 +2,7 @@
   "_comment": "历史版本漂移已于 2026-11-24 对账对齐到 v1.6.60。本文件保留已解决漂移的登记用于审计追溯，不再作为新增漂移的豁免；任一表面出现新版本立即 FAIL。",
   "_recorded_at": "2026-11-22",
   "_resolved_at": "2026-11-24",
-  "_canonical": "v1.6.60",
+  "_canonical": "v1.6.61",
   "surfaces": {
     ".env.prod.example VERSION": "1.6.60",
     "backend defaultAppVersion": "1.6.60",

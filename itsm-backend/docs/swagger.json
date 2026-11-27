@@ -4,7 +4,7 @@
         "description": "AI-Native ITSM 平台 API：ITIL v4 核心流程（工单/事件/问题/变更/发布/服务请求）、CMDB、BPMN 工作流、知识库 RAG、SLA、RBAC 与多租户隔离。",
         "title": "ITSM API",
         "contact": {},
-        "version": "1.6.60"
+        "version": "1.6.61"
     },
     "basePath": "/api/v1",
     "paths": {

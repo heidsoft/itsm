@@ -21,7 +21,7 @@ var ErrNoExecutor = errors.New("mcp: 执行器未装配")
 // 回落默认值。不复用 router 的 appVersion() 是因为它是未导出函数，
 // 而 router 已 import 本包 —— 反向引用会形成 import 循环。
 // 两处读取同一个环境变量，口径不会漂移。
-const defaultVersion = "1.6.60"
+const defaultVersion = "1.6.61"
 
 // Version 返回本服务端对外声明的版本号。
 func Version() string {

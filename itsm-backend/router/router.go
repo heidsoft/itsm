@@ -134,9 +134,9 @@ func withIncidentIDParam(handler gin.HandlerFunc) gin.HandlerFunc {
 // .env.prod.example、docs/documentation-governance.md、UPGRADE.md 以及 release tag。
 // 任何对外暴露版本的端点（/version、/system/config）都必须走 appVersion()，不要
 // 各自再写一份字面量 —— 历史上 /system/config 硬编码 "1.6.8"、/version 为 "1.6.9"，
-// 2026-11-24 对账时这些字面量已统一到 v1.6.60。
-// 守卫：node scripts/check-version-consistency.js --canonical=v1.6.60 --strict
-const defaultAppVersion = "1.6.60"
+// 2026-11-24 对账时这些字面量已统一到 v1.6.61。
+// 守卫：node scripts/check-version-consistency.js --canonical=v1.6.61 --strict
+const defaultAppVersion = "1.6.61"
 
 // appVersion 返回当前应用版本：优先取注入的 APP_VERSION，回落到 defaultAppVersion。
 func appVersion() string {

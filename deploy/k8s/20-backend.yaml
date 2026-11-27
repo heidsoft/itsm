@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/heidsoft/itsm-backend:1.6.60
+          image: ghcr.io/heidsoft/itsm-backend:1.6.61
           ports: [{ containerPort: 8090 }]
           envFrom:
             - configMapRef: { name: itsm-config }
