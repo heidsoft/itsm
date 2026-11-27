@@ -106,7 +106,7 @@ func (v *CIAttributeValidator) RequiredAttributes(ctx context.Context, tenantID,
 			Name:         def.Name,
 			DisplayName:  def.DisplayName,
 			DataType:     def.Type,
-			EnumValues:   stringListFromRule(rules, "enum_values"),
+			EnumValues:   effectiveEnumValues(def, rules),
 			DefaultValue: def.DefaultValue,
 			Placeholder:  def.Placeholder,
 			HelpText:     def.HelpText,
@@ -137,7 +137,7 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 
 	for name, def := range definitionMap {
 		value, exists := normalized[name]
-		if (!exists || value == nil || isBlankAttributeString(value)) && def.DefaultValue != "" {
+		if (!exists || dto.IsBlankCIAttribute(value)) && def.DefaultValue != "" {
 			parsedDefault, err := parseAttributeValue(def.Type, def.DefaultValue)
 			if err != nil {
 				return nil, fmt.Errorf("属性 %s 默认值无效: %w", def.DisplayName, err)
@@ -147,7 +147,7 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 			exists = true
 		}
 
-		if def.Required && (!exists || value == nil || isBlankAttributeString(value)) {
+		if def.Required && (!exists || dto.IsBlankCIAttribute(value)) {
 			// 校验失败是用户数据问题，必须是 4xx（400/4000），不能让裸 sentinel 落到 classifyError 兜底成 5001。
 			// 用 common.NewValidationError 包成 *AppError，保留 sentinel 供 errors.Is 分流（投影/发现回写）。
 			return nil, common.NewValidationError(
@@ -234,6 +234,9 @@ func normalizeAttributeValue(def *ent.CIAttributeDefinition, value interface{}) 
 		return nil, fmt.Errorf("验证规则格式错误: %w", err)
 	}
 
+	if len(def.EnumValues) > 0 {
+		rules["enum_values"] = def.EnumValues
+	}
 	if err := applyAttributeValidationRules(def.Type, normalized, rules); err != nil {
 		return nil, err
 	}
@@ -249,6 +252,9 @@ func parseValidationRules(raw string) (map[string]interface{}, error) {
 	var rules map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &rules); err != nil {
 		return nil, err
+	}
+	if rules == nil {
+		return nil, fmt.Errorf("验证规则必须是JSON对象")
 	}
 	return rules, nil
 }
@@ -299,6 +305,7 @@ func applyAttributeValidationRules(attributeType string, value interface{}, rule
 		}
 	}
 
+	// pattern deliberately retains literal substring semantics for existing persisted rules; it is not a regex.
 	if pattern, ok := rules["pattern"].(string); ok && pattern != "" {
 		actual := fmt.Sprint(value)
 		if !strings.Contains(actual, pattern) && actual != pattern {
@@ -453,7 +460,12 @@ func attrToTimeString(value interface{}, layout string) (string, error) {
 	}
 }
 
-func isBlankAttributeString(value interface{}) bool {
-	text, ok := value.(string)
-	return ok && strings.TrimSpace(text) == ""
+func effectiveEnumValues(def *ent.CIAttributeDefinition, rules map[string]interface{}) []string {
+	if len(def.EnumValues) > 0 {
+		return def.EnumValues
+	}
+	return stringListFromRule(rules, "enum_values")
 }
+
+// Compatibility wrapper for lifecycle validation; the predicate has one owner.
+func isBlankAttributeString(value interface{}) bool { return dto.IsBlankCIAttribute(value) }

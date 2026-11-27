@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/database"
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/cloudaccount"
@@ -650,7 +651,7 @@ func (r *EntRepository) ListCIsForGovernance(ctx context.Context, tenantID int) 
 	es, err := r.client.ConfigurationItem.Query().
 		Where(configurationitem.TenantID(tenantID)).
 		Order(ent.Asc(configurationitem.FieldID)).
-		All(ctx)
+		All(database.WithIncludeRetiredCIs(ctx))
 	if err != nil {
 		return nil, err
 	}

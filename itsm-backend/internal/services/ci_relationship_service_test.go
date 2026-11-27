@@ -285,7 +285,7 @@ func TestGetCIImpactAnalysis_RequiresTenant(t *testing.T) {
 // Stage 1.5 — Topology / Impact / Cycle coverage
 // -----------------------------------------------------------------------------
 
-func TestGetCITopology_DepthClampsToMax10(t *testing.T) {
+func TestGetCITopology_RejectsExcessDepth(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ci_topology_clamp?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
@@ -310,13 +310,10 @@ func TestGetCITopology_DepthClampsToMax10(t *testing.T) {
 		prev = next.ID
 	}
 
-	// Ask for an absurd depth; the implementation must clamp to <= 10.
-	graph, err := svc.GetCITopology(ctx, root.ID, tenant.ID, 100)
-	if err != nil {
-		t.Fatalf("GetCITopology failed: %v", err)
-	}
-	if graph.Depth > 10 {
-		t.Fatalf("depth = %d, must be <= 10", graph.Depth)
+	// Reject excessive depth rather than silently changing the requested scope.
+	_, err := svc.GetCITopology(ctx, root.ID, tenant.ID, 100)
+	if err == nil {
+		t.Fatal("expected invalid depth rejection")
 	}
 }
 
@@ -854,5 +851,66 @@ func TestCreateCIRelationship_EmptyGradeUsesSchemaDefault(t *testing.T) {
 	}
 	if rel.ImpactLevel != dto.ImpactMedium {
 		t.Fatalf("impactLevel 默认值应为 medium，实际 %q", rel.ImpactLevel)
+	}
+}
+
+func TestCIGraphAuditBudgets(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:graph_audit?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Budget", "budget", "budget.example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	typ, err := createTestCIType(ctx, client, tenant.ID, "budget")
+	if err != nil {
+		t.Fatal(err)
+	}
+	root, err := createTestCI(ctx, client, tenant.ID, typ.ID, "root")
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	for i := 0; i < 200; i++ {
+		child, err := createTestCI(ctx, client, tenant.ID, typ.ID, fmt.Sprintf("node%d", i))
+		if err != nil {
+			t.Fatal(err)
+		}
+		client.CIRelationship.Create().SetTenantID(tenant.ID).SetSourceCiID(root.ID).SetTargetCiID(child.ID).SetRelationshipType("depends_on").SaveX(ctx)
+	}
+	if _, err := svc.GetCITopology(ctx, root.ID, tenant.ID, 1); err == nil {
+		t.Error("topology exceeded node budget")
+	}
+	if _, err := svc.GetCIImpactAnalysis(ctx, root.ID, tenant.ID, 1); err == nil {
+		t.Error("impact exceeded node budget")
+	}
+	if _, err := svc.GetCIImpactAnalysis(ctx, root.ID, tenant.ID, 11); err == nil {
+		t.Error("impact accepted excessive depth")
+	}
+	// Dense graph needs an edge budget independently of node count.
+	if _, err := client.CIRelationship.Delete().Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	ids := []int{root.ID}
+	for i := 0; i < 21; i++ {
+		child, err := createTestCI(ctx, client, tenant.ID, typ.ID, fmt.Sprintf("dense%d", i))
+		if err != nil {
+			t.Fatal(err)
+		}
+		ids = append(ids, child.ID)
+	}
+	for _, source := range ids {
+		for _, target := range ids {
+			if source != target {
+				client.CIRelationship.Create().SetTenantID(tenant.ID).SetSourceCiID(source).SetTargetCiID(target).SetRelationshipType("depends_on").SaveX(ctx)
+			}
+		}
+	}
+	if _, err := svc.GetCITopology(ctx, root.ID, tenant.ID, 2); err == nil {
+		t.Error("topology exceeded edge budget")
+	}
+	if _, err := svc.GetCIImpactAnalysis(ctx, root.ID, tenant.ID, 2); err == nil {
+		t.Error("impact exceeded edge budget")
 	}
 }

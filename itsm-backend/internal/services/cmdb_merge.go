@@ -484,8 +484,9 @@ func (s *CMDBImportExportService) ApplyThreeWayMerge(
 		return incoming, &MergeResult{Resolved: incoming, Changed: true}, nil
 	}
 
-	// 2. Get tenant SLA default
-	tenantDefault, _ := s.GetOrCreateTenantSLA(ctx, tenantID, incoming.CiTypeID)
+	// 2. 该版本没有按 CI 类型配置的租户级 SLA 默认，保持 nil；
+	// 不再经由名为 GetOrCreate 的 scaffold 伪装成能力已接线。
+	var tenantDefault *ent.ConfigurationItem
 
 	// 3. Three-way merge
 	result, err = s.ThreeWayMerge(ctx, incoming, existing, tenantDefault)
@@ -603,11 +604,4 @@ func (s *CMDBImportExportService) ApplyThreeWayMerge(
 
 	result.Resolved = updated
 	return updated, result, nil
-}
-
-// GetOrCreateTenantSLA returns the tenant-level SLA default for a given CI type.
-// Returns nil if no SLA default is configured.
-func (s *CMDBImportExportService) GetOrCreateTenantSLA(ctx context.Context, tenantID, ciTypeID int) (*ent.ConfigurationItem, error) {
-	// In a full implementation this would look up an SLA policy for the tenant/CI type
-	return nil, nil
 }

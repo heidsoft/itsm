@@ -18,6 +18,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
+	"itsm-backend/ent/predicate"
 	entticket "itsm-backend/ent/ticket"
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/internal/datascope"
@@ -89,6 +90,17 @@ func (s *ConfigurationItemService) resolveOwner(ctx context.Context, tenantID, o
 
 // CreateCI 创建配置项
 func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.CreateCIRequest, tenantID int) (*dto.CIResponse, error) {
+	ciNumber, numErr := s.generateCINumber(ctx)
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = tx.Rollback() }()
+	bound := *s
+	bound.client = tx.Client()
+	bound.attrValidator = NewCIAttributeValidator(tx.Client())
+	bound.historyService = NewCIHistoryService(tx.Client(), s.logger)
+	s = &bound
 	ciTypeID := req.CITypeID
 	if ciTypeID == 0 {
 		return nil, fmt.Errorf("CI type id is required")
@@ -171,7 +183,12 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 		create.SetDescription(req.Description)
 	}
 	// 依据 CI 类型（含继承链）属性定义归一化并校验动态属性
-	normalizedAttrs, err := s.attrValidator.NormalizeAttributes(ctx, tenantID, ciTypeID, req.Attributes, 0)
+	effective := &ent.ConfigurationItem{CiTypeID: ciTypeID, Attributes: req.Attributes, LifecycleStatus: req.LifecycleStatus}
+	if effective.LifecycleStatus == "" {
+		effective.LifecycleStatus = common.CILifecycleStatusOnline
+	}
+	err = s.validateCIWrite(ctx, effective, tenantID, true)
+	normalizedAttrs := effective.Attributes
 	if err != nil {
 		s.logger.Warnw("CI attribute validation failed", "error", err, "tenant_id", tenantID, "ci_type_id", ciTypeID)
 		return nil, err
@@ -227,7 +244,6 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 
 	// 生成全局唯一业务编号 ci_number（CI-YYYYMM-NNNNNN）。
 	// 编号是 Agent 稳定定位实体的自然键；发号失败不阻断创建（降级为无编号，迁移 018 可回填）。
-	ciNumber, numErr := s.generateCINumber(ctx)
 	if numErr != nil {
 		s.logger.Warnw("Failed to generate ci_number, creating CI without number", "error", numErr, "tenant_id", tenantID)
 	} else {
@@ -235,16 +251,17 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 	}
 
 	ci, err := create.Save(ctx)
-	if err == nil {
-		// 记录创建历史
-		operatorID, operatorName := OperatorFromContext(ctx)
-		if historyErr := s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "create", "", nil, ci); historyErr != nil {
-			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ci.ID, "operation", "create")
-		}
-	}
 	if err != nil {
 		s.logger.Errorw("Failed to create configuration item", "error", err, "tenant_id", tenantID, "name", req.Name)
 		return nil, fmt.Errorf("failed to create configuration item: %w", err)
+	}
+
+	operatorID, operatorName := OperatorFromContext(ctx)
+	if err := s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "create", "", nil, ci); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
 
 	s.logger.Infow("Configuration item created successfully", "ci_id", ci.ID, "tenant_id", tenantID, "name", ci.Name, "ci_number", ci.CiNumber)
@@ -341,14 +358,22 @@ func (s *ConfigurationItemService) ciNumberExistsRaw(ctx context.Context, candid
 
 // GetCIByID 根据ID获取配置项
 func (s *ConfigurationItemService) GetCIByID(ctx context.Context, id, tenantID int, withRelations bool) (*dto.CIResponse, error) {
-	query := s.client.ConfigurationItem.Query().
+	var relationScope []predicate.CIRelationship
+	if withRelations {
+		var scopeErr error
+		relationScope, scopeErr = ciReadRelationshipPredicates(ctx, s.client, tenantID)
+		if scopeErr != nil {
+			return nil, scopeErr
+		}
+	}
+	query := scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
 	if withRelations {
 		query = query.WithOutgoingRelations(func(q *ent.CIRelationshipQuery) {
-			q.Where(cirelationship.IsActiveEQ(true)).WithTargetCi()
+			q.Where(relationScope...).Where(cirelationship.IsActiveEQ(true)).WithTargetCi()
 		}).WithIncomingRelations(func(q *ent.CIRelationshipQuery) {
-			q.Where(cirelationship.IsActiveEQ(true)).WithSourceCi()
+			q.Where(relationScope...).Where(cirelationship.IsActiveEQ(true)).WithSourceCi()
 		})
 	}
 
@@ -369,17 +394,26 @@ func (s *ConfigurationItemService) GetCIByID(ctx context.Context, id, tenantID i
 // 覆盖原 ListCIs（简单过滤）+ SearchCI（关键词宽模糊/SortBy/TagIDs/DateFrom/DateTo/关系预加载）。
 // CISearchFilter / CISearchRequest 已 deprecated，handler 内部转 ListCIRequest 后统一走此处。
 func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, req *dto.ListCIRequest) (*dto.CIListResponse, error) {
+	var relationScope []predicate.CIRelationship
+	if req.WithRelations {
+		var scopeErr error
+		relationScope, scopeErr = ciReadRelationshipPredicates(ctx, s.client, tenantID)
+		if scopeErr != nil {
+			return nil, scopeErr
+		}
+	}
 	// 页长只在这里归一一次：HTTP 入口用 common.GetPaginationFromQuery 决定生效值，非 HTTP
 	// 调用方（AI 工具注册表、导出任务）传 0/负数/超大值时由本层兜住。不归一的后果在 Ent 侧
 	// 是静默的——Limit(0) 等于不加 LIMIT 直接返回整表，page<=0 会算出负 OFFSET。
 	req.Page, req.PageSize = common.ValidatePagination(req.Page, req.PageSize)
 
-	query := s.client.ConfigurationItem.Query().
+	query := scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
-	// 行级数据权限：只有 HTTP handler 显式注入 ScopeConfigured 才应用过滤。
+	// 行级数据权限：HTTP 显式 context scope 在 scopedCIQuery 应用；
+	// AI 工具保留显式 ListCIRequest.ScopeConfigured 注入。
 	// 治理看板走 ListCIsForGovernance（全局质量视图），刻意不接本谓词；
-	// AI 工具/导出等内部调用方走同一 service 但不带 scope，保持租户级旧语义。
+	// AI 工具显式注入 scope；导出等可信内部调用不带 scope，保持租户级旧语义。
 	// 一旦 handler 注入，ScopeUserID<=0（如 service 主体）由 ApplyCIFilter 安全收窄为空集。
 	if req.ScopeConfigured {
 		ds := datascope.DataScopeOwnedOrAssigned
@@ -489,10 +523,10 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 			WithCiTypeRef().
 			WithTags().
 			WithOutgoingRelations(func(q *ent.CIRelationshipQuery) {
-				q.WithTargetCi()
+				q.Where(relationScope...).WithTargetCi()
 			}).
 			WithIncomingRelations(func(q *ent.CIRelationshipQuery) {
-				q.WithSourceCi()
+				q.Where(relationScope...).WithSourceCi()
 			})
 	}
 
@@ -526,6 +560,16 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 
 // UpdateCI 更新配置项
 func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID int, req *dto.UpdateCIRequest) (*dto.CIResponse, error) {
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = tx.Rollback() }()
+	bound := *s
+	bound.client = tx.Client()
+	bound.attrValidator = NewCIAttributeValidator(tx.Client())
+	bound.historyService = NewCIHistoryService(tx.Client(), s.logger)
+	s = &bound
 	// 查询更新前的CI数据
 	oldCI, err := s.client.ConfigurationItem.Query().
 		Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped)).
@@ -619,19 +663,23 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	if req.Description != "" {
 		update.SetDescription(req.Description)
 	}
+	effective := *oldCI
+	if req.CITypeID != 0 {
+		effective.CiTypeID = req.CITypeID
+	}
 	if req.Attributes != nil {
-		// 依据生效的 CI 类型（本次更新后的类型）归一化并校验动态属性
-		effectiveTypeID := oldCI.CiTypeID
-		if req.CITypeID != 0 {
-			effectiveTypeID = req.CITypeID
-		}
-		normalizedAttrs, err := s.attrValidator.NormalizeAttributes(ctx, tenantID, effectiveTypeID, req.Attributes, id)
-		if err != nil {
-			s.logger.Warnw("CI attribute validation failed", "error", err, "ci_id", id, "tenant_id", tenantID, "ci_type_id", effectiveTypeID)
+		effective.Attributes = req.Attributes
+	}
+	if req.LifecycleStatus != "" {
+		effective.LifecycleStatus = req.LifecycleStatus
+	}
+	if req.Attributes != nil || req.CITypeID != 0 || effective.LifecycleStatus == common.CILifecycleStatusOnline {
+		if err := s.validateCIWrite(ctx, &effective, tenantID, true); err != nil {
 			return nil, err
 		}
-		update.SetAttributes(normalizedAttrs)
+		update.SetAttributes(effective.Attributes)
 	}
+
 	if req.CloudProvider != "" {
 		update.SetCloudProvider(req.CloudProvider)
 	}
@@ -720,7 +768,11 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	// 记录更新历史
 	operatorID, operatorName := OperatorFromContext(ctx)
 	if historyErr := s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "update", "", oldCI, ci); historyErr != nil {
-		s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ci.ID, "operation", "update")
+		return nil, historyErr
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
 
 	s.logger.Infow("Configuration item updated successfully", "ci_id", ci.ID, "tenant_id", tenantID)
@@ -829,7 +881,7 @@ func (s *ConfigurationItemService) staleCIStateErrorInTx(ctx context.Context, tx
 // GetCIStats 获取配置项统计
 func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int) (*dto.CIStatsResponse, error) {
 	// 总数量
-	total, err := s.client.ConfigurationItem.Query().
+	total, err := scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped)).
 		Count(ctx)
 	if err != nil {
@@ -856,7 +908,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 
 	// 按状态统计
 	var statusStats []statusCount
-	err = s.client.ConfigurationItem.Query().
+	err = scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID)).
 		GroupBy(configurationitem.FieldStatus).
 		Aggregate(ent.Count()).
@@ -868,7 +920,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 
 	// 按类型统计
 	var typeStats []ciTypeCount
-	err = s.client.ConfigurationItem.Query().
+	err = scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID)).
 		GroupBy(configurationitem.FieldCiType).
 		Aggregate(ent.Count()).
@@ -880,7 +932,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 
 	// 按环境统计
 	var envStats []environmentCount
-	err = s.client.ConfigurationItem.Query().
+	err = scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID)).
 		GroupBy(configurationitem.FieldEnvironment).
 		Aggregate(ent.Count()).
@@ -892,7 +944,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 
 	// 按重要性统计
 	var criticalityStats []criticalityCount
-	err = s.client.ConfigurationItem.Query().
+	err = scopedCIQuery(ctx, s.client, tenantID).
 		Where(configurationitem.TenantIDEQ(tenantID)).
 		GroupBy(configurationitem.FieldCriticality).
 		Aggregate(ent.Count()).
@@ -1052,11 +1104,27 @@ func (s *ConfigurationItemService) BatchCreateCI(ctx context.Context, req *dto.B
 		return nil, fmt.Errorf("batch size cannot exceed 100")
 	}
 
+	numbers := make([]string, len(req.Items))
+	for i := range req.Items {
+		var numErr error
+		numbers[i], numErr = s.generateCINumber(ctx)
+		if numErr != nil {
+			s.logger.Warnw("Failed to generate ci_number in batch create", "error", numErr, "tenant_id", tenantID, "item_index", i)
+		}
+	}
+
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to start transaction for batch create", "error", err)
 		return nil, fmt.Errorf("failed to start transaction: %w", err)
 	}
+
+	defer func() { _ = tx.Rollback() }()
+	bound := *s
+	bound.client = tx.Client()
+	bound.attrValidator = NewCIAttributeValidator(tx.Client())
+	bound.historyService = NewCIHistoryService(tx.Client(), s.logger)
+	s = &bound
 
 	successCount := 0
 	failedIDs := make([]int, 0)
@@ -1128,8 +1196,18 @@ func (s *ConfigurationItemService) BatchCreateCI(ctx context.Context, req *dto.B
 		if item.Source != "" {
 			create.SetSource(item.Source)
 		}
-		if item.Attributes != nil {
-			create.SetAttributes(item.Attributes)
+		effective := &ent.ConfigurationItem{CiTypeID: ciTypeID, Attributes: item.Attributes, LifecycleStatus: item.LifecycleStatus}
+		if effective.LifecycleStatus == "" {
+			effective.LifecycleStatus = common.CILifecycleStatusOnline
+		}
+		if err := s.validateCIWrite(ctx, effective, tenantID, true); err != nil {
+			failedIDs = append(failedIDs, tempID)
+			errors = append(errors, fmt.Sprintf("CI %d: %v", tempID, err))
+			continue
+		}
+		create.SetAttributes(effective.Attributes)
+		if item.LifecycleStatus != "" {
+			create.SetLifecycleStatus(item.LifecycleStatus)
 		}
 		if item.CloudProvider != "" {
 			create.SetCloudProvider(item.CloudProvider)
@@ -1169,10 +1247,8 @@ func (s *ConfigurationItemService) BatchCreateCI(ctx context.Context, req *dto.B
 		}
 
 		// 批量创建同样补 ci_number（发号失败不阻断该项创建）
-		if ciNum, numErr := s.generateCINumber(ctx); numErr == nil {
-			create.SetCiNumber(ciNum)
-		} else {
-			s.logger.Warnw("Failed to generate ci_number in batch create", "error", numErr, "tenant_id", tenantID)
+		if numbers[i] != "" {
+			create.SetCiNumber(numbers[i])
 		}
 
 		ci, err := create.Save(ctx)
@@ -1185,7 +1261,9 @@ func (s *ConfigurationItemService) BatchCreateCI(ctx context.Context, req *dto.B
 		// 记录历史
 		operatorID, operatorName := OperatorFromContext(ctx)
 		if historyErr := s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "create", "Batch created", nil, ci); historyErr != nil {
-			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ci.ID, "operation", "create")
+			failedIDs = append(failedIDs, tempID)
+			errors = append(errors, fmt.Sprintf("CI %d: %v", tempID, historyErr))
+			continue
 		}
 
 		successCount++
@@ -1229,6 +1307,13 @@ func (s *ConfigurationItemService) BatchUpdateCI(ctx context.Context, req *dto.B
 		s.logger.Errorw("Failed to start transaction for batch update", "error", err)
 		return nil, fmt.Errorf("failed to start transaction: %w", err)
 	}
+
+	defer func() { _ = tx.Rollback() }()
+	bound := *s
+	bound.client = tx.Client()
+	bound.attrValidator = NewCIAttributeValidator(tx.Client())
+	bound.historyService = NewCIHistoryService(tx.Client(), s.logger)
+	s = &bound
 
 	successCount := 0
 	failedIDs := make([]int, 0)
@@ -1301,7 +1386,12 @@ func (s *ConfigurationItemService) BatchUpdateCI(ctx context.Context, req *dto.B
 			continue
 		}
 
-		update := tx.ConfigurationItem.UpdateOneID(id).Where(configurationitem.TenantIDEQ(tenantID))
+		if req.Updates.Version > 0 && req.Updates.Version != oldCI.Version {
+			failedIDs = append(failedIDs, id)
+			errors = append(errors, fmt.Sprintf("CI %d: %v", id, common.NewVersionConflictError("配置项", id, req.Updates.Version, oldCI.Version)))
+			continue
+		}
+		update := tx.ConfigurationItem.UpdateOneID(id).Where(configurationitem.TenantIDEQ(tenantID), configurationitem.VersionEQ(oldCI.Version), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped)).SetVersion(oldCI.Version + 1)
 
 		if req.Updates.Name != "" {
 			update.SetName(req.Updates.Name)
@@ -1342,9 +1432,31 @@ func (s *ConfigurationItemService) BatchUpdateCI(ctx context.Context, req *dto.B
 		if req.Updates.Source != "" {
 			update.SetSource(req.Updates.Source)
 		}
-		if req.Updates.Attributes != nil {
-			update.SetAttributes(req.Updates.Attributes)
+		effective := *oldCI
+		if ciType != nil {
+			effective.CiTypeID = ciType.ID
 		}
+		if req.Updates.Attributes != nil {
+			effective.Attributes = req.Updates.Attributes
+		}
+		if req.Updates.LifecycleStatus != "" {
+			effective.LifecycleStatus = req.Updates.LifecycleStatus
+		}
+		var validationErr error
+		if effective.LifecycleStatus != oldCI.LifecycleStatus {
+			if effective.LifecycleStatus == common.CILifecycleStatusScrapped || !common.CanTransitionCILifecycle(oldCI.LifecycleStatus, effective.LifecycleStatus) {
+				validationErr = invalidTransitionError(oldCI.LifecycleStatus, effective.LifecycleStatus)
+			}
+		}
+		if validationErr == nil && (req.Updates.Attributes != nil || ciType != nil || effective.LifecycleStatus == common.CILifecycleStatusOnline) {
+			validationErr = s.validateCIWrite(ctx, &effective, tenantID, true)
+		}
+		if validationErr != nil {
+			failedIDs = append(failedIDs, id)
+			errors = append(errors, fmt.Sprintf("CI %d: %v", id, validationErr))
+			continue
+		}
+		update.SetAttributes(effective.Attributes).SetLifecycleStatus(effective.LifecycleStatus)
 		if req.Updates.CloudProvider != "" {
 			update.SetCloudProvider(req.Updates.CloudProvider)
 		}
@@ -1390,6 +1502,9 @@ func (s *ConfigurationItemService) BatchUpdateCI(ctx context.Context, req *dto.B
 		updatedCI, err := update.Save(ctx)
 		if err != nil {
 			failedIDs = append(failedIDs, id)
+			if ent.IsNotFound(err) {
+				err = s.staleCIStateErrorInTx(ctx, tx, id, tenantID, oldCI.Version)
+			}
 			errors = append(errors, fmt.Sprintf("CI %d: failed to update: %v", id, err))
 			continue
 		}
@@ -1397,13 +1512,16 @@ func (s *ConfigurationItemService) BatchUpdateCI(ctx context.Context, req *dto.B
 		// 记录历史
 		operatorID, operatorName := OperatorFromContext(ctx)
 		if historyErr := s.historyService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "update", "Batch updated", oldCI, updatedCI); historyErr != nil {
-			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", id, "operation", "update")
+			failedIDs = append(failedIDs, id)
+			errors = append(errors, fmt.Sprintf("CI %d: %v", id, historyErr))
+			continue
 		}
 
 		successCount++
 	}
 
 	if len(failedIDs) > 0 {
+		successCount = 0
 		// 有失败的，回滚事务
 		if err := tx.Rollback(); err != nil {
 			s.logger.Errorw("Failed to rollback transaction for batch update", "error", err)
@@ -1625,6 +1743,25 @@ type LifecycleChangeParams = dto.LifecycleChangeParams
 // 本 sentinel 专指「状态推进到 online 时属性不齐」——handler 据此给 422 并点名缺失项。
 var ErrCIAttributeValidationRequiredOnline = dto.ErrCIAttributeValidationRequiredOnline
 
+// validateCIWrite checks the effective post-write state, never just the submitted patch.
+// Lifecycle-only writes validate completeness without rewriting existing attributes.
+func (s *ConfigurationItemService) validateCIWrite(ctx context.Context, ci *ent.ConfigurationItem, tenantID int, normalize bool) error {
+	if s.attrValidator == nil {
+		return fmt.Errorf("CI attribute validator unavailable")
+	}
+	if normalize {
+		attrs, err := s.attrValidator.NormalizeAttributes(ctx, tenantID, ci.CiTypeID, ci.Attributes, ci.ID)
+		if err != nil {
+			return err
+		}
+		ci.Attributes = attrs
+	}
+	if ci.LifecycleStatus == common.CILifecycleStatusOnline {
+		return s.validateRequiredAttributesForOnline(ctx, ci, tenantID)
+	}
+	return nil
+}
+
 // validateRequiredAttributesForOnline 上线前的必填属性完整性校验。
 //
 // 事实来源是 CIAttributeValidator.RequiredAttributes（含类型继承链、租户覆盖全局），
@@ -1639,7 +1776,7 @@ var ErrCIAttributeValidationRequiredOnline = dto.ErrCIAttributeValidationRequire
 // 无法判定完整性，此时放行等于放弃门禁。
 func (s *ConfigurationItemService) validateRequiredAttributesForOnline(ctx context.Context, ci *ent.ConfigurationItem, tenantID int) error {
 	if s.attrValidator == nil {
-		return nil
+		return fmt.Errorf("CI attribute validator unavailable")
 	}
 	requirements, err := s.attrValidator.RequiredAttributes(ctx, tenantID, ci.CiTypeID)
 	if err != nil {
@@ -1710,15 +1847,11 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 		return dto.ToCIResponse(ci), nil
 	}
 
-	// 上线门禁：必填属性缺失的 CI 不得进入 in_service（online）。
-	//
-	// 校验器（CIAttributeValidator.NormalizeAttributes）只在 CreateCI/UpdateCI 两个写路径
-	// 上生效，而生命周期推进是第三条写路径——它直接改 lifecycle_status，从不碰
-	// attributes。于是「创建时填过必填项、后来被清空 / 属性定义在创建后才加了新必填项 /
-	// 发现投影落库后未补全」这三类 CI 都能被推进为 online，变成一张「已在服务中」
-	// 却缺关键信息的记录；影响分析、变更评估与权限分配都读这张表。
+	// 生命周期接口与普通更新共用写后必填属性门禁。
 	if params.Status == common.CILifecycleStatusOnline {
-		if err := s.validateRequiredAttributesForOnline(ctx, ci, tenantID); err != nil {
+		effective := *ci
+		effective.LifecycleStatus = params.Status
+		if err := s.validateCIWrite(ctx, &effective, tenantID, false); err != nil {
 			return nil, err
 		}
 	}
@@ -1834,7 +1967,7 @@ func (s *ConfigurationItemService) BatchUpdateLifecycleStatus(ctx context.Contex
 
 // GetLifecycleHistory 获取CI生命周期变更历史
 func (s *ConfigurationItemService) GetLifecycleHistory(ctx context.Context, id int, tenantID int) ([]map[string]interface{}, error) {
-	_, err := s.client.ConfigurationItem.Query().
+	_, err := scopedCIQuery(ctx, s.client, tenantID).
 		Where(
 			configurationitem.ID(id),
 			configurationitem.TenantID(tenantID),
@@ -2012,4 +2145,38 @@ func (s *ConfigurationItemService) ListCITickets(ctx context.Context, tenantID, 
 		})
 	}
 	return result, nil
+}
+
+func scopedCIQuery(ctx context.Context, client *ent.Client, tenantID int) *ent.ConfigurationItemQuery {
+	q := client.ConfigurationItem.Query().Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
+	if actor, ok := database.CIReadScopeFromContext(ctx); ok {
+		if actor.TenantID != tenantID {
+			return q.Where(configurationitem.IDEQ(-1))
+		}
+		q = datascope.ApplyCIFilter(q, actor.UserID, actor.DepartmentID, datascope.ForCIReader(actor.Role))
+	}
+	return q
+}
+
+// Both endpoints must be readable, including legacy cross-tenant relations.
+// The scope predicate is pushed into an EXISTS subquery so large tenants never
+// materialize the visible CI id list into an IN clause with unbounded parameters.
+func ciReadRelationshipPredicates(ctx context.Context, _ *ent.Client, tenantID int) ([]predicate.CIRelationship, error) {
+	actor, ok := database.CIReadScopeFromContext(ctx)
+	if !ok {
+		return nil, nil
+	}
+	preds := []predicate.ConfigurationItem{
+		configurationitem.TenantIDEQ(tenantID),
+		configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+	}
+	if actor.TenantID != tenantID {
+		preds = []predicate.ConfigurationItem{configurationitem.IDEQ(-1)}
+	} else {
+		preds = append(preds, datascope.CIFilterPredicates(actor.UserID, actor.DepartmentID, datascope.ForCIReader(actor.Role))...)
+	}
+	return []predicate.CIRelationship{
+		cirelationship.HasSourceCiWith(preds...),
+		cirelationship.HasTargetCiWith(preds...),
+	}, nil
 }

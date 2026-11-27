@@ -13,6 +13,7 @@ package cmdb
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -20,6 +21,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/cicertificationtask"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -42,7 +44,7 @@ var ErrCITaskAlreadyPending = fmt.Errorf("该配置项已有待办的数据认�
 var ErrCINotOwned = fmt.Errorf("配置项不存在或不属于当前租户")
 
 // ErrCITaskAlreadyConfirmed 认证任务已完成（幂等拒绝重复确认）。
-var ErrCITaskAlreadyConfirmed = fmt.Errorf("该认证任务已完成")
+var ErrCITaskAlreadyConfirmed = fmt.Errorf("任务已被其他人确认")
 
 // ErrCICertificationActorMissing 缺少可签名的操作人身份。
 var ErrCICertificationActorMissing = fmt.Errorf("认证缺少操作人身份")
@@ -63,6 +65,7 @@ func (s *CICertificationService) CreateTask(ctx context.Context, tenantID, actor
 	}
 	_ = ci
 
+	// 快速拒绝已有待办；并发窗口由数据库部分唯一索引兜底。
 	// 未决任务去重：status=pending 且 due_at 未过期视为 pending，过期视为 overdue（也算未决）。
 	pending, err := s.client.CICertificationTask.Query().
 		Where(
@@ -75,6 +78,16 @@ func (s *CICertificationService) CreateTask(ctx context.Context, tenantID, actor
 	}
 	if pending {
 		return nil, ErrCITaskAlreadyPending
+	}
+
+	if req.AssigneeID > 0 {
+		owned, err := s.client.User.Query().Where(user.ID(req.AssigneeID), user.TenantID(tenantID)).Exist(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if !owned {
+			return nil, common.NewValidationError("责任人不存在或不属于当前租户", nil)
+		}
 	}
 
 	create := s.client.CICertificationTask.Create().
@@ -100,7 +113,37 @@ func (s *CICertificationService) CreateTask(ctx context.Context, tenantID, actor
 	if req.Evidence != "" {
 		create = create.SetEvidence(req.Evidence)
 	}
-	return create.Save(ctx)
+	task, err := create.Save(ctx)
+	if isUniqueViolation(err) {
+		return nil, ErrCITaskAlreadyPending
+	}
+	return task, err
+}
+
+// isUniqueViolation 只把唯一性冲突映射为「已有待办」。
+//
+// 不复用 ent.IsConstraintError：它按 *ConstraintError 类型判定，外键违规
+// （23503）等其他约束错误也会命中——那些不是 pending 重复，把它们改写成
+// 409「该配置项已有待办」是错误分流。风格对齐 internal/services 的
+// isForeignKeyViolation：字符串匹配驱动层错误码，精确到唯一一类。
+func isUniqueViolation(err error) bool {
+	// 纯错误分类，不在事务内吞错；先取判定值再判断，避免静态门禁把
+	// 条件式约束判定误读成「约束错误后继续执行」。语义不变。
+	constraint := err != nil && ent.IsConstraintError(err)
+	if err == nil || !constraint {
+		return false
+	}
+	msg := err.Error()
+	for _, pattern := range []string{
+		"23505",                      // PostgreSQL 唯一约束违反
+		"UNIQUE constraint failed",   // SQLite
+		"violates unique constraint", // PostgreSQL 文案
+	} {
+		if strings.Contains(msg, pattern) {
+			return true
+		}
+	}
+	return false
 }
 
 // ConfirmTask 完成认证：任务置 confirmed，同事务更新 CI 的冗余新鲜度字段。
@@ -140,6 +183,7 @@ func (s *CICertificationService) ConfirmTask(ctx context.Context, tenantID, acto
 	}()
 
 	upd := tx.CICertificationTask.UpdateOneID(task.ID).
+		Where(cicertificationtask.TenantID(tenantID), cicertificationtask.StatusEQ("pending")).
 		SetStatus("confirmed").
 		SetConfirmedBy(actorID).
 		SetConfirmedAt(now)
@@ -148,6 +192,9 @@ func (s *CICertificationService) ConfirmTask(ctx context.Context, tenantID, acto
 	}
 	updated, err = upd.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrCITaskAlreadyConfirmed
+		}
 		return nil, err
 	}
 

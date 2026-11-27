@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -153,4 +154,148 @@ func TestSafeCMDBTaskErrorDoesNotPersistProviderDetails(t *testing.T) {
 		"下载文件失败: Get https://storage.example/file?token=secret: timeout",
 	))
 	require.Equal(t, "任务执行失败", safeCMDBTaskError("  "))
+}
+
+func TestCMDBImportIdentityAndDatesRejectUnsafeRows(t *testing.T) {
+	for _, scenario := range []string{"ambiguousAsset", "conflictingCloud", "invalidDates", "uniqueReplay"} {
+		t.Run(scenario, func(t *testing.T) {
+			client, ctx, service, tenantID, operatorID, ciTypeID := cmdbJobFixture(t)
+			t.Cleanup(func() { client.Close() })
+			first := client.ConfigurationItem.Create().SetName("first").SetCiType("server").SetCiTypeID(ciTypeID).SetTenantID(tenantID).SetAssetTag("shared").SetSerialNumber("serial-first").SetCloudProvider("aliyun").SetCloudResourceID("cloud-first").SaveX(ctx)
+			secondTag := "other"
+			if scenario == "ambiguousAsset" {
+				secondTag = "shared"
+			}
+			second := client.ConfigurationItem.Create().SetName("second").SetCiType("server").SetCiTypeID(ciTypeID).SetTenantID(tenantID).SetAssetTag(secondTag).SetSerialNumber("serial-second").SetCloudProvider("aliyun").SetCloudResourceID("cloud-second").SaveX(ctx)
+			header := "Name,CI Type ID,Asset Tag,Cloud Provider,Cloud Resource ID,Effective At,Expire At"
+			row := fmt.Sprintf("updated,%d,shared,,,,", ciTypeID)
+			if scenario == "conflictingCloud" {
+				row = fmt.Sprintf("updated,%d,shared,aliyun,cloud-second,,", ciTypeID)
+			}
+			if scenario == "invalidDates" {
+				row = fmt.Sprintf("updated,%d,shared,,,bad-effective,bad-expire", ciTypeID)
+			}
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { fmt.Fprintf(w, "%s\n%s\n", header, row) }))
+			defer server.Close()
+			created, err := service.CreateImportTask(ctx, &dto.ImportCIRequest{FileURL: server.URL, FileType: "csv", UpdateMode: "merge"}, tenantID, operatorID, "operator")
+			require.NoError(t, err)
+			command := client.OperationalCommand.Query().Where(operationalcommand.TenantIDEQ(tenantID)).OnlyX(ctx)
+			for attempt := 0; attempt < 2; attempt++ {
+				require.NoError(t, service.HandleImportCommand(ctx, command))
+				task := client.CMDBImportTask.Query().Where(cmdbimporttask.TaskIDEQ(created.TaskID)).OnlyX(ctx)
+				if scenario == "uniqueReplay" {
+					require.Equal(t, 1, task.SuccessCount)
+					require.Zero(t, task.FailedCount)
+					require.Equal(t, "updated", client.ConfigurationItem.GetX(ctx, first.ID).Name)
+				} else {
+					require.Equal(t, 1, task.FailedCount)
+					require.Zero(t, task.SuccessCount)
+					require.NotEmpty(t, task.Errors)
+					require.EqualValues(t, 2, task.Errors[0]["row_number"])
+					details := fmt.Sprint(task.Errors)
+					switch scenario {
+					case "ambiguousAsset":
+						require.Contains(t, details, "身份歧义")
+					case "conflictingCloud":
+						require.Contains(t, details, "身份冲突")
+					case "invalidDates":
+						require.Contains(t, details, "effective_at")
+						require.Contains(t, details, "bad-effective")
+						require.Contains(t, details, "expire_at")
+						require.Contains(t, details, "bad-expire")
+					}
+					require.Equal(t, "first", client.ConfigurationItem.GetX(ctx, first.ID).Name)
+				}
+				require.Equal(t, "second", client.ConfigurationItem.GetX(ctx, second.ID).Name)
+				require.Equal(t, 2, client.ConfigurationItem.Query().Where(configurationitem.TenantIDEQ(tenantID)).CountX(ctx))
+				client.CMDBImportTask.UpdateOneID(task.ID).SetStatus("pending").ExecX(ctx)
+			}
+		})
+	}
+}
+
+func TestImportIdentitySaveRegression(t *testing.T) {
+	for _, mode := range []string{"create", "overwrite", "merge"} {
+		for _, identity := range []string{"asset", "cloud", "success"} {
+			t.Run(mode+"/"+identity, func(t *testing.T) {
+				client, ctx, service, tenantID, operatorID, ciTypeID := cmdbJobFixture(t)
+				_, err := client.ConfigurationItem.Create().SetTenantID(tenantID).SetName("occupied").SetCiTypeID(ciTypeID).SetAssetTag("occupied").SetCloudProvider("aliyun").SetCloudAccountID("account").SetCloudResourceID("occupied").Save(ctx)
+				require.NoError(t, err)
+				targetID := 0
+				if mode != "create" {
+					target, err := client.ConfigurationItem.Create().SetTenantID(tenantID).SetName("original").SetCiTypeID(ciTypeID).SetAssetTag("incoming").Save(ctx)
+					require.NoError(t, err)
+					targetID = target.ID
+				}
+				db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?mode=memory&cache=shared&_fk=1", strings.ReplaceAll(t.Name(), "/", "-")))
+				require.NoError(t, err)
+				defer db.Close()
+				_, err = db.ExecContext(ctx, `CREATE UNIQUE INDEX ci_asset_tag_tenant_unique ON configuration_items (tenant_id, asset_tag) WHERE asset_tag IS NOT NULL AND asset_tag <> ''`)
+				require.NoError(t, err)
+				_, err = db.ExecContext(ctx, `CREATE UNIQUE INDEX ci_cloud_identity_unique ON configuration_items (tenant_id, cloud_provider, cloud_account_id, cloud_resource_id) WHERE cloud_provider <> '' AND cloud_resource_id <> ''`)
+				require.NoError(t, err)
+				// Change the identity after lookup to reproduce a competing identity write.
+				// The real SQLite index rejects it, and the service transaction must roll back.
+				if identity != "success" {
+					client.ConfigurationItem.Use(func(next ent.Mutator) ent.Mutator {
+						return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+							mutation := m.(*ent.ConfigurationItemMutation)
+							if identity == "asset" {
+								mutation.SetAssetTag("occupied")
+							} else {
+								mutation.SetCloudProvider("aliyun")
+								mutation.SetCloudAccountID("account")
+								mutation.SetCloudResourceID("occupied")
+							}
+							return next.Mutate(ctx, m)
+						})
+					})
+				}
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					_, _ = fmt.Fprintf(w, "Name,CI Type ID,Status,Asset Tag\nupdated,%d,active,incoming\n", ciTypeID)
+				}))
+				defer server.Close()
+				updateMode := mode
+				if mode == "create" {
+					updateMode = "overwrite"
+				}
+				_, err = service.CreateImportTask(ctx, &dto.ImportCIRequest{FileURL: server.URL, FileType: "csv", UpdateMode: updateMode}, tenantID, operatorID, "operator")
+				require.NoError(t, err)
+				command, err := client.OperationalCommand.Query().Where(operationalcommand.CommandTypeEQ(commandbus.CommandProcessCMDBImport)).Only(ctx)
+				require.NoError(t, err)
+				require.NoError(t, service.HandleImportCommand(ctx, command))
+				task, err := client.CMDBImportTask.Query().Only(ctx)
+				require.NoError(t, err)
+				if identity == "success" {
+					require.Zero(t, task.FailedCount)
+					require.Equal(t, 1, task.SuccessCount)
+				} else {
+					require.Equal(t, 1, task.FailedCount)
+					require.Zero(t, task.SuccessCount)
+					require.Len(t, task.Errors, 1)
+					expected := "asset_tag 已被其他 CI 占用（同租户）"
+					if identity == "cloud" {
+						expected = "云身份已被其他 CI 占用"
+					}
+					require.Equal(t, expected, task.Errors[0]["message"])
+				}
+				count, err := client.ConfigurationItem.Query().Count(ctx)
+				require.NoError(t, err)
+				expectedCount := 2
+				if mode == "create" && identity != "success" {
+					expectedCount = 1
+				}
+				require.Equal(t, expectedCount, count)
+				if targetID != 0 {
+					target, err := client.ConfigurationItem.Get(ctx, targetID)
+					require.NoError(t, err)
+					expectedName := "original"
+					if identity == "success" {
+						expectedName = "updated"
+					}
+					require.Equal(t, expectedName, target.Name)
+				}
+			})
+		}
+	}
 }

@@ -23,13 +23,13 @@ CMDB 正式产品面只展示已经通过生产验收的 GA 能力。代码中�
 - 云资源与 CI 自动对账
 
 受控试点能力不进入正式导航。自动发现接口必须失败关闭，禁止创建不会被执行、
-长期停留在 `pending` 的任务。
+长期停留在 `queued` 的任务。
 
 ## 云同步转 GA 的强制验收条件
 
 1. 至少一个真实厂商适配器完成账号连接测试和跨 Region 分页发现。
 2. 凭证由密钥服务引用，API、日志和审计响应不得返回明文凭证。
-3. 发现任务具备 pending、running、succeeded、failed、cancelled 状态和合法转换。
+3. 发现任务具备 queued、discovering、discovered、reconciling、succeeded、partial_failed、failed、cancelled 状态和合法转换（见 `handlers/cmdb/discovery_job_lifecycle.go`）。
 4. 每个任务记录开始时间、结束时间、发现数量、创建、更新、失联和失败数量。
 5. 相同来源和资源标识重复执行不产生重复 CI。
 6. 单 Region 失败可重试，部分失败不得被报告为成功。

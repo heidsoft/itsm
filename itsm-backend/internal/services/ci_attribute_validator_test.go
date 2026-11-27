@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -368,5 +369,85 @@ func TestCreateCIRejectsInvalidAttributes(t *testing.T) {
 	}
 	if resp.Attributes["owner"] != "张三" {
 		t.Fatalf("owner = %#v, want 张三", resp.Attributes["owner"])
+	}
+}
+
+func TestAttributeAuditEnumAndBlankRegression(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:attr_audit?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Audit", "audit", "audit.example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	typ, err := createTestCIType(ctx, client, tenant.ID, "audit")
+	if err != nil {
+		t.Fatal(err)
+	}
+	def, err := createTestAttrDefinition(ctx, client, tenant.ID, typ.ID, "env", "环境", "enum", true, false, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.CIAttributeDefinition.UpdateOneID(def.ID).SetEnumValues([]string{"prod"}).Save(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	validator := NewCIAttributeValidator(client)
+	if _, err := validator.NormalizeAttributes(ctx, tenant.ID, typ.ID, map[string]interface{}{"env": "invalid"}, 0); err == nil {
+		t.Error("enumValues-only definition must reject invalid value")
+	}
+	if _, err := validator.NormalizeAttributes(ctx, tenant.ID, typ.ID, map[string]interface{}{"env": "prod"}, 0); err != nil {
+		t.Fatal(err)
+	}
+	// Historical conflict: canonical EnumValues wins over legacy rules.
+	_, err = client.CIAttributeDefinition.UpdateOneID(def.ID).SetValidationRules(`{"enum_values":["legacy"]}`).Save(ctx)
+	if err != nil {
+		t.Error(err)
+	}
+	if _, err := validator.NormalizeAttributes(ctx, tenant.ID, typ.ID, map[string]interface{}{"env": "prod"}, 0); err != nil {
+		t.Error(err)
+	}
+	for _, kind := range []string{"json", "list", "map"} {
+		_, err = client.CIAttributeDefinition.UpdateOneID(def.ID).SetType(kind).SetEnumValues([]string{}).SetValidationRules("").Save(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, value := range []interface{}{nil, "", " ", []interface{}{}, map[string]interface{}{}, []string{}} {
+			if _, err := validator.NormalizeAttributes(ctx, tenant.ID, typ.ID, map[string]interface{}{"env": value}, 0); err == nil {
+				t.Errorf("%s: empty %T must be missing", kind, value)
+			}
+		}
+	}
+}
+
+func TestAttributeDefinitionAuditRuleStructure(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:attr_rule_audit?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Rules", "rules", "rules.example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	typ, err := createTestCIType(ctx, client, tenant.ID, "rules")
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := NewCIAttributeDefinitionService(client, zaptest.NewLogger(t).Sugar())
+	for i, raw := range []string{`null`, `[]`, `{"pattern":1}`, `{"enum_values":"prod"}`, `{"min_length":-1}`, `{"min":5,"max":1}`, `{"enum_values":["dev"]}`} {
+		_, err := svc.CreateCIAttributeDefinition(ctx, &dto.CreateCIAttributeDefinitionRequest{Name: fmt.Sprintf("bad%d", i), DisplayName: "bad", CiTypeID: typ.ID, Type: "enum", EnumValues: []string{"prod"}, ValidationRules: raw}, tenant.ID)
+		if err == nil {
+			t.Errorf("accepted malformed/conflicting rules %s", raw)
+		}
+	}
+	valid, err := svc.CreateCIAttributeDefinition(ctx, &dto.CreateCIAttributeDefinitionRequest{Name: "valid", DisplayName: "valid", CiTypeID: typ.ID, Type: "enum", ValidationRules: `{"enum_values":["prod"]}`}, tenant.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bad := `{"pattern":1}`
+	if _, err := svc.UpdateCIAttributeDefinition(ctx, valid.ID, tenant.ID, &dto.UpdateCIAttributeDefinitionRequest{ValidationRules: &bad}); err == nil {
+		t.Error("update accepted malformed rules")
+	}
+	if _, err := normalizeAttributeValue(&ent.CIAttributeDefinition{Type: "string", ValidationRules: `{"pattern":"a.*"}`}, "prefix a.* suffix"); err != nil {
+		t.Fatal("pattern must keep literal substring semantics", err)
 	}
 }

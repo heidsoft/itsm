@@ -25,6 +25,7 @@ import (
 	"itsm-backend/ent/cmdbexporttask"
 	"itsm-backend/ent/cmdbimporttask"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/predicate"
 	"itsm-backend/internal/commandbus"
 
 	"github.com/google/uuid"
@@ -352,7 +353,7 @@ func (s *CMDBImportExportService) processImportTask(parent context.Context, task
 			continue
 		}
 
-		// 检查CI是否已存在（根据资产标签或序列号）
+		// 检查 CI 是否已存在（云身份 → 序列号 → 资产标签；任一身份歧义或键冲突逐行拒绝）
 		existingCI, err := s.findExistingCI(ctx, createReq, tenantID)
 		if err != nil {
 			failedCount++
@@ -389,7 +390,7 @@ func (s *CMDBImportExportService) processImportTask(parent context.Context, task
 			errors = append(errors, dto.CIImportError{
 				RowNumber: rowNumber,
 				FieldName: "",
-				Message:   fmt.Sprintf("保存CI失败: %v", err),
+				Message:   importCISaveError(err),
 			})
 			continue
 		}
@@ -861,6 +862,8 @@ func (s *CMDBImportExportService) parseCIRow(row map[string]string, fieldMap map
 				t, err = time.Parse("2006-01-02", value)
 				if err == nil {
 					req.EffectiveAt = &t
+				} else {
+					errors = append(errors, &FieldError{Field: field, Message: fmt.Sprintf("%s 日期格式无效: %q", field, value)})
 				}
 			}
 		case "expire_at":
@@ -871,6 +874,8 @@ func (s *CMDBImportExportService) parseCIRow(row map[string]string, fieldMap map
 				t, err = time.Parse("2006-01-02", value)
 				if err == nil {
 					req.ExpireAt = &t
+				} else {
+					errors = append(errors, &FieldError{Field: field, Message: fmt.Sprintf("%s 日期格式无效: %q", field, value)})
 				}
 			}
 		}
@@ -907,56 +912,46 @@ func (s *CMDBImportExportService) parseCIRow(row map[string]string, fieldMap map
 
 // findExistingCI 查找已存在的CI
 func (s *CMDBImportExportService) findExistingCI(ctx context.Context, req *dto.CreateCIRequest, tenantID int) (*ent.ConfigurationItem, error) {
-	// 优先按资产标签查找
-	if req.AssetTag != "" {
-		ci, err := s.client.ConfigurationItem.Query().
-			Where(
-				configurationitem.AssetTag(req.AssetTag),
-				configurationitem.TenantID(tenantID),
-			).
-			First(ctx)
-		if err == nil {
-			return ci, nil
-		}
-		if !ent.IsNotFound(err) {
-			return nil, err
-		}
+	// Evaluate every supplied identity; priority must never hide conflicting keys.
+	type identity struct {
+		field      string
+		predicates []predicate.ConfigurationItem
 	}
-
-	// 其次按序列号查找
+	var keys []identity
+	if req.CloudProvider != "" && req.CloudResourceID != "" {
+		cloud := []predicate.ConfigurationItem{configurationitem.CloudProvider(req.CloudProvider), configurationitem.CloudResourceID(req.CloudResourceID)}
+		if req.CloudAccountID != "" {
+			cloud = append(cloud, configurationitem.CloudAccountID(req.CloudAccountID))
+		}
+		if req.CloudRegion != "" {
+			cloud = append(cloud, configurationitem.CloudRegion(req.CloudRegion))
+		}
+		keys = append(keys, identity{"cloudResourceId", cloud})
+	}
 	if req.SerialNumber != "" {
-		ci, err := s.client.ConfigurationItem.Query().
-			Where(
-				configurationitem.SerialNumber(req.SerialNumber),
-				configurationitem.TenantID(tenantID),
-			).
-			First(ctx)
-		if err == nil {
-			return ci, nil
-		}
-		if !ent.IsNotFound(err) {
+		keys = append(keys, identity{"serialNumber", []predicate.ConfigurationItem{configurationitem.SerialNumber(req.SerialNumber)}})
+	}
+	if req.AssetTag != "" {
+		keys = append(keys, identity{"assetTag", []predicate.ConfigurationItem{configurationitem.AssetTag(req.AssetTag)}})
+	}
+	var matched *ent.ConfigurationItem
+	for _, key := range keys {
+		candidates, err := s.client.ConfigurationItem.Query().Where(configurationitem.TenantID(tenantID)).Where(key.predicates...).Limit(2).All(ctx)
+		if err != nil {
 			return nil, err
 		}
-	}
-
-	// 最后按云资源ID查找
-	if req.CloudResourceID != "" && req.CloudProvider != "" {
-		ci, err := s.client.ConfigurationItem.Query().
-			Where(
-				configurationitem.CloudResourceID(req.CloudResourceID),
-				configurationitem.CloudProvider(req.CloudProvider),
-				configurationitem.TenantID(tenantID),
-			).
-			First(ctx)
-		if err == nil {
-			return ci, nil
+		if len(candidates) > 1 {
+			return nil, fmt.Errorf("%s 身份歧义：匹配多个 CI，请修复身份数据后重试", key.field)
 		}
-		if !ent.IsNotFound(err) {
-			return nil, err
+		if len(candidates) == 0 {
+			continue
 		}
+		if matched != nil && matched.ID != candidates[0].ID {
+			return nil, fmt.Errorf("%s 身份冲突：提供的身份键指向不同 CI", key.field)
+		}
+		matched = candidates[0]
 	}
-
-	return nil, nil
+	return matched, nil
 }
 
 // convertCreateToUpdateReq 将创建请求转换为更新请求
@@ -1542,4 +1537,19 @@ func safeExcelizeGetRows(filePath, sheetName string) (rows [][]string, err error
 		return nil, fmt.Errorf("读取Sheet失败: %w", err)
 	}
 	return rows, nil
+}
+
+// importCISaveError classifies only identity-key unique violations. Other
+// constraints retain their original failure semantics rather than claiming occupancy.
+func importCISaveError(err error) string {
+	msg := err.Error()
+	if ent.IsConstraintError(err) && (strings.Contains(msg, "23505") || strings.Contains(msg, "violates unique constraint") || strings.Contains(msg, "UNIQUE constraint failed")) {
+		switch {
+		case strings.Contains(msg, "ci_asset_tag_tenant_unique"), strings.Contains(msg, "configuration_items.asset_tag"):
+			return "asset_tag 已被其他 CI 占用（同租户）"
+		case strings.Contains(msg, "ci_cloud_identity_unique"), strings.Contains(msg, "configuration_items.cloud_resource_id"):
+			return "云身份已被其他 CI 占用"
+		}
+	}
+	return fmt.Sprintf("保存CI失败: %v", err)
 }

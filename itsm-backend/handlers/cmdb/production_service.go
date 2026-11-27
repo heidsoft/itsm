@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
+	"itsm-backend/database"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/schema"
@@ -429,7 +430,7 @@ func (c *ProductionService) ListCIs(ctx *gin.Context) {
 	req.ScopeUserID = ctx.GetInt("user_id")
 	req.ScopeAll = datascope.ForCIReader(ctx.GetString("role")) == datascope.DataScopeAll
 
-	result, err := c.ciService.ListCIs(ctx.Request.Context(), tenantID, &req)
+	result, err := c.ciService.ListCIs(ciBusinessReadContext(ctx, tenantID), tenantID, &req)
 	if err != nil {
 		c.logger.Errorw("List CIs failed", "error", err, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "获取配置项列表失败")
@@ -457,7 +458,7 @@ func (c *ProductionService) GetCI(ctx *gin.Context) {
 
 	withRelations, _ := strconv.ParseBool(ctx.DefaultQuery("withRelations", "false"))
 
-	result, err := c.ciService.GetCIByID(ctx.Request.Context(), id, tenantID, withRelations)
+	result, err := c.ciService.GetCIByID(ciBusinessReadContext(ctx, tenantID), id, tenantID, withRelations)
 	if err != nil {
 		c.logger.Errorw("Get CI failed", "error", err, "ci_id", id, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "获取配置项失败")
@@ -582,7 +583,7 @@ func (c *ProductionService) GetCIStats(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.ciService.GetCIStats(ctx.Request.Context(), tenantID)
+	result, err := c.ciService.GetCIStats(ciBusinessReadContext(ctx, tenantID), tenantID)
 	if err != nil {
 		c.logger.Errorw("Get CI stats failed", "error", err, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "获取配置项统计失败")
@@ -615,7 +616,7 @@ func (c *ProductionService) ListCIRelationships(ctx *gin.Context) {
 	page, pageSize := pagination.Page, pagination.PageSize
 	relationshipType := ctx.Query("relationshipType")
 
-	result, err := c.ciRelationshipService.ListAllCIRelationships(ctx.Request.Context(), tenantID, page, pageSize, relationshipType)
+	result, err := c.ciRelationshipService.ListAllCIRelationships(ciBusinessReadContext(ctx, tenantID), tenantID, page, pageSize, relationshipType)
 	if err != nil {
 		c.logger.Errorw("List CI relationships failed", "error", err, "tenant_id", tenantID)
 		common.FailWithErr(ctx, err, "获取CI关系列表失败")
@@ -640,7 +641,7 @@ func (c *ProductionService) GetCIRelationship(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.ciRelationshipService.GetCIRelationshipByID(ctx.Request.Context(), id, tenantID)
+	result, err := c.ciRelationshipService.GetCIRelationshipByID(ciBusinessReadContext(ctx, tenantID), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get CI relationship failed", "error", err, "relation_id", id, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "获取CI关系失败")
@@ -680,7 +681,7 @@ func (c *ProductionService) ListCIRelationshipsByCIID(ctx *gin.Context) {
 
 	direction := ctx.DefaultQuery("direction", "")
 
-	result, err := c.ciRelationshipService.ListCIRelationshipsByCIID(ctx.Request.Context(), ciID, tenantID, direction)
+	result, err := c.ciRelationshipService.ListCIRelationshipsByCIID(ciBusinessReadContext(ctx, tenantID), ciID, tenantID, direction)
 	if err != nil {
 		c.logger.Errorw("List CI relationships by CI ID failed", "error", err, "ci_id", ciID, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "获取CI关系列表失败")
@@ -825,10 +826,15 @@ func (c *ProductionService) GetCITopology(ctx *gin.Context) {
 		return
 	}
 	depth, _ := strconv.Atoi(ctx.DefaultQuery("depth", "3"))
-	result, err := c.ciRelationshipService.GetCITopology(ctx.Request.Context(), ciID, tenantID, depth)
+	result, err := c.ciRelationshipService.GetCITopology(ciBusinessReadContext(ctx, tenantID), ciID, tenantID, depth)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.NotFound(ctx, "配置项不存在")
+			return
+		}
+		var appErr *common.AppError
+		if errors.As(err, &appErr) && appErr.Code == common.ErrCodeValidation {
+			common.BadRequestWithErr(ctx, err, appErr.Message)
 			return
 		}
 		c.logger.Errorw("Get CI topology failed", "errorClass", "internal", "ciId", ciID, "tenantId", tenantID)
@@ -866,10 +872,15 @@ func (c *ProductionService) GetCIImpactAnalysis(ctx *gin.Context) {
 		maxDepth = 3
 	}
 
-	result, err := c.ciRelationshipService.GetCIImpactAnalysis(ctx.Request.Context(), ciID, tenantID, maxDepth)
+	result, err := c.ciRelationshipService.GetCIImpactAnalysis(ciBusinessReadContext(ctx, tenantID), ciID, tenantID, maxDepth)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.NotFound(ctx, "配置项不存在")
+			return
+		}
+		var appErr *common.AppError
+		if errors.As(err, &appErr) && appErr.Code == common.ErrCodeValidation {
+			common.BadRequestWithErr(ctx, err, appErr.Message)
 			return
 		}
 		c.logger.Errorw("Get CI impact analysis failed", "errorClass", "internal", "ciId", ciID, "tenantId", tenantID)
@@ -1136,7 +1147,17 @@ func (c *ProductionService) GetCIHistory(ctx *gin.Context) {
 
 	page, pageSize := cmdbPagination(ctx)
 
-	result, err := c.ciHistoryService.GetCIHistory(ctx.Request.Context(), id, tenantID, page, pageSize)
+	ci, err := c.ciService.GetCIByID(ciBusinessReadContext(ctx, tenantID), id, tenantID, false)
+	if err != nil {
+		common.RespondError(ctx, err, "获取配置项失败")
+		return
+	}
+	if ci == nil {
+		common.NotFound(ctx, "配置项不存在")
+		return
+	}
+
+	result, err := c.ciHistoryService.GetCIHistory(ciBusinessReadContext(ctx, tenantID), id, tenantID, page, pageSize)
 	if err != nil {
 		c.logger.Errorw("Get CI history failed", "error", err, "ci_id", id, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "获取历史记录失败")
@@ -1313,7 +1334,7 @@ func (c *ProductionService) SearchCI(ctx *gin.Context) {
 	// 页长归一在 ListCIs 单点完成（本方法内部转 ListCIRequest）；这里再写一套
 	// `>1000→20` 就成了第二个所有者，会把大批量请求静默截断。
 
-	result, err := c.ciService.SearchCI(ctx.Request.Context(), tenantID, &req)
+	result, err := c.ciService.SearchCI(ciBusinessReadContext(ctx, tenantID), tenantID, &req)
 	if err != nil {
 		c.logger.Errorw("Search CI failed", "error", err, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "搜索失败")
@@ -1835,7 +1856,7 @@ func (c *ProductionService) GetLifecycleHistory(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.ciService.GetLifecycleHistory(ctx.Request.Context(), id, tenantID)
+	result, err := c.ciService.GetLifecycleHistory(ciBusinessReadContext(ctx, tenantID), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get CI lifecycle history failed", "error", err, "ci_id", id, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "获取生命周期历史失败")
@@ -1843,4 +1864,13 @@ func (c *ProductionService) GetLifecycleHistory(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, result)
+}
+
+// ciBusinessReadContext uses middleware identity only, never request fields.
+func ciBusinessReadContext(ctx *gin.Context, tenantID int) context.Context {
+	actor := datascope.Actor{UserID: ctx.GetInt("user_id"), Role: ctx.GetString("role"), TenantID: tenantID}
+	if trusted, ok := datascope.ActorFromContext(ctx.Request.Context(), tenantID); ok {
+		actor.DepartmentID = trusted.DepartmentID
+	}
+	return database.WithCIReadScope(ctx.Request.Context(), actor)
 }

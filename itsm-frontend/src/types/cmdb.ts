@@ -8,33 +8,28 @@
 /**
  * CI类型
  */
-export enum CIType {
-  // 硬件
-  SERVER = 'server',
-  NETWORK_DEVICE = 'network_device',
-  STORAGE = 'storage',
-  DESKTOP = 'desktop',
-  LAPTOP = 'laptop',
-  MOBILE = 'mobile',
-  PRINTER = 'printer',
-
-  // 软件
-  APPLICATION = 'application',
-  DATABASE = 'database',
-  MIDDLEWARE = 'middleware',
-  OPERATING_SYSTEM = 'operating_system',
-  LICENSE = 'license',
-
-  // 服务
-  BUSINESS_SERVICE = 'business_service',
-  TECHNICAL_SERVICE = 'technical_service',
-
-  // 其他
-  LOCATION = 'location',
-  DEPARTMENT = 'department',
-  PERSON = 'person',
-  DOCUMENT = 'document',
-}
+// 这些是内置类型示例，不是闭集：生产环境的 CI 类型由租户在 ci_types 中自定义
+// （cloud_vm / kubernetes 等）。wire DTO 以 types/biz/cmdb.ts 为准，本模块是展示模型。
+export type CIType =
+  | 'server'
+  | 'network_device'
+  | 'storage'
+  | 'desktop'
+  | 'laptop'
+  | 'mobile'
+  | 'printer'
+  | 'application'
+  | 'database'
+  | 'middleware'
+  | 'operating_system'
+  | 'license'
+  | 'business_service'
+  | 'technical_service'
+  | 'location'
+  | 'department'
+  | 'person'
+  | 'document'
+  | (string & {});
 
 /**
  * CI状态

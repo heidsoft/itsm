@@ -1,95 +1,66 @@
-# ADR-003: CMDB 行级权限默认 tenant-wide
+# ADR-003: CMDB HTTP 业务读面按行级权限收窄
 
 > Status: current
 
 ## 状态
 
-Accepted（2026-09-16）
-
-> **背景**：本 ADR 把 R4-a「RBAC 行级 scope」调研结论中关于 CMDB 的口径**显式固化**。
-> 此前 `handlers/cmdb/*` 零 DataScope 接入（grep 实证），其它核心 6 域（ticket /
-> change / incident / problem / release / service_request）均已通过
-> `handlers/common/datascope/datascope.go` + 各域 repository 层
-> `Or(Owner, Assignee)` 强制收窄。CMDB 显式缺位并非缺陷，而是**有意识设计**——
-> IT 基础设施（CI、关系、拓扑）天然是跨部门共享的工作底座，行级收窄反而
-> 会让变更/事件/问题处理失明。本 ADR 把这层语义写进文档，避免后续误接入
-> 行级过滤造成跨部门协作断裂。
+Accepted（2026-11-26），替代 2026-09-16 的默认 tenant-wide 读权限决策。
 
 ## 背景
 
-RBAC 行级权限（DataScope）原语在 ticket 域落地后（阻断 8 修复），逐步推广到
-6 个核心域（commit 序列 09-11 至 09-16 见 `ROADMAP.md` v1.6.x）。CMDB 是
-唯一显式未接入的域：
+CMDB 的 CI、关系、拓扑用于跨部门协作，但这不意味着每个具备 CMDB
+读权限的用户都应看到全部已明确归属的资产。HTTP 业务读入口此前只有
+列表接入 scope，搜索、详情和关系图可以绕过列表权限，必须统一收窄。
 
-| 域 | DataScope 写 | DataScope 读 |
-|---|---|---|
-| ticket | ✅ service 收窄 | ✅ repository `Or(Requester, Assignee)` |
-| change | ✅ service 收窄 | ✅ repository `Or(CreatedBy, Assignee)` |
-| incident | ✅ service 收窄 | ✅ repository `Or(Reporter, Assignee)` |
-| problem | ✅ service 收窄 | ✅ repository `Or(CreatedBy, Assignee)` |
-| release | ✅ service 收窄 | ✅ repository `Or(CreatedBy, Owner)` |
-| service_request | ✅ handler 收窄 | ✅ repository |
-| **cmdb** | **tenant-wide**（无行级） | **tenant-wide**（无行级） |
-| knowledge | knowledgeaccess 单独处理 | — |
-
-CMDB 资源（CI / 关系 / 拓扑 / 云账号 / 发现作业）属于 IT 基础设施，天然
-跨部门可见。变更/事件/问题管理需要查询 CI 关系图、拓扑、依赖——若 CMDB
-按"申请人/受理人"行级收窄，处理人会查不到非自己创建但影响自己变更的 CI，
-反而引入**决策盲区**与**协作断裂**。
+CI 不能照搬工单的申请人/受理人模型：工单天然有责任主体，资产则可以无主，
+发现与存量导入尤其如此。将全部无主资产隐藏会导致一线无法认领资产，
+也会让变更、事件处理失去跨部门依赖信息。因此保留公共资产例外，并明确
+区分用户业务读面与可信内部分析。
 
 ## 决策
 
-1. **CMDB 行级权限默认 = tenant-wide**：所有租户内角色（end_user / agent /
-   manager / admin / super_admin 等）均可读全租户 CMDB。
-2. **写路径仍受通用 RBAC 权限位控制**（`RequirePermission` 中间件），不放开
-   普通 end_user 写入 CI；行级问题不存在，权限位问题已由 `RequirePermission`
-   统一处理。
-3. **Department tier 仍是死代码**——`ApplyTicketFilter` 0 调用方，`ctx.DepartmentID`
-   0 注入点。CMDB 不引入 Department tier，因基础设施跨部门可见是工作常态。
-4. **未来扩展点**（本 ADR 不实施）：若客户要求"敏感 CI（合同价/安全等级）
-   限可见"，应新增 `ci_sensitivity` 字段 + 按字段过滤，**不**走 DataScope
-   的三档枚举（DataScope 三档只覆盖「全员/本部门/本人」三种语义粒度）。
+1. HTTP CI 列表、搜索、详情、统计、关系列表/详情、拓扑、影响分析和历史
+   均从认证中间件身份显式注入 scope；请求体、查询参数和 Header 不得自报身份或权限。
+   管理角色经 `datascope.ForCIReader` 得到 `DataScopeAll`，可见全租户业务资产；
+   其余角色复用 `ApplyCIFilter`，按本人归属及既有 scope 规则收窄。
+2. `owner_id` 与 `department_id` 双 NULL 的 CI 是租户公共资产，所有有效用户
+   均可见。`departmentID<=0` 不添加部门谓词；需要用户身份的 scope 在
+   `userID<=0` 时为空集，未知 scope 也为空集。不得更改既有原语的这些语义。
+3. 关系两端必须同时可读；详情预加载、拓扑与影响分析遍历也遵守同样边界，
+   不返回隐藏节点、相邻 CI 内容或跨租户关系。不可读的根 CI 按不存在处理。
+4. HTTP scope 使用显式 typed context 标记，service 不根据普通 actor context
+   无条件推断行级限制。后台任务、变更/事件的可信内部影响分析、导出和治理
+   保持租户级语义；调用方仍须负责权限与 tenant scope。
+5. AI 工具保留既有显式 scope 注入，以可信 actor 判定权限，不能从模型参数
+   接受 scopeAll 或用户身份。不得把 AI 工具视为自动豁免的后台调用。
+6. 治理报告的分母包含退役 CI，退役仍参与 Assessable。仅
+   `ListCIsForGovernance` 使用 `database.WithIncludeRetiredCIs`，绕过 CI 的
+   scrapped 读过滤；该私有 typed context key 不接受任何 HTTP 字段映射，
+   不绕过租户谓词、写守卫或数据库 RLS。普通业务读面继续隐藏退役 CI。
+7. 路由的 CMDB RBAC 仍是访问前提，行级权限不替代接口授权。
 
-## 后果
+## 后果与边界
 
-### 正面
+已归属的敏感资产不会因切换搜索、详情或拓扑入口而泄漏；公共资产仍支持
+认领与跨部门协作。可信内部分析可保留完整租户依赖视图，调用边界需要审查，
+不得把外部请求直接透传为无 scope 的内部调用。
 
-- CMDB 跨部门可见与工作流协作天然一致，避免变更/事件/问题处理失明；
-- 不引入新的中间件/上下文注入，0 代码改动；
-- 文档把口径显式化，避免后续误接入行级过滤造成跨部门协作断裂。
-
-### 负面
-
-- 无法直接按"我的 CI 视图"过滤（需客户端按 created_by 字段再过滤）；
-- 敏感 CI（如合同价、安全事件相关）默认全员可见，需要未来按 `ci_sensitivity`
-  字段二次过滤（本 ADR 不阻塞当前商业化路径）。
-
-### 缓解
-
-- `security_classification` 字段预留（`ent/schema/configurationitem.go`）；
-- 客户端若需要"我创建的 CI"过滤，可直接传 `created_by` filter 参数
-  （CMDB handler 已支持）。
-
-## 与既有 ADR 的关系
-
-- ADR-001 模块化单体：CMDB 作为领域切片保留，不引入跨服务调用；
-- ADR-002 事件驱动：CMDB 变更（CI 创建/关系更新）通过事件总线异步广播，
-  CMDB 行级权限的广播不受本 ADR 影响——广播范围仍按角色/权限位控制，
-  非按数据可见性。
+关系读过滤把同一 `CIFilterPredicates` 下推到 `HasSourceCiWith` /
+`HasTargetCiWith` 的 SQL EXISTS 子查询，先物化可见 CI ID 列表再用 `IDIn`
+的做法已废弃——后者在大租户会撞 SQL 参数数量上限。谓词单一源在
+`internal/datascope/ci_filter.go`，列表查询与关系读都从它派生。
 
 ## 落地证据
 
-- `handlers/common/datascope/datascope.go`：DataScope 原语单一源
-- `handlers/cmdb/*`：grep `DataScope|datascope|OwnerID|RequesterID` 0 命中（实证 tenant-wide）
-- `repository/ticket/repository_impl.go:479-489`：ticket 域 DataScopeOwnedOrAssigned 强制收窄样板
-- `handlers/change/repository_impl.go:243-251`：change 域强制收窄样板
-- `handlers/incident/repository_impl.go:250-258`：incident 域强制收窄样板
-- `handlers/problem/repository_impl.go:284-292`：problem 域强制收窄样板
-- `service/release_service.go:190-200`：release 域强制收窄样板
-- `handlers/service_request/repository_impl.go:316-324`：service_request 域强制收窄样板
+- `router/cmdb_routes.go`：CMDB 实际生产路由及 RequirePermission。
+- `handlers/cmdb/production_service.go`：HTTP 可信身份与 scope 注入。
+- `internal/services/configuration_item_service.go`：显式 scope 与 CI 查询过滤。
+- `internal/services/ci_relationship_service.go`：关系两端与图遍历过滤。
+- `internal/datascope/ci_filter.go`：公共资产、部门及 fail-closed 语义单一源。
+- `handlers/cmdb/repository_impl.go` 与 `database/security.go`：治理专用退役查询开关。
+- `handlers/cmdb/production_service_test.go`：生产 Handler 读权限与真实安全拦截器回归。
 
-## 未来可触发本 ADR 重审的条件
+## 与既有 ADR 的关系
 
-- 客户要求 CMDB 按部门/角色过滤（触发本 ADR 升级为 CMDB scoped 版）；
-- DataScope 引入第四档（如 "team" 团队级），CMDB 是否纳入；
-- 安全合规审计要求 CMDB 记录按密级二次过滤。
+ADR-001 的模块化单体边界保持适用；ADR-002 的事件驱动不构成读取权限豁免，
+异步消费者仍须明确其租户、权限、审计及可信内部调用边界。

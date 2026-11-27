@@ -23,6 +23,7 @@ import (
 //
 // 门禁规则：RequiresReview && RiskLevel != "high" ⇒ 422（失败关闭，可操作文案）；
 // 无高风险特征（RequiresReview=false）或 entClient 缺失（legacy 装配）⇒ 放行。
+// 生产摘要查询失败 ⇒ 503，阻断提交。
 
 func newImpactGateTestService(t *testing.T) (*Service, context.Context, int) {
 	t.Helper()
@@ -84,7 +85,7 @@ func TestValidateImpactGate(t *testing.T) {
 		assert.NoError(t, svc.validateImpactGate(ctx, change.ID, tenantID, c))
 	})
 
-	t.Run("entClient缺失时降级放行", func(t *testing.T) {
+	t.Run("entClient缺失时保留legacy装配", func(t *testing.T) {
 		legacySvc := newTestService(svc.repo, nil, zaptest.NewLogger(t).Sugar(), nil)
 		c, err := svc.repo.Get(ctx, change.ID, tenantID)
 		require.NoError(t, err)

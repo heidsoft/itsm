@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -338,20 +339,24 @@ var ErrSubmitGateBlocked = errors.New("change submit blocked by impact analysis 
 // A 租户的变更单可以把 B 租户的资产写进自己的影响面。
 var ErrAffectedCIsNotOwned = errors.New("affected CI not owned by tenant")
 
+// ErrImpactSummaryUnavailable 表示提交前无法取得权威 CMDB 影响摘要。
+var ErrImpactSummaryUnavailable = errors.New("CMDB impact summary unavailable")
+
 // validateImpactGate 影响摘要消费门禁（2026-10-21 收口「影响摘要尚未成为提交审批的
 // 后端门禁」）：关键 CI 命中或存在关联开放事件（RequiresReview）时，必须显式声明
 // high 风险等级——影响摘要此前只进 WorkflowHints 提示文案，风险分析与提交流程断链。
-// entClient 为 nil（纯 legacy/单测装配）或查询失败时降级放行
-// （best-effort，与 checkWindowConflict 同口径）但留 Warn。
+// entClient 为 nil 时保留纯 legacy/单测装配；生产摘要查询失败必须阻断提交。
+
 func (s *Service) validateImpactGate(ctx context.Context, changeID, tenantID int, c *Change) error {
 	if s.entClient == nil {
 		return nil
 	}
 	summary, sumErr := s.GetCMDBImpactSummary(ctx, changeID, tenantID)
 	if sumErr != nil {
-		s.logger.Warnw("validateImpactGate: 影响摘要查询失败，降级放行",
+		s.logger.Warnw("validateImpactGate: 影响摘要查询失败，阻断提交",
 			"error", sumErr, "change_id", changeID, "tenant_id", tenantID)
-		return nil
+		return common.NewAppError(common.ErrCodeDatabaseError,
+			"CMDB 影响摘要暂不可用，无法提交审批；请先修复 CMDB 影响数据查询后重试", http.StatusServiceUnavailable, ErrImpactSummaryUnavailable)
 	}
 	if summary.RequiresReview && c.RiskLevel != "high" {
 		return common.NewValidationError(
@@ -860,8 +865,7 @@ func (s *Service) GetCMDBImpactSummary(ctx context.Context, changeID, tenantID i
 	// 变更风险判断的数据依据，数据库读不出来时推荐风险会从 high 掉到 low、
 	// RequiresReview 变成 false、提交门禁随之放行，高风险变更被当成低风险变更。
 	//
-	// 返回错误后由调用方决定降级策略（validateImpactGate 选择 best-effort 放行
-	// 但会留 Warn 日志），而不是在这里伪造一个「看起来正常」的摘要。
+	// 返回错误后由提交门禁阻断审批，而不是伪造一个「看起来正常」的摘要。
 	relCount, err := s.entClient.CIRelationship.Query().
 		Where(
 			cirelationship.TenantID(tenantID),

@@ -55,7 +55,18 @@ export interface CreateCIRequest {
   cloudSyncStatus?: string;
   cloudResourceRefId?: number;
   cloudMetadata?: Record<string, unknown>;
+  type?: string;
+  lifecycleStatus?: string;
+  effectiveAt?: string;
+  expireAt?: string;
 }
+
+// 与后端 dto.UpdateCIRequest 对齐：ownerId/departmentId 用 null 表示「显式清空」。
+export type UpdateCIRequest = Omit<Partial<CreateCIRequest>, 'ownerId' | 'departmentId'> & {
+  ownerId?: number | null;
+  departmentId?: number | null;
+  version?: number;
+};
 
 export interface GetCIListRequest {
   ciType?: string;
@@ -373,7 +384,7 @@ export class CMDBApi {
 
   static async updateCI(
     id: string | number,
-    request: Partial<CreateCIRequest> & Record<string, any>
+    request: UpdateCIRequest
   ): Promise<ConfigurationItem> {
     return httpClient.put(`${CIS_BASE}/${id}`, request);
   }

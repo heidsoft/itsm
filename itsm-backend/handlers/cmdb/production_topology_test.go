@@ -57,6 +57,8 @@ func cmdbTopologyRouter(t *testing.T) (*gin.Engine, *ent.Client) {
 				tenantID = v
 			}
 		}
+		c.Set("user_id", 1)
+		c.Set("role", "admin")
 		c.Set("tenant_id", tenantID)
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
 		c.Next()
@@ -146,24 +148,22 @@ func TestGetCITopology_RejectsCrossTenant(t *testing.T) {
 	assert.Equal(t, float64(4004), resp["code"])
 }
 
-func TestGetCITopology_CapsDepthAt10(t *testing.T) {
+func TestGetCITopology_RejectsExcessDepth(t *testing.T) {
 	r, client := cmdbTopologyRouter(t)
 	defer client.Close()
 
 	root, _ := seedCITopologyFixture(t, client, 1)
 
-	// Request depth=20; the service caps at maxCIImpactAnalysisDepth (=10).
+	// Excess depth is invalid input; silently clamping hides the requested scope.
 	req, _ := http.NewRequest("GET", "/api/v1/cmdb/cis/"+strconv.Itoa(root)+"/topology?depth=20", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-
-	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	require.Equal(t, http.StatusBadRequest, w.Code, w.Body.String())
 	var resp struct {
-		Code int                    `json:"code"`
-		Data map[string]interface{} `json:"data"`
+		Code int `json:"code"`
 	}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Equal(t, float64(10), resp.Data["depth"], "depth=20 must be capped to 10")
+	assert.NotZero(t, resp.Code)
 }
 
 func TestGetCITopology_DefaultsDepthTo3(t *testing.T) {
@@ -297,4 +297,28 @@ func TestGetCITopology_IsolatedCIEdgesNotNull(t *testing.T) {
 	require.Len(t, resp.Data["nodes"], 1, "孤点 CI 的拓扑必须含 root 自身")
 	assert.Equal(t, float64(1), resp.Data["totalNodes"])
 	assert.Equal(t, float64(0), resp.Data["totalEdges"])
+}
+
+func TestCIGraphAuditHandlerLimits(t *testing.T) {
+	r, client := cmdbTopologyRouter(t)
+	defer client.Close()
+	root, _ := seedCITopologyFixture(t, client, 1)
+	ctx := context.Background()
+	ci := client.ConfigurationItem.GetX(ctx, root)
+	for i := 0; i < 200; i++ {
+		child := client.ConfigurationItem.Create().SetName("budget-" + strconv.Itoa(i)).SetTenantID(1).SetCiTypeID(ci.CiTypeID).SaveX(ctx)
+		client.CIRelationship.Create().SetSourceCiID(root).SetTargetCiID(child.ID).SetTenantID(1).SetRelationshipType("depends_on").SaveX(ctx)
+	}
+	for _, suffix := range []string{"/topology?depth=1", "/impact-analysis?maxDepth=1", "/impact-analysis?maxDepth=11"} {
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/v1/cmdb/cis/"+strconv.Itoa(root)+suffix, nil))
+		require.Equal(t, http.StatusBadRequest, w.Code, w.Body.String())
+		var body struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		}
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+		require.Equal(t, 4000, body.Code)
+		require.NotEmpty(t, body.Message)
+	}
 }

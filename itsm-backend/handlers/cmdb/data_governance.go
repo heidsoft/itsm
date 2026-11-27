@@ -97,13 +97,14 @@ func ComputeQualityMetrics(cis []*ConfigurationItem, threshold time.Duration, no
 //
 // 🔴 分母口径刻意与完整率不同，不能合并：
 //   - 完整率的分母 Assessable = 「该 CI 类型有必填属性定义」的 CI 数；
-//   - 认证的分母 Verified 在此之上再排除退役 CI。
+//   - 认证的分母 Verified = 全部非退役 CI，不要求先有必填属性定义。
 //
 // 退役资产不该被要求「确认它仍然准确」——它已经不在了，要求确认只会把
-// 认证率永久拉低，让运维对这个指标失去信任。这个差异必须写在结构里，
+// 认证率永久拉低；但「属性还没定义完整」不等于「没人担保它的真实性」，
+// 所以这里不套完整率的 Assessable 过滤。两个差异必须写在结构里，
 // 否则下一个人很容易「顺手统一口径」。
 type CertificationMetrics struct {
-	// Verified 是认证率的有效分母：在用（非 scrapped）且可评估的 CI 数。
+	// Verified 是认证率的有效分母：全部非 scrapped CI 数，不套完整率的 Assessable 过滤。
 	Verified int `json:"verified"`
 	// NeverConfirmed 是从未被任何人在任何时点确认过的 CI 数。
 	// 它不是「过期」——过期是「确认过但太久了」，两者对运维的含义不同：

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 )
 
 // CMDB 属性级数据质量：对齐 ServiceNow CMDB Health 的 completeness / duplicate
@@ -60,25 +61,9 @@ type AttributeMissingStat struct {
 	Applicable int    `json:"applicable"`
 }
 
-// attributeIsBlank 判定属性值是否可视为「未填」。
-//
-// 与 internal/services 的 isBlankAttributeString 保持同一语义（空白串算缺），
-// 但额外覆盖 nil、空切片/空 map：JSON 属性列里 `""`、`null`、`[]`、`{}` 都
-// 表示「没填」，只判 `""` 会让「清空过的数组字段」被算成已填。
+// attributeIsBlank shares the write validator's missing-value semantics.
 func attributeIsBlank(value interface{}, exists bool) bool {
-	if !exists || value == nil {
-		return true
-	}
-	if text, ok := value.(string); ok {
-		return strings.TrimSpace(text) == ""
-	}
-	switch typed := value.(type) {
-	case []interface{}:
-		return len(typed) == 0
-	case map[string]interface{}:
-		return len(typed) == 0
-	}
-	return false
+	return !exists || dto.IsBlankCIAttribute(value)
 }
 
 // attributeValuePresent 取出属性值并判定非空。返回值便于单测直接断言。

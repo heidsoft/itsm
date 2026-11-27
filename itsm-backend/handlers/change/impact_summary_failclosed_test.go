@@ -3,12 +3,19 @@ package change
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/middleware"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -167,4 +174,45 @@ func TestGetCMDBImpactSummary_OpenIncidentCountErrorIsNotSilentZero(t *testing.T
 		return
 	}
 	assert.False(t, true, "未预期的实现：返回了 nil error 但既未标注降级也未拒绝")
+}
+
+func TestSubmitChangeImpactQueryFailureRejects(t *testing.T) {
+	for _, table := range []string{"ci_relationships", "incidents"} {
+		t.Run(table, func(t *testing.T) {
+			svc, ctx, tenantID, dsn := newImpactSummaryFixture(t)
+			changeID, _ := seedChangeWithHighRiskDependencies(t, svc, ctx, tenantID, 1)
+			svc.entClient.Change.UpdateOneID(changeID).SetImplementationPlan("deploy").SetRollbackPlan("restore").ExecX(ctx)
+			dropTable(t, dsn, table)
+			result, err := svc.SubmitChange(ctx, changeID, tenantID, 1, &dto.SubmitChangeRequest{})
+			require.Nil(t, result)
+			require.Error(t, err)
+			var appErr *common.AppError
+			require.ErrorAs(t, err, &appErr)
+			require.Equal(t, http.StatusServiceUnavailable, appErr.HTTPStatus)
+			require.Contains(t, appErr.Message, "修复 CMDB")
+			router := gin.New()
+			router.Use(func(c *gin.Context) {
+				c.Set("user_id", 1)
+				c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
+				c.Next()
+			})
+			router.POST("/api/v1/changes/:id/submit", NewHandler(svc).SubmitChange)
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/changes/%d/submit", changeID), nil))
+			require.Equal(t, http.StatusServiceUnavailable, recorder.Code)
+			var response struct {
+				Code    int         `json:"code"`
+				Message string      `json:"message"`
+				Data    interface{} `json:"data"`
+			}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+			require.Equal(t, common.ServiceUnavailableCode, response.Code)
+			require.Contains(t, response.Message, "修复 CMDB")
+			require.Nil(t, response.Data)
+			stored, err := svc.entClient.Change.Get(ctx, changeID)
+			require.NoError(t, err)
+			require.EqualValues(t, "draft", stored.Status)
+			require.Zero(t, svc.entClient.ApprovalRecord.Query().CountX(ctx))
+		})
+	}
 }

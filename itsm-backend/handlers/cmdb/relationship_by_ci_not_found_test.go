@@ -57,6 +57,8 @@ func newRelationshipByCIFixture(t *testing.T, ctxTenantID int) relationshipFixtu
 
 	r := gin.New()
 	r.Use(func(c *gin.Context) {
+		c.Set("user_id", 1)
+		c.Set("role", "agent")
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: ctxTenantID})
 		c.Next()
 	})
