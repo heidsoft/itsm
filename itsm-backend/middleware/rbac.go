@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/ent"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/role"
@@ -140,6 +141,46 @@ func cacheRolePermissions(cacheKey string, perms []Permission, loadErr error) {
 	permissionCacheLock.Unlock()
 }
 
+// errRoleInactive 表示角色行存在但被显式停用（roles.is_active=false）。
+//
+// 它与「角色行不存在」是两种不同状态，必须区分：
+//   - 角色行不存在 → DBOnly 下视为「已撤销/迁移异常」，按空权限集 fail-closed；
+//   - 角色行存在但停用 → 同样是显式撤销，也按空权限集 fail-closed，
+//     但不能被误判成「未初始化」而回退到编译期默认权限（否则停用形同虚设）。
+var errRoleInactive = errors.New("role inactive")
+
+// lookupEffectiveRole 是「角色是否生效」的唯一判定源。
+//
+// 停用状态刻意不在 SQL 里用 role.IsActive 过滤：过滤后停用行会退化成
+// NotFound，与「角色行不存在」不可区分，DBOnly 路径就会把「显式停用」
+// 当成「未配置」并回退到编译期默认权限——停用反而变成放行。
+//
+// 平台超管 super_admin 的直通语义由 AuthorizeResource 单独拥有，
+// 不经由本函数；原因见该函数注释。
+func lookupEffectiveRole(ctx context.Context, client *ent.Client, roleName string, tenantID int) (*ent.Role, error) {
+	// client 为 nil 或虽非 nil 但 Role 客户端未初始化（如 HardcodeOnly 模式测试
+	// 用的 &ent.Client{} 空壳）时，无从查询角色行，也就没有「停用」证据。
+	// 返回 (nil, nil) 让调用方维持既有判定——既不误判成停用（那会 fail-open 到
+	// 空权限集、破坏 HardcodeOnly 的硬编码表语义），也不会因 client.Role 为 nil
+	// 而在 client.Role.Query() 处 panic。
+	if client == nil || client.Role == nil {
+		return nil, nil
+	}
+	r, err := client.Role.Query().
+		Where(
+			role.Code(roleName),
+			role.TenantID(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !r.IsActive {
+		return nil, errRoleInactive
+	}
+	return r, nil
+}
+
 // loadRolePermissionsFromDB 从数据库加载角色的权限
 // 直接从 role_permissions 联表查询，支持多租户
 // ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
@@ -165,13 +206,13 @@ func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName
 	var perms []Permission
 	var loadErr error
 
-	// 首先查找角色ID
-	roleEntity, err := client.Role.Query().
-		Where(
-			role.Code(roleName),
-			role.TenantID(tenantID),
-		).
-		Only(ctx)
+	// 首先查找角色ID。复用这一次查询做生效性判定：角色行存在但已停用时
+	// 按显式撤销处理（空权限集 + 错误），既不回退默认权限、也不写入缓存
+	// （停用是管理动作，缓存里不能留下可继续放行的权限集）。
+	roleEntity, err := lookupEffectiveRole(ctx, client, roleName, tenantID)
+	if errors.Is(err, errRoleInactive) {
+		return nil, errRoleInactive
+	}
 
 	if err == nil && roleEntity != nil {
 		roleID := roleEntity.ID
@@ -363,13 +404,15 @@ func loadPermissionsFromDBDBOnlyState(ctx context.Context, client *ent.Client, r
 		return permissionDBOnlyUnavailable, nil
 	}
 
-	roleEntity, err := client.Role.Query().
-		Where(
-			role.Code(roleName),
-			role.TenantID(tenantID),
-		).
-		Only(ctx)
-	if ent.IsNotFound(err) || (err == nil && roleEntity == nil) {
+	roleEntity, err := lookupEffectiveRole(ctx, client, roleName, tenantID)
+	switch {
+	case errors.Is(err, errRoleInactive):
+		// 角色行存在但被显式停用：这是管理员的显式撤销，语义等同「权限集为空」，
+		// 必须 fail-closed 且**不得**回退到编译期默认权限基线——
+		// 若落到 unconfigured 分支，停用反而会重新发放默认权限（形同虚设）。
+		// 这里复用上面那次角色行查询，不额外增加 DB 往返。
+		return permissionDBOnlyConfigured, nil
+	case ent.IsNotFound(err) || (err == nil && roleEntity == nil):
 		// 只有整个租户还没有任何 Role 行时才视为“未初始化”并使用默认基线；
 		// 租户已有角色但当前 role 行缺失，视为该角色被撤销/迁移异常，
 		// 必须按显式空权限集 fail-closed，不能重新发放默认权限。
@@ -384,8 +427,7 @@ func loadPermissionsFromDBDBOnlyState(ctx context.Context, client *ent.Client, r
 			return permissionDBOnlyConfigured, nil
 		}
 		return permissionDBOnlyUnconfigured, nil
-	}
-	if err != nil {
+	case err != nil:
 		// 查询本身失败（连接错误、ctx 取消、同 code 多行）：不能当成「未配置」走硬编码，
 		// 否则瞬时故障变成 fail-open。
 		logPermissionLoadFailure(roleName, tenantID, err)
@@ -573,7 +615,9 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		if extraRoles := userEntity.Edges.Roles; len(extraRoles) > 0 {
 			roleCodes := make([]string, 0, len(extraRoles))
 			for _, r := range extraRoles {
-				if r != nil && r.IsActive && r.TenantID == tenantID {
+				// 附加角色不可授予平台超管：历史上租户可伪造该码，触发字符串直通。
+				// super_admin 只能来自 users.role 主角色，不能通过 user_roles 叠加。
+				if r != nil && r.IsActive && r.TenantID == tenantID && r.Code != domainrole.SuperAdmin {
 					roleCodes = append(roleCodes, r.Code)
 				}
 			}
@@ -807,6 +851,16 @@ func hasResourcePermission(ctx context.Context, client *ent.Client, role, resour
 //     保持既有 TestSmartCheckPermission_DBOnlyFailClosed /
 //     TestDBOnlyPermissionModeDoesNotUseHardcodedFallback 等 fail-closed 测试不破。
 func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string, tenantID int) []Permission {
+	// 非 DBOnly 模式（开发/测试环境）没有「角色行不存在即未配置」的分支，
+	// 停用角色会经由 RoleDefaultPermissions 重新拿到编译期默认权限——
+	// 停用必须真的停用，所以这里先做一次生效性判定：停用即返回空集。
+	// 生产 DBOnly 路径不在此处判定，避免每次授权判定都多查一次库
+	// （DBOnlyState 内部本来就查角色行，判定已在那条路径上完成）。
+	if client != nil && PermissionConfig.Mode != PermissionConfigModeDBOnly {
+		if _, err := lookupEffectiveRole(ctx, client, role, tenantID); errors.Is(err, errRoleInactive) {
+			return nil
+		}
+	}
 	switch PermissionConfig.Mode {
 	case PermissionConfigModeDBOnly:
 		state, perms := loadPermissionsFromDBDBOnlyState(ctx, client, role, tenantID)

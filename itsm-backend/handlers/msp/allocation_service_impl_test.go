@@ -29,7 +29,7 @@ func TestMSPAllocationCreate_ReAllocationPreservesArchivedHistory(t *testing.T) 
 
 	mspTenant, err := client.Tenant.Create().SetName("MSP-H").SetCode("msp-h-a").SetType("msp_provider").Save(ctx)
 	require.NoError(t, err)
-	customer, err := client.Tenant.Create().SetName("Cust H").SetCode("cust-h-a").SetType("customer").Save(ctx)
+	customer, err := client.Tenant.Create().SetName("Cust H").SetCode("cust-h-a").SetType("customer").SetMspProviderID(mspTenant.ID).Save(ctx)
 	require.NoError(t, err)
 	agent, err := client.User.Create().
 		SetUsername("alloc_agent").SetEmail("alloc@example.com").SetName("Alloc Agent").
@@ -47,7 +47,7 @@ func TestMSPAllocationCreate_ReAllocationPreservesArchivedHistory(t *testing.T) 
 	require.NoError(t, err)
 
 	svc := NewMSPAllocationService(client, logger)
-	// super_admin 旁路会跳过租户类型与同租户归属校验，这里只验证重新分配保留归档历史。
+	// 平台管理员也只能在已有委托内重新分配。
 	created, err := svc.Create(ctx, agent.ID, agent.ID, customer.ID, "backup", "super_admin")
 	require.NoError(t, err)
 	require.NotNil(t, created)
@@ -115,7 +115,7 @@ func TestMSPAllocationCreate_SameTenantOperatorSucceedsWithAudit(t *testing.T) {
 
 	mspTenant, err := client.Tenant.Create().SetName("MSP-M").SetCode("msp-m").SetType("msp_provider").Save(ctx)
 	require.NoError(t, err)
-	customer, err := client.Tenant.Create().SetName("Cust M").SetCode("cust-m").SetType("customer").Save(ctx)
+	customer, err := client.Tenant.Create().SetName("Cust M").SetCode("cust-m").SetType("customer").SetMspProviderID(mspTenant.ID).Save(ctx)
 	require.NoError(t, err)
 	admin, err := client.User.Create().
 		SetUsername("msp_admin").SetEmail("msp-admin@example.com").SetName("MSP Admin").

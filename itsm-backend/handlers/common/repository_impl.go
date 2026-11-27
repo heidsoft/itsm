@@ -214,7 +214,49 @@ func (r *EntRepository) UpdateUser(ctx context.Context, u *User) (*User, error) 
 
 // Department methods
 
+// validateDepartmentReferences keeps every referenced resource inside the department tenant.
+// Update walks the proposed parent chain with both cycle and depth protection.
+func (r *EntRepository) validateDepartmentReferences(ctx context.Context, d *Department, checkCycle bool) error {
+	if d.ManagerID != 0 {
+		if err := r.assertActiveTenantUser(ctx, d.ManagerID, d.TenantID); err != nil {
+			return err
+		}
+	}
+	visited := make(map[int]struct{})
+	currentID := d.ParentID
+	const maxDepartmentDepth = 256
+	for depth := 0; currentID != 0; depth++ {
+		if checkCycle {
+			if currentID == d.ID {
+				return common.NewValidationError("部门父级不能形成环", nil)
+			}
+			if _, seen := visited[currentID]; seen {
+				return common.NewValidationError("部门父级链存在环", nil)
+			}
+			if depth >= maxDepartmentDepth {
+				return common.NewValidationError("部门父级链超过最大深度", nil)
+			}
+			visited[currentID] = struct{}{}
+		}
+		parent, err := r.client.Department.Query().Where(department.ID(currentID), department.TenantID(d.TenantID), department.DeletedAtIsNil()).Only(ctx)
+		if ent.IsNotFound(err) {
+			return common.NewValidationError("父部门不存在、已删除或不属于当前租户", nil)
+		}
+		if err != nil {
+			return fmt.Errorf("查询父部门失败: %w", err)
+		}
+		if !checkCycle {
+			break
+		}
+		currentID = parent.ParentID
+	}
+	return nil
+}
+
 func (r *EntRepository) CreateDepartment(ctx context.Context, d *Department) (*Department, error) {
+	if err := r.validateDepartmentReferences(ctx, d, false); err != nil {
+		return nil, err
+	}
 	exists, err := r.client.Department.Query().
 		Where(department.Code(d.Code), department.TenantID(d.TenantID), department.DeletedAtIsNil()).
 		Exist(ctx)
@@ -245,7 +287,7 @@ func (r *EntRepository) CreateDepartment(ctx context.Context, d *Department) (*D
 func (r *EntRepository) GetDepartment(ctx context.Context, id int, tenantID int) (*Department, error) {
 	e, err := r.client.Department.Query().
 		Where(department.ID(id), department.TenantID(tenantID), department.DeletedAtIsNil()).
-		WithChildren(func(q *ent.DepartmentQuery) { q.Where(department.DeletedAtIsNil()) }).
+		WithChildren(func(q *ent.DepartmentQuery) { q.Where(department.TenantID(tenantID), department.DeletedAtIsNil()) }).
 		Only(ctx)
 	if err != nil {
 		return nil, err
@@ -305,6 +347,9 @@ func (r *EntRepository) GetDepartmentTree(ctx context.Context, tenantID int) ([]
 }
 
 func (r *EntRepository) UpdateDepartment(ctx context.Context, d *Department) (*Department, error) {
+	if err := r.validateDepartmentReferences(ctx, d, true); err != nil {
+		return nil, err
+	}
 	exists, err := r.client.Department.Query().
 		Where(department.Code(d.Code), department.TenantID(d.TenantID), department.DeletedAtIsNil(), department.IDNEQ(d.ID)).
 		Exist(ctx)

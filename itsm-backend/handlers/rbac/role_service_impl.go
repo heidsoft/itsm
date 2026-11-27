@@ -124,12 +124,16 @@ func (s *roleServiceImpl) CreateRole(ctx context.Context, req *dto.CreateRoleReq
 		code = generateCodeFromName(req.Name)
 	}
 
+	if domainrole.IsBuiltinCode(code) {
+		return nil, common.NewStateConflictError("内置角色码只能由系统播种", code)
+	}
+
 	roleEntity, err := s.client.Role.Create().
 		SetName(req.Name).
 		SetDescription(req.Description).
 		SetCode(code).
 		SetTenantID(tenantID).
-		SetIsSystem(req.IsSystem).
+		SetIsSystem(false).
 		SetIsActive(req.Status != dto.RoleStatusInactive). // 默认启用，仅显式 inactive 时禁用
 		Save(ctx)
 	if err != nil {
@@ -263,7 +267,11 @@ func (s *roleServiceImpl) UpdateRole(ctx context.Context, id int, req *dto.Updat
 		update = update.SetDescription(*req.Description)
 	}
 	if req.Code != nil && strings.TrimSpace(*req.Code) != "" {
-		update = update.SetCode(strings.TrimSpace(*req.Code))
+		code := strings.TrimSpace(*req.Code)
+		if code != roleEntity.Code && domainrole.IsBuiltinCode(code) {
+			return nil, common.NewStateConflictError("内置角色码只能由系统播种", code)
+		}
+		update = update.SetCode(code)
 	}
 	// 启用状态：线上契约 status(active/inactive) → 持久层 is_active(bool)
 	// handler 已用 dto.RoleActiveFromStatus 校验取值，此处只需按契约映射

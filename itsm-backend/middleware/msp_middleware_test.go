@@ -1,10 +1,13 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -61,4 +64,75 @@ func TestMSPMiddleware_Gate(t *testing.T) {
 		assert.Equal(t, "disabled", body.Data.State)
 		assert.NotEmpty(t, body.Message)
 	})
+}
+
+func TestMSPMiddlewareLifecycle(t *testing.T) {
+	for _, tc := range []struct {
+		name, status                          string
+		expired, provider, header, unassigned bool
+		want                                  int
+		message                               string
+	}{
+		{name: "active", status: "active", want: 200},
+		{name: "customer_suspended", status: "suspended", want: 200},
+		{name: "customer_expired", status: "active", expired: true, want: 200},
+		{name: "provider_suspended", status: "suspended", provider: true, want: 403, message: "租户已被暂停或过期"},
+		{name: "provider_expired", status: "active", expired: true, provider: true, want: 403, message: "租户已过期"},
+		{name: "header_suspended", status: "suspended", header: true, want: 403, message: "客户租户已被暂停或过期"},
+		{name: "header_expired", status: "active", expired: true, header: true, want: 403, message: "客户租户已过期"},
+		{name: "header_unassigned", status: "active", header: true, unassigned: true, want: 403, message: "MSP员工无权访问此客户租户"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			client := enttest.Open(t, "sqlite3", "file:lifecycle_"+tc.name+"?mode=memory&cache=shared&_fk=1")
+			defer client.Close()
+			ctx := context.Background()
+			provider, err := client.Tenant.Create().SetName("P").SetCode("p").SetType("msp_provider").Save(ctx)
+			require.NoError(t, err)
+			customer, err := client.Tenant.Create().SetName("C").SetCode("c").SetType("customer").SetMspProviderID(provider.ID).Save(ctx)
+			require.NoError(t, err)
+			id := customer.ID
+			if tc.provider {
+				id = provider.ID
+			}
+			update := client.Tenant.UpdateOneID(id).SetStatus(tc.status)
+			if tc.expired {
+				update.SetExpiresAt(time.Now().Add(-time.Hour))
+			}
+			require.NoError(t, update.Exec(ctx))
+			actor, err := client.User.Create().SetUsername("actor").SetEmail("actor@example.com").SetName("Actor").SetPasswordHash("hash").SetTenantID(provider.ID).SetMspRole("provider_admin").Save(ctx)
+			require.NoError(t, err)
+			if !tc.unassigned {
+				require.NoError(t, client.MSPAllocation.Create().SetMspUserID(actor.ID).SetCustomerTenantID(customer.ID).SetRole("primary").SetAssignedAt(time.Now()).Exec(ctx))
+			}
+			r := gin.New()
+			r.Use(func(c *gin.Context) { c.Set("user_id", actor.ID); c.Next() }, MSPMiddleware(client))
+			r.GET("/api/v1/msp/context", func(c *gin.Context) { m, _ := GetMSPContext(c); common.Success(c, m.AllowedCustomers) })
+			req := httptest.NewRequest("GET", "/api/v1/msp/context", nil)
+			if tc.header {
+				req.Header.Set("X-Customer-Tenant-ID", strconv.Itoa(customer.ID))
+			}
+			w := httptest.NewRecorder()
+			r.ServeHTTP(w, req)
+			require.Equal(t, tc.want, w.Code, w.Body.String())
+			var body struct {
+				Code    int             `json:"code"`
+				Message string          `json:"message"`
+				Data    json.RawMessage `json:"data"`
+			}
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+			if tc.want == 403 {
+				require.Equal(t, common.ForbiddenCode, body.Code)
+				require.Equal(t, tc.message, body.Message)
+			} else {
+				require.Zero(t, body.Code)
+				var ids []int
+				require.NoError(t, json.Unmarshal(body.Data, &ids))
+				if tc.status == "active" && !tc.expired {
+					require.Equal(t, []int{customer.ID}, ids)
+				} else {
+					require.Empty(t, ids)
+				}
+			}
+		})
+	}
 }
