@@ -103,6 +103,8 @@ Concretely that means:
 
 ### 已落地
 
+- **部门级变更路由** — 创建变更时将创建人的同租户部门随 `workflow.start` 命令保存，Worker 校验后匹配部门绑定。定向用例 `TestWorkflowStart_ChangeRouting_DepartmentSnapshot` 覆盖两部门分流、跨租户和已删除部门兜底、旧命令兼容及重试去重。目标 QA 租户的审批验收待执行。
+
 - [x] **TicketType 平台化** — 类型持久化、动态字段、创建快照、Preset Library、归档恢复和管理 UI。
 - [x] **统一绑定解析** — Ticket 创建从已解析 TicketType 执行 Workflow、SLA 与 Assignment。
 - [x] **权限与审计** — TicketType 独立管理/归档/Preset 安装权限，ACL manifest 覆盖；Preset 安装、归档恢复和绑定变更独立审计。

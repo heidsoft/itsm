@@ -18,6 +18,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// ChangeRoutingDepartmentKey stores the creator department snapshot for change routing.
+const ChangeRoutingDepartmentKey = "routingDepartmentId"
+
 const (
 	StatusPending    = "pending"
 	StatusProcessing = "processing"
