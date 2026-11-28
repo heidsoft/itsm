@@ -71,6 +71,10 @@ POST /api/v1/ai/tickets/{id}/investigate
 
 ## AI 审计记录
 
+`GET /api/v1/ai/evaluation?days=30` 返回总体、场景（`byScenario`）和技能（`bySkill`）的 `acceptedCount`、`rejectedCount`、`pendingCount`。采纳率 `acceptedRate` 为采纳数除以采纳与拒绝数之和。没有已决审计时返回 `null`。普通反馈仅参与反馈指标。总体和每项技能分别达到 `minHealthDecisions`（当前 10 条人工已决记录）后才给出 `healthScore`，样本不足返回 `null`。
+
+审计列表的 `accepted` 为 `true`（采纳）、`false`（拒绝）或 `null`（未决）。`PATCH /api/v1/ai/audit-logs/{auditId}` 接收显式布尔值，拒绝缺字段或 `null`。
+
 需要 `ai:read` 权限，租户范围只取认证上下文，查询参数中的同名字段不生效。
 
 ```http

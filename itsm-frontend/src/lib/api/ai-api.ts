@@ -260,24 +260,41 @@ export interface AICalibrationBucket {
   calibrationError: number;
 }
 
-export interface AIScenarioEval {
+interface AIDecisionMetrics {
+  acceptedCount: number;
+  rejectedCount: number;
+  pendingCount: number;
+  acceptedRate: number | null;
+}
+
+export interface AIScenarioEval extends AIDecisionMetrics {
   kind: string;
   count: number;
   usefulRate: number;
-  acceptedRate: number;
   avgConfidence: number;
 }
 
-export interface AIEvaluationReport {
+export interface AISkillEval extends AIDecisionMetrics {
+  skillCode: string;
+  skillName?: string;
+  count: number;
+  usefulRate: number;
+  avgConfidence: number;
+  healthScore: number | null;
+  isPilot: boolean;
+}
+
+export interface AIEvaluationReport extends AIDecisionMetrics {
   generatedAt: string;
   lookbackDays: number;
   totalFeedback: number;
   usefulRate: number;
-  acceptedRate: number;
   avgConfidence: number;
-  healthScore: number;
+  healthScore: number | null;
+  minHealthDecisions: number;
   hasData: boolean;
   byScenario: AIScenarioEval[];
+  bySkill: AISkillEval[];
   confidenceCalibration: AICalibrationBucket[];
   platform: {
     llmCallCount: number;
@@ -297,7 +314,7 @@ export interface AIAuditEntry {
   promptVersion: string;
   model: string;
   confidence: number;
-  accepted: boolean;
+  accepted: boolean | null;
   suggestion: Record<string, unknown> | null;
   notes: string;
 }

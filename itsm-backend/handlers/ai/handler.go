@@ -928,7 +928,7 @@ func (h *Handler) UpdateAuditAccepted(c *gin.Context) {
 		return
 	}
 	var req struct {
-		Accepted bool `json:"accepted" binding:"required"`
+		Accepted *bool `json:"accepted" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -940,7 +940,7 @@ func (h *Handler) UpdateAuditAccepted(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.UpdateAuditAccepted(c.Request.Context(), tenantID, id, req.Accepted); err != nil {
+	if err := h.svc.UpdateAuditAccepted(c.Request.Context(), tenantID, id, *req.Accepted); err != nil {
 		if errors.Is(err, dto.ErrFeedbackNotFound) {
 			common.NotFoundWithErr(c, err, "audit-logs 行不存在或非 ai_audit")
 			return
@@ -948,7 +948,7 @@ func (h *Handler) UpdateAuditAccepted(c *gin.Context) {
 		common.FailWithErr(c, err, "更新 accepted 失败")
 		return
 	}
-	common.Success(c, gin.H{"id": id, "accepted": req.Accepted})
+	common.Success(c, gin.H{"id": id, "accepted": *req.Accepted})
 }
 
 // queryInt 解析正整数查询参数，非法/缺失时回退到默认值。
