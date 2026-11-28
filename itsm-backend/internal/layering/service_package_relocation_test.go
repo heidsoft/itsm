@@ -34,7 +34,10 @@ import (
 // 同步改常量，守卫会退化成噪音。
 
 const (
-	sprProdCount        = 125
+	// 2026-11-28：knowledge_integration_service.go 经 L.5 退役流程删除
+	// （14 个导出符号全仓零消费、移出后全量编译通过，详见 CHANGELOG），
+	// 生产文件数 125 -> 124；非"漏搬"，是经行为证据确认的主动收口。
+	sprProdCount        = 124
 	sprTestCount        = 207
 	sprMinProdBytes     = 200
 	sprMinGoFiles       = 300
@@ -84,8 +87,9 @@ func TestSPRLegacyServiceDirHasNoTopLevelGo(t *testing.T) {
 	}
 }
 
-// TestSPRRelocatedProductionFilesAreIntact 锁 125 个生产文件的文件名集合、
-// 包名与非空下界。内容完整性由本提交的 332 个 R100 rename 与
+// TestSPRRelocatedProductionFilesAreIntact 锁归位生产文件的文件名集合、
+// 包名与非空下界（数量常量 sprProdCount，2026-11-28 因 L.5 退役死代码由 125 调至 124）。
+// 内容完整性由本提交的 332 个 R100 rename 与
 // output/service-layer-relocation-2026-11-12.md 中的一次性 SHA256 摘要证明：
 // 不把内容哈希做成长期锚点，否则任何人正常改一行业务代码都要同步改常量，
 // 守卫反而会变成噪音（并行会话 WIP 尤其容易触发）。
