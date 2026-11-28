@@ -224,7 +224,7 @@ func TestPublishApprovalReadiness_CSVTokenExactMatch(t *testing.T) {
 // 9. 显式 assignee 节点跳过静态判定：已有明确审批人，不得误伤。
 func TestPublishApprovalReadiness_ExplicitAssigneeSkipped(t *testing.T) {
 	engine, ctx, _, _ := setupReadinessDef(t, "explicit-assignee")
-	xmlWithAssignee := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
+	xmlWithAssignee := `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" targetNamespace="http://test">
   <bpmn:process id="readiness_process" isExecutable="true">
     <bpmn:startEvent id="start"/>
@@ -233,7 +233,7 @@ func TestPublishApprovalReadiness_ExplicitAssigneeSkipped(t *testing.T) {
     <bpmn:sequenceFlow id="f1" sourceRef="start" targetRef="Activity_Approve"/>
     <bpmn:sequenceFlow id="f2" sourceRef="Activity_Approve" targetRef="end"/>
   </bpmn:process>
-</bpmn:definitions>`)
+</bpmn:definitions>`
 
 	published, err := engine.ProcessDefinitionService().PublishProcessDefinition(ctx, "explicit-assignee", "1.0",
 		&UpdateProcessDefinitionRequest{BPMNXML: xmlWithAssignee})
