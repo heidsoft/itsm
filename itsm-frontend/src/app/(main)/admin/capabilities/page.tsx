@@ -223,9 +223,10 @@ export default function CapabilitiesAdminPage() {
       title: '能力',
       dataIndex: 'key',
       width: 260,
+      className: 'capability-key-cell',
       render: (key: string, item) => (
         <Space orientation='vertical' size={0}>
-          <Text strong>{key}</Text>
+          <Text strong className='code-token'>{key}</Text>
           {item.dependencies.length > 0 && (
             <Text type='secondary' style={{ fontSize: 12 }}>
               依赖：{item.dependencies.join(' / ')}
@@ -285,6 +286,7 @@ export default function CapabilitiesAdminPage() {
     {
       title: '说明',
       key: 'reason',
+      width: 320,
       render: (_: unknown, item) => <PilotReasonCell item={item} onOpen={setDetailKey} />,
     },
   ];
@@ -392,6 +394,8 @@ export default function CapabilitiesAdminPage() {
           loading={loading}
           columns={columns}
           dataSource={visible}
+          tableLayout='fixed'
+          scroll={{ x: 1080 }}
           pagination={{ pageSize: 20, hideOnSinglePage: true }}
           locale={{
             emptyText: (

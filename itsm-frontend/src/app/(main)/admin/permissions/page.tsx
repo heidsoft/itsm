@@ -852,22 +852,24 @@ const PermissionConfiguration = () => {
       {/* 角色选择器 */}
       <Card>
         <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={6}>
+          <Col xs={24} sm={24} md={12} xl={8}>
             <div className="flex items-center gap-2">
-              <Text strong>{t('permissions.selectRole')}</Text>
+              <Text strong className="field-label">
+                {t('permissions.selectRole')}
+              </Text>
               <Select
                 placeholder={t('permissions.placeholders.selectRole')}
                 value={selectedRoleId || undefined}
                 onChange={handleSelectRole}
                 loading={rolesLoading}
-                style={{ minWidth: 200 }}
+                style={{ flex: 1, minWidth: 0 }}
                 showSearch
                 optionFilterProp="children"
                 options={roles.map(role => ({ value: role.id, label: role.name }))}
               />
             </div>
           </Col>
-          <Col xs={24} md={6}>
+          <Col xs={24} sm={24} md={12} xl={8}>
             <Input
               placeholder={t('permissions.placeholders.searchModules')}
               prefix={<Search className="w-4 h-4 text-gray-400" />}
@@ -876,7 +878,7 @@ const PermissionConfiguration = () => {
               allowClear
             />
           </Col>
-          <Col xs={24} md={4}>
+          <Col xs={24} sm={12} md={12} xl={4}>
             <Select
               placeholder={t('permissions.placeholders.filterCategory')}
               value={categoryFilter}
@@ -888,7 +890,7 @@ const PermissionConfiguration = () => {
               ]}
             />
           </Col>
-          <Col xs={24} md={4}>
+          <Col xs={24} sm={12} md={12} xl={4}>
             <Select
               placeholder={t('permissions.placeholders.viewMode')}
               value={viewMode}
@@ -900,8 +902,8 @@ const PermissionConfiguration = () => {
               ]}
             />
           </Col>
-          <Col xs={24} md={4} className="text-right">
-            <Space>
+          <Col xs={24} className="text-right">
+            <Space wrap>
               <Button onClick={handleInitPermissions} loading={saving}>
                 {t('permissions.buttons.init')}
               </Button>
