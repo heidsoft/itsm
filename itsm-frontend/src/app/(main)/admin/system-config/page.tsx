@@ -486,8 +486,8 @@ export default function SystemConfiguration() {
 
       {/* 系统状态统计 */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm border border-gray-200">
+        <Col xs={24} sm={12} xl={6}>
+          <Card className="h-full rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title="系统运行时间"
               value={systemStats ? formatUptime(systemStats.uptime) : '—'}
@@ -496,8 +496,8 @@ export default function SystemConfiguration() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm border border-gray-200">
+        <Col xs={24} sm={12} xl={6}>
+          <Card className="h-full rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title="Goroutine 数"
               value={systemStats?.goroutines ?? 0}
@@ -506,8 +506,8 @@ export default function SystemConfiguration() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm border border-gray-200">
+        <Col xs={24} sm={12} xl={6}>
+          <Card className="h-full rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title="CPU 核心数"
               value={systemStats?.cores ?? 0}
@@ -516,8 +516,8 @@ export default function SystemConfiguration() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="rounded-lg shadow-sm border border-gray-200">
+        <Col xs={24} sm={12} xl={6}>
+          <Card className="h-full rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-gray-500">内存使用率</div>
