@@ -578,6 +578,8 @@ POST /tickets/workflow/reopen
 工单 id 在请求体 `ticketId` 中，不在路径里。权限码按工单动作而非流程定义管理授予：
 accept/forward/cc 需 `ticket:assign`，approve/reject 需 `ticket:approve`，resolve 需
 `ticket:resolve`，close/reopen 需 `ticket:close`，withdraw 需 `ticket:update`。
+申请人调用 approve 或 reject 返回 HTTP 403、业务码 2003。独立 reject 在绑定流程时校验当前审批任务归属，已有认领人时仅允许该人操作；未绑定流程时按当前级别的待审记录判断。绑定流程缺少可操作审批任务时返回 409。拒绝请求不修改工单、审批记录或流转历史。
+
 `workflow:read`/`workflow:write` 的目录语义是流程定义管理（含发布流程模板），不再守这组路由。
 
 ### 获取工单评论

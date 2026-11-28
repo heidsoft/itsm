@@ -137,6 +137,10 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 		return err
 	}
 
+	if err := requireIndependentTicketApprover(tk, userID); err != nil {
+		return err
+	}
+
 	// 更新工单状态
 	returnToStatus := "rejected"
 	if req.ReturnToStatus != nil {
@@ -161,6 +165,10 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 	}()
 
 	txClient := tx.Client()
+	txErr = s.checkTicketRejectionOwner(ctx, txClient, tk.ID, userID, tenantID)
+	if txErr != nil {
+		return txErr
+	}
 
 	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
 		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(tk.Version)).
@@ -193,6 +201,51 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 		return fmt.Errorf("提交驳回事务失败: %w", txErr)
 	}
 	return txErr
+}
+
+func requireIndependentTicketApprover(tk *ent.Ticket, userID int) error {
+	if tk.RequesterID == userID {
+		return common.NewBusinessError(common.ForbiddenCode, "申请人不能审批自己的工单", "")
+	}
+	return nil
+}
+
+// checkTicketRejectionOwner uses the active BPMN task when a process is bound.
+// Unbound legacy tickets use the pending approvers at the current level.
+func (s *TicketWorkflowService) checkTicketRejectionOwner(ctx context.Context, client *ent.Client, ticketID, userID, tenantID int) error {
+	lookup, err := s.approvalBridge.findPendingApprovalTaskWithClient(ctx, client, tenantID, string(dto.BusinessTypeTicket), ticketID)
+	if err != nil {
+		return err
+	}
+	if lookup.bound {
+		if lookup.task == nil || isLifecycleTask(lookup.task) {
+			return bpmnApprovalNotActionable(string(dto.BusinessTypeTicket), ticketID)
+		}
+		actorCtx := context.WithValue(ctx, bpmn.BPMNUserIDContextKey, userID)
+		engine := &CustomProcessEngine{logger: s.logger}
+		return engine.authorizeTaskActorWithClient(actorCtx, client, lookup.task)
+	}
+
+	pending := client.TicketApproval.Query().Where(
+		ticketapproval.TenantID(tenantID),
+		ticketapproval.TicketID(ticketID),
+		ticketapproval.Status(string(dto.ApprovalStatusPending)),
+	)
+	current, err := pending.Clone().Order(ent.Asc(ticketapproval.FieldLevel)).First(ctx)
+	if ent.IsNotFound(err) {
+		return common.NewBusinessError(common.ForbiddenCode, "当前用户没有待处理的工单审批", "")
+	}
+	if err != nil {
+		return err
+	}
+	allowed, err := pending.Where(ticketapproval.Level(current.Level), ticketapproval.ApproverID(userID)).Exist(ctx)
+	if err != nil {
+		return err
+	}
+	if !allowed {
+		return common.NewBusinessError(common.ForbiddenCode, "当前用户不是当前级别的审批人", "")
+	}
+	return nil
 }
 
 // WithdrawTicket 撤回工单
@@ -469,6 +522,10 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 
 	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
+		return err
+	}
+
+	if err := requireIndependentTicketApprover(tk, userID); err != nil {
 		return err
 	}
 
@@ -1183,10 +1240,10 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 	// closed 是状态机终态，不再提供重开动作（与 IsValidTicketStatusTransition 对齐）
 
 	// 检查审批权限
-	if approvalStatus != nil && *approvalStatus == dto.ApprovalStatusPending {
+	if tk.RequesterID != userID && approvalStatus != nil && *approvalStatus == dto.ApprovalStatusPending {
 		// 检查当前用户是否是当前审批级别的审批人
 		for _, a := range approvals {
-			if a.Level == currentLevelVal(state) && a.ApproverID == userID {
+			if a.Level == currentLevelVal(state) && a.ApproverID == userID && a.Status == string(dto.ApprovalStatusPending) {
 				state.CanApprove = true
 				state.AvailableActions = append(state.AvailableActions,
 					dto.WorkflowActionApprove,
