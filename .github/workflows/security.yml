@@ -192,6 +192,6 @@ jobs:
       # 钉住 release tag：@main 是浮动分支，上游一次合并就改变扫描行为，
       # 且 `uses: ...@main` 无法回答「这次扫描跑的是哪个版本」。
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@v3.99.7
+        uses: trufflesecurity/trufflehog@v3.99.8
         with:
           path: ./
