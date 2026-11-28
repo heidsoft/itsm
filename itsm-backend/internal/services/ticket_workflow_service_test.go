@@ -571,8 +571,13 @@ func TestTicketWorkflowService_RejectTicket_GuardsAndWhitelist(t *testing.T) {
 	user, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "rj")
 	require.NoError(t, err)
 
+	requester, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "rj-requester")
+	require.NoError(t, err)
+
 	// 默认目标 rejected：状态机已补齐可达性（new/open/assigned/in_progress/pending → rejected）
-	tk, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "new")
+	tk, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, requester.ID, "new")
+	require.NoError(t, err)
+	_, err = client.TicketApproval.Create().SetTicketID(tk.ID).SetTenantID(tenant.ID).SetLevel(1).SetLevelName("审批").SetApproverID(user.ID).SetStatus("pending").Save(ctx)
 	require.NoError(t, err)
 	require.NoError(t, service.RejectTicket(ctx, &dto.RejectTicketRequest{TicketID: tk.ID, Reason: "r", Comment: "c"}, user.ID, tenant.ID))
 	fresh, err := client.Ticket.Get(ctx, tk.ID)
@@ -581,13 +586,13 @@ func TestTicketWorkflowService_RejectTicket_GuardsAndWhitelist(t *testing.T) {
 	assert.Equal(t, tk.Version+1, fresh.Version)
 
 	// closed 是终态，不可驳回
-	closed, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "closed")
+	closed, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, requester.ID, "closed")
 	require.NoError(t, err)
 	err = service.RejectTicket(ctx, &dto.RejectTicketRequest{TicketID: closed.ID, Reason: "r", Comment: "c"}, user.ID, tenant.ID)
 	assertWorkflowConflict(t, err, common.ConflictCode)
 
 	// 客户端指定白名单外目标（new → closed）必须冲突
-	tk2, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "new")
+	tk2, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, requester.ID, "new")
 	require.NoError(t, err)
 	badTarget := "closed"
 	err = service.RejectTicket(ctx, &dto.RejectTicketRequest{TicketID: tk2.ID, Reason: "r", Comment: "c", ReturnToStatus: &badTarget}, user.ID, tenant.ID)

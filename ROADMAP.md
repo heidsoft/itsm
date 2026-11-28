@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-11-27（v1.6.61 发布：本批合并 #131 AI 工具写路径行级范围、#132 Run Manifest 骨架、#135 CMDB 审计 13 项收口、#136 飞书入站 HITL 与商业边界记录；版本面同步至 v1.6.61，未部署生产）。上次同步 2026-11-25（本批能力—场景对应修复：能力域归属映射守卫接入、scenario8 正名；docs-gate 实测 8/8 通过。上次同步 2026-11-24 的版本口径对账：tag / CHANGELOG 最新发布 / 后端兜底 / 前端包 / 示例环境 / 治理文档 / GA readiness / swagger / MCP 兜底 / K8s 示例标签统一至 v1.6.60；RAG 评测阈值表述修正为 ≥0.8；README Go 版本对齐 go.mod 1.26.10）。上次同步 2026-11-15（F1 收口补全：关闭工单的收敛点从「详情页 handler」下移到工单域 service 层，`CloseTicket` / `UpdateStatus(closed)` 同事务终止 BPMN 实例；同时更正 2026-11-14 记录里「F1 已修复」的过宽结论——原修复只覆盖 `POST /tickets/workflow/close` 一条路径。飞书同步关闭与 F2 剩余一半（triage 缓存回放带 `accepted`）落在在途 connectors / AI 审计批次，未在本批修改，已登记为已知缺口）。上次同步 2026-11-08（事实漂移修正：「当前未发布改进」同步至 CHANGELOG [Unreleased] 最新口径；「当前收敛项」过期「剩余」改写为真实阻断；v1.7 两项提前收口在正文勾选。service/ 迁移收口条目仍待团队评审，本批不登记）。上次同步 2026-11-03：应用市场交付语义闭环并晋升「可用」，能力矩阵 `marketplace` 行同步摘除 pilotReason。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
+> what is parked.** Updated as part of every release. Last synced: 2026-11-28（企业质量治理首轮登记，覆盖工单职责分离、流转权限和状态投影验收）。上次同步 2026-11-27（v1.6.61 发布：本批合并 #131 AI 工具写路径行级范围、#132 Run Manifest 骨架、#135 CMDB 审计 13 项收口、#136 飞书入站 HITL 与商业边界记录；版本面同步至 v1.6.61，未部署生产）。上次同步 2026-11-25（本批能力—场景对应修复：能力域归属映射守卫接入、scenario8 正名；docs-gate 实测 8/8 通过。上次同步 2026-11-24 的版本口径对账：tag / CHANGELOG 最新发布 / 后端兜底 / 前端包 / 示例环境 / 治理文档 / GA readiness / swagger / MCP 兜底 / K8s 示例标签统一至 v1.6.60；RAG 评测阈值表述修正为 ≥0.8；README Go 版本对齐 go.mod 1.26.10）。上次同步 2026-11-15（F1 收口补全：关闭工单的收敛点从「详情页 handler」下移到工单域 service 层，`CloseTicket` / `UpdateStatus(closed)` 同事务终止 BPMN 实例；同时更正 2026-11-14 记录里「F1 已修复」的过宽结论——原修复只覆盖 `POST /tickets/workflow/close` 一条路径。飞书同步关闭与 F2 剩余一半（triage 缓存回放带 `accepted`）落在在途 connectors / AI 审计批次，未在本批修改，已登记为已知缺口）。上次同步 2026-11-08（事实漂移修正：「当前未发布改进」同步至 CHANGELOG [Unreleased] 最新口径；「当前收敛项」过期「剩余」改写为真实阻断；v1.7 两项提前收口在正文勾选。service/ 迁移收口条目仍待团队评审，本批不登记）。上次同步 2026-11-03：应用市场交付语义闭环并晋升「可用」，能力矩阵 `marketplace` 行同步摘除 pilotReason。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
@@ -103,6 +103,8 @@ Concretely that means:
 
 ### 已落地
 
+- 工单审批职责分离（PQ-01）。流转审批拦截申请人自审，独立驳回校验审批任务归属或当前级别的待审资格。真实 Gin 路由与隔离 SQLite 回归验证拒绝无业务写入。
+
 - [x] **TicketType 平台化** — 类型持久化、动态字段、创建快照、Preset Library、归档恢复和管理 UI。
 - [x] **统一绑定解析** — Ticket 创建从已解析 TicketType 执行 Workflow、SLA 与 Assignment。
 - [x] **权限与审计** — TicketType 独立管理/归档/Preset 安装权限，ACL manifest 覆盖；Preset 安装、归档恢复和绑定变更独立审计。
@@ -151,6 +153,8 @@ Concretely that means:
 
 
 ### 当前收敛项
+
+- 工单职责分离及写入权限收敛。首轮按 [企业质量治理整改队列](docs/audits/remediation-backlog.md#2026-11-28-质量治理增量) 跟踪审批与详情状态投影的证据和验收。
 
 > 2026-09-12 复核：以下各项均按“已完成部分 / 剩余缺口”标注，避免把部分进展误读为闭环。
 

@@ -155,3 +155,9 @@ Playwright 已配置（`playwright.config.ts:17-121`，`webServer: npm run dev`�
 视口：1440×900、820×1180、390×844 三档，禁用态差异在三档一致；暗色菜单文本因各档首个非选中项状态不同，采样值有差异，但均不再使用旧硬编码色。截图：`/tmp/ui-before2-dark.png`、`/tmp/ui-after2-dark.png`（会话临时目录，非仓库产物）。
 
 回归：`select-option-states.test.ts` 3 例；type-check、三个静态门禁均 exit 0。
+
+## 2026-11-28 设计系统治理补充
+
+保留 Ant Design、现有设计 token 与 `src/components/ui/design-system.css`。从主布局和页面容器统一面包屑及标题，服务请求页面核对布局导航与页面 Tab 的职责。弹窗统一约束视口，内容区滚动，底部操作可达；复杂配置评估 Drawer 或独立页。下拉层级、聚焦返回与键盘操作在实际容器验收。
+
+视觉验收同时覆盖多重滚动、卡片嵌套、间距字号、预览标签与菜单箭头、禁用态、列宽与固定列、技术编码及英文残留、页面切换滚动位置，以及加载、空、失败、无权限状态。状态标签对应 [工单领域模型](../architecture/ticket-domain-model.md)。浏览器证据和分辨率见 [验收矩阵](../acceptance/e2e-acceptance-matrix.md)。

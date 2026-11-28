@@ -69,7 +69,7 @@ func (h *Handler) RejectTicket(c *gin.Context) {
 	err := h.workflowService.RejectTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to reject ticket", "error", err, "ticket_id", req.TicketID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "驳回失败")
 		return
 	}
 

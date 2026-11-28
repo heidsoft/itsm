@@ -24,12 +24,14 @@ import (
 func createBridgeTestTicketWithApproval(t *testing.T, client *ent.Client, tenantID, approverID int, suffix string) (*ent.Ticket, *ent.TicketApproval) {
 	t.Helper()
 	ctx := context.Background()
+	requester, err := createTicketWorkflowTestUser(ctx, client, tenantID, "requester-"+suffix)
+	require.NoError(t, err)
 	tk, err := client.Ticket.Create().
 		SetTitle("Bridge Approval Ticket " + suffix).
 		SetStatus("pending").
 		SetPriority("medium").
 		SetTicketNumber("BRG-TKT-" + suffix).
-		SetRequesterID(approverID).
+		SetRequesterID(requester.ID).
 		SetTenantID(tenantID).
 		Save(ctx)
 	require.NoError(t, err)

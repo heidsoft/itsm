@@ -72,3 +72,9 @@ after evidence is archived and rollback no longer requires legacy runtime writer
 - new unregistered approval writer fails CI;
 - no runtime writer is deleted and no in-flight instance is migrated in PR-0;
 - PR-0.5 and PR-1 reference this contract for template ownership and service-request binding.
+
+## 治理补充
+
+`internal/bpmntemplates/bpmn` 包含变更、紧急事件、问题、发布和服务请求五个 `_cn` 变体。按租户核对技术编码、版本、部署、节点与策略差异、默认绑定以及活跃和历史引用，再决定推荐范围。展示名可本地化，内部编码及历史实例链接保持稳定。
+
+每个审批节点以部署版本的配置确定参与人和会签、或签、拒绝策略，任务及投票记录保留运行时证据。审批链模板用于配置和显式绑定。工单原始申请人身份在业务数据上做职责分离判定。暂停、恢复、终止、重试、超时与任务完成分别核对流程状态、业务状态、审计及重复执行结果。

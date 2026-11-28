@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Fix（PQ-01）**：工单申请人不能通过流转审批接口自审，审批动作投影同步隐藏自审操作。独立驳回要求当前 BPMN 审批任务归属，未绑定流程时要求当前审批级别的待审资格。
+
 - **Fix**：共享弹窗 shell 的视口高度边界——Ant Design v6 默认 `top:100px` 且不限高，`1280×720` 下「新建菜单项」弹窗底边落到 745px、页脚保存/取消按钮掉出视口（实测 `body overflow=visible`、不可滚动）。`globals.css` 给 `.ant-modal` / `.ant-modal-container` 加 `max-height: calc(100dvh - 128px)`（含 `vh` 回退），`.ant-modal-body` 承担滚动、header/footer 不压缩，`max-height:640px` 时切换到 16px 顶距。真实浏览器复测：弹窗底边 745→692、页脚完整可见、表单区可滚动，下拉框 portal 仍在视口内；新增 `tests/e2e/admin-modal-viewport.spec.ts` 锁定几何与下拉不被裁剪。**未处理**：权限页角色标签逐字换行／工具栏溢出、能力矩阵长标识断行、系统配置卡片高度差属另一根因（Ant `.ant-typography word-break:break-word` + flex shrink），留待下一轮单独评审。未改后端、未部署。
 - **Fix**：共享排版/工具栏窄视口塌缩（1280×720 / 1024×768 实测）——权限页「选择角色：」被 antd `.ant-typography{word-break:break-word}` 逐字折成 16×114px，角色 Select 固定 `minWidth:200` 又把 `Col md=6` 挤爆，动作按钮列 `scrollWidth 337 > clientWidth 160` 溢出卡片。新增共享 `field-label` / `code-token` 排版类（不逐字符折行，`html` 前缀覆盖 antd 运行时样式，无 `!important`），权限页改为响应式 Col（`md=12/xl=8` 给筛选、`xs=24` 给动作整行 + `Space wrap`），Select 由固定 200px 改为 `flex:1;minWidth:0`。能力矩阵首列实测被 auto 布局压到 30px、`serviceRequest` 竖排成 13×306px；改 `tableLayout=fixed` + `scroll.x=1080` + 首列 `capability-key-cell min-width:260px` + 说明列 320px，横向滚动收进表格内部，表格不再把溢出推给页面主体（页头在 1024 仍有既存 48px 溢出，属另一根因，本轮未改）。新增 Playwright 回归 `admin-toolbar-typography.spec.ts`；未触及后端/权限/数据，未改系统配置卡片高度（属另一根因）。
 

@@ -225,7 +225,7 @@ func TestHandler_ApproveTicket_UnboundFallsBackToApprovalChain(t *testing.T) {
 			tenantB := env.createTenant(t, "unbound-b")
 			actor := env.createUser(t, tenantA, "approver-"+tc.action)
 			delegatee := env.createUser(t, tenantA, "delegatee-"+tc.action)
-			ticketID := env.createTicket(t, tenantA, actor, "pending")
+			ticketID := env.createTicket(t, tenantA, env.createUser(t, tenantA, "requester"), "pending")
 			approvalID := env.createApproval(t, tenantA, ticketID, actor, "pending")
 
 			payload := fmt.Sprintf(
@@ -288,7 +288,7 @@ func TestHandler_ApproveTicket_BoundWithoutActionableTaskIsConflict(t *testing.T
 			tenantID := env.createTenant(t, "bound")
 			actor := env.createUser(t, tenantID, "approver-"+action)
 			delegatee := env.createUser(t, tenantID, "delegatee-"+action)
-			ticketID := env.createTicket(t, tenantID, actor, "pending")
+			ticketID := env.createTicket(t, tenantID, env.createUser(t, tenantID, "requester"), "pending")
 			approvalID := env.createApproval(t, tenantID, ticketID, actor, "pending")
 			taskID := env.createBPMNFixture(t, tenantID, ticketID, actor, true)
 
@@ -502,7 +502,7 @@ func TestHandler_ApproveTicket_E2E_Approve(t *testing.T) {
 	env := setupE2E(t)
 	tenantID := env.createTenant(t, "approve")
 	actorID := env.createUser(t, tenantID, "approver")
-	ticketID := env.createTicket(t, tenantID, actorID, "pending")
+	ticketID := env.createTicket(t, tenantID, env.createUser(t, tenantID, "requester"), "pending")
 	approvalID := env.createApproval(t, tenantID, ticketID, actorID, "pending")
 	taskID := env.createBPMNFixture(t, tenantID, ticketID, actorID, true)
 
@@ -550,7 +550,7 @@ func TestHandler_ApproveTicket_E2E_Reject(t *testing.T) {
 	env := setupE2E(t)
 	tenantID := env.createTenant(t, "reject")
 	actorID := env.createUser(t, tenantID, "rejecter")
-	ticketID := env.createTicket(t, tenantID, actorID, "pending")
+	ticketID := env.createTicket(t, tenantID, env.createUser(t, tenantID, "requester"), "pending")
 	approvalID := env.createApproval(t, tenantID, ticketID, actorID, "pending")
 	taskID := env.createBPMNFixture(t, tenantID, ticketID, actorID, true)
 
@@ -597,7 +597,7 @@ func TestHandler_ApproveTicket_E2E_Delegate(t *testing.T) {
 	tenantID := env.createTenant(t, "delegate")
 	actorID := env.createUser(t, tenantID, "delegator")
 	delegateeID := env.createUser(t, tenantID, "delegatee")
-	ticketID := env.createTicket(t, tenantID, actorID, "pending")
+	ticketID := env.createTicket(t, tenantID, env.createUser(t, tenantID, "requester"), "pending")
 	approvalID := env.createApproval(t, tenantID, ticketID, actorID, "pending")
 	taskID := env.createBPMNFixture(t, tenantID, ticketID, actorID, true)
 
@@ -652,7 +652,7 @@ func TestHandler_ApproveTicket_E2E_CrossTenantRejected(t *testing.T) {
 	actorA := env.createUser(t, tenantA, "actor-a")
 	actorB := env.createUser(t, tenantB, "actor-b")
 
-	ticketID := env.createTicket(t, tenantA, actorA, "pending")
+	ticketID := env.createTicket(t, tenantA, env.createUser(t, tenantA, "requester"), "pending")
 	approvalID := env.createApproval(t, tenantA, ticketID, actorA, "pending")
 	env.createBPMNFixture(t, tenantA, ticketID, actorA, true)
 
