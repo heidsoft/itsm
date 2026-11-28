@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
 	"net/http"
 	"strings"
@@ -11,9 +12,13 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
+	entrole "itsm-backend/ent/role"
+	"itsm-backend/ent/user"
+	"itsm-backend/internal/bpmncontracts"
 )
 
 // ---------------------------------------------------------------------------
@@ -265,6 +270,11 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 		// 响应文案（classifyError 只回显最外层 AppError.Message）。
 		return nil, common.NewValidationError(fmt.Sprintf("候选流程策略校验失败: %v", err), nil)
 	}
+	// 空审批组引用必须在开事务前阻断：被引用组零成员时流程照常发布、任务照常
+	// 创建，但 ExpandGroupsToUsers 恒返回空 → 永远无人可批且无报错。
+	if err := validatePublishApprovalReadiness(ctx, s.client, tenantID, req.BPMNXML); err != nil {
+		return nil, err
+	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("开始发布事务失败: %w", err)
@@ -430,6 +440,14 @@ func (s *bpmnProcessDefinitionService) SetProcessDefinitionActive(ctx context.Co
 		if err := validateActivatableBPMNXML(string(definition.BpmnXML)); err != nil {
 			return err
 		}
+		tenantID, err := requireBPMNTenantContext(ctx)
+		if err != nil {
+			return err
+		}
+		// 与发布共用同一守卫：停用后重新激活同样不能放过空审批组引用。
+		if err := validatePublishApprovalReadiness(ctx, s.client, tenantID, string(definition.BpmnXML)); err != nil {
+			return err
+		}
 	}
 
 	_, err = s.client.ProcessDefinition.UpdateOne(definition).
@@ -534,6 +552,178 @@ func validateActivatableBPMNXML(bpmnXML string) error {
 	// 具体问题必须进 Message：classifyError 只回显最外层 AppError.Message，
 	// 放进 Err 会让用户只看到「校验失败」而不知道改哪里。
 	return common.NewValidationError(fmt.Sprintf("BPMN 发布校验失败: %s", strings.Join(messages, "；")), nil)
+}
+
+// ---------------------------------------------------------------------------
+// 发布期审批人就绪守卫
+//
+// 组名是审批人解析键而非展示名：BPMN userTask 的 candidateGroups 在流程实例化时
+// 落库到 process_task.candidate_groups，运行时由 service/bpmn.GroupResolver 的
+// ExpandGroupsToUsers 按组名精确展开。组存在但零成员（成员可被单独移除，不触发
+// 组级改名/删除守卫）时展开结果为空，流程照常发布、任务照常创建，却永远无人可批。
+//
+// 这里做与运行时逐条对齐的反向诊断：待发布 XML 里每个显式声明候选组的 userTask，
+// 是否至少能解析出一个审批人。判定口径见 approversForGroupName 的注释；不另立
+// 一套「谁算审批人」的规则，否则会误拦可审批流程或漏放空审批人流程。
+// ---------------------------------------------------------------------------
+
+// approvalReadinessIssue 描述一个解析不到审批人的候选组引用。
+type approvalReadinessIssue struct {
+	NodeID    string
+	GroupName string
+	Reason    string
+}
+
+// splitApprovalCSVTokens 按运行时 GroupResolver.splitCSV 的口径分割 CSV：
+// 逗号分隔 + 逐项 TrimSpace + 丢弃空项。
+func splitApprovalCSVTokens(s string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	var out []string
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// approversForGroupName 判断 groupName 在本租户内能否解析出审批人，并给出不可解析的原因。
+//
+// 与运行时 ExpandGroupsToUsers 严格对齐：
+//   - 组存在 → 只取 Edges.Members（即使为空也**不**回退角色，运行时 found[name]=true
+//     会直接跳过角色分支）；
+//   - 组不存在 → 尝试同名 role.code 回退，活跃用户口径复刻 resolveRoleUsers：
+//     user.ActiveEQ(true) ∧ (M2M HasRolesWith ∪ 主角色枚举 RoleEQ)。
+//
+// 严格限定 tenantID，避免他租户同名组/角色被误当作本租户的合格审批人。
+func approversForGroupName(ctx context.Context, client *ent.Client, tenantID int, name string) (bool, string, error) {
+	groups, err := client.Group.Query().
+		Where(group.TenantID(tenantID), group.Name(name)).
+		WithMembers().
+		All(ctx)
+	if err != nil {
+		return false, "", fmt.Errorf("查询审批组 %s 失败: %w", name, err)
+	}
+	if len(groups) > 0 {
+		for _, g := range groups {
+			if len(g.Edges.Members) > 0 {
+				return true, "", nil
+			}
+		}
+		return false, "组存在但无成员（运行时不回退角色）", nil
+	}
+
+	roles, err := client.Role.Query().
+		Where(entrole.TenantID(tenantID), entrole.Code(name)).
+		All(ctx)
+	if err != nil {
+		return false, "", fmt.Errorf("查询回退角色 %s 失败: %w", name, err)
+	}
+	for _, r := range roles {
+		users, err := client.User.Query().
+			Where(
+				user.TenantIDEQ(tenantID),
+				user.ActiveEQ(true),
+				user.Or(
+					user.HasRolesWith(entrole.IDEQ(r.ID)),
+					user.RoleEQ(user.Role(r.Code)),
+				),
+			).
+			Select(user.FieldID).
+			All(ctx)
+		if err != nil {
+			return false, "", fmt.Errorf("查询角色 %s 活跃用户失败: %w", name, err)
+		}
+		if len(users) > 0 {
+			return true, "", nil
+		}
+	}
+	return false, "组不存在，且无同名角色可回退或该角色无活跃用户", nil
+}
+
+// inspectPublishApprovalReadiness 反向诊断待发布 XML 的审批组就绪状态。
+//
+// 跳过三类节点（发布期无法静态判定或已有显式审批人，静态拦截会误伤）：
+//  1. 显式 assignee 或 candidateUsers；
+//  2. approvalLevel > 0（审批人运行时由 approval_plan 变量按层级解析）；
+//  3. 未声明 candidateGroups（分配语义可能来自脚本/动态变量）。
+//
+// 失败关闭：XML 无法解析时返回 error，调用方必须拒绝发布，不能因解析失败而放行。
+func inspectPublishApprovalReadiness(ctx context.Context, client *ent.Client, tenantID int, bpmnXML string) ([]approvalReadinessIssue, error) {
+	if client == nil || tenantID <= 0 || strings.TrimSpace(bpmnXML) == "" {
+		return nil, nil
+	}
+	var parsed bpmncontracts.BPMNDefinitions
+	if err := xml.Unmarshal([]byte(bpmnXML), &parsed); err != nil {
+		return nil, fmt.Errorf("审批人就绪校验无法解析 BPMN XML: %w", err)
+	}
+
+	var issues []approvalReadinessIssue
+	seen := make(map[string]struct{})
+	for _, proc := range parsed.Processes {
+		if proc == nil {
+			continue
+		}
+		for _, task := range proc.UserTasks {
+			if task == nil {
+				continue
+			}
+			if strings.TrimSpace(task.Assignee) != "" || strings.TrimSpace(task.CandidateUsers) != "" || task.ApprovalLevel > 0 {
+				continue
+			}
+			for _, name := range splitApprovalCSVTokens(task.CandidateGroups) {
+				hasApprover, reason, err := approversForGroupName(ctx, client, tenantID, name)
+				if err != nil {
+					return nil, err
+				}
+				if hasApprover {
+					continue
+				}
+				key := task.ID + "\x00" + name
+				if _, dup := seen[key]; dup {
+					continue
+				}
+				seen[key] = struct{}{}
+				issues = append(issues, approvalReadinessIssue{
+					NodeID:    task.ID,
+					GroupName: name,
+					Reason:    reason,
+				})
+			}
+		}
+	}
+	return issues, nil
+}
+
+// validatePublishApprovalReadiness 是发布/激活路径的统一守卫入口。
+// 409 语义与同文件 DeleteProcessDefinition 的冲突口径一致；具体节点/组名/原因
+// 进 AppError.Message，common.RespondError 会原样透传，用户侧可直接定位修复点。
+func validatePublishApprovalReadiness(ctx context.Context, client *ent.Client, tenantID int, bpmnXML string) error {
+	issues, err := inspectPublishApprovalReadiness(ctx, client, tenantID, bpmnXML)
+	if err != nil {
+		// 失败关闭：无法确认审批人是否为空时拒绝发布。
+		return common.NewAppError(
+			common.ErrCodeConflict,
+			"发布前审批人就绪校验失败："+err.Error()+"；请修正流程定义后重试。",
+			http.StatusConflict, nil,
+		)
+	}
+	if len(issues) == 0 {
+		return nil
+	}
+	parts := make([]string, 0, len(issues))
+	for _, issue := range issues {
+		parts = append(parts, fmt.Sprintf("节点 [%s] 候选组 [%s] 解析不到任何审批人（%s）", issue.NodeID, issue.GroupName, issue.Reason))
+	}
+	return common.NewAppError(
+		common.ErrCodeConflict,
+		fmt.Sprintf("发布前审批人就绪校验失败：%s。请为该组添加成员，或改用有成员的角色/组后再发布。", strings.Join(parts, "；")),
+		http.StatusConflict, nil,
+	)
 }
 
 // rejectImmutableXMLChange 拦截对「已发布或已被实例引用」的流程定义的原行 XML 替换。
