@@ -73,7 +73,6 @@ incident_alerting_service.go
 incident_monitoring_service.go
 incident_rule_engine.go
 incident_service.go
-knowledge_integration_service.go
 knowledge_service.go
 legacy_approval_migration_service.go
 llm_gateway.go
