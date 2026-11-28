@@ -3,7 +3,9 @@ package group
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/group"
@@ -80,17 +82,22 @@ func (s *GroupService) ListGroups(ctx context.Context, req *dto.ListGroupsReques
 // UpdateGroup 更新组
 func (s *GroupService) UpdateGroup(ctx context.Context, id int, req *dto.UpdateGroupRequest, tenantID int) (*ent.Group, error) {
 	// 先检查组是否存在且属于当前租户
-	exists, err := s.client.Group.Query().
+	existing, err := s.client.Group.Query().
 		Where(
 			group.IDEQ(id),
 			group.TenantIDEQ(tenantID),
 		).
-		Exist(ctx)
+		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询组失败: %w", err)
-	}
-	if !exists {
 		return nil, fmt.Errorf("组不存在或无权访问")
+	}
+
+	// 组名是审批人解析键（BPMN candidateGroups / 审批链 group:<name>）。
+	// 改名会让被引用组的候选审批人静默变空，属于审批绕过，必须先阻断。
+	if req.Name != "" && req.Name != existing.Name {
+		if err := s.assertNotReferenced(ctx, tenantID, existing.Name, "改名"); err != nil {
+			return nil, err
+		}
 	}
 
 	update := s.client.Group.UpdateOneID(id)
@@ -111,17 +118,19 @@ func (s *GroupService) UpdateGroup(ctx context.Context, id int, req *dto.UpdateG
 // DeleteGroup 删除组
 func (s *GroupService) DeleteGroup(ctx context.Context, id, tenantID int) error {
 	// 检查组是否存在且属于当前租户
-	exists, err := s.client.Group.Query().
+	existing, err := s.client.Group.Query().
 		Where(
 			group.IDEQ(id),
 			group.TenantIDEQ(tenantID),
 		).
-		Exist(ctx)
+		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("查询组失败: %w", err)
-	}
-	if !exists {
 		return fmt.Errorf("组不存在或无权访问")
+	}
+
+	// 组名是审批人解析键，删除被引用组会让候选审批人静默变空，必须先阻断。
+	if err := s.assertNotReferenced(ctx, tenantID, existing.Name, "删除"); err != nil {
+		return err
 	}
 
 	// 删除组（会自动清除关联）
@@ -130,6 +139,31 @@ func (s *GroupService) DeleteGroup(ctx context.Context, id, tenantID int) error 
 		return fmt.Errorf("删除组失败: %w", err)
 	}
 	return nil
+}
+
+// assertNotReferenced 断言组名未被本租户的审批配置引用；被引用则以 409 阻断，
+// 并在用户可见的 message 中列出引用位置，便于管理员先调整流程/审批链再变更组。
+func (s *GroupService) assertNotReferenced(ctx context.Context, tenantID int, groupName, action string) error {
+	refs, err := findGroupReferences(ctx, s.client, tenantID, groupName)
+	if err != nil {
+		// 无法确认引用面时失败关闭：拒绝变更，避免坏 XML 绕过守卫。
+		return common.NewStateConflictError(
+			fmt.Sprintf("无法确认审批组 %q 的引用情况，已阻止%s以保证审批链安全", groupName, action),
+			err.Error(),
+		)
+	}
+	if len(refs) == 0 {
+		return nil
+	}
+	var parts []string
+	for _, r := range refs {
+		parts = append(parts, fmt.Sprintf("%s:%s(节点 %s)", r.Kind, r.RefKey, r.NodeID))
+	}
+	return common.NewStateConflictError(
+		fmt.Sprintf("审批组 %q 已被 %d 处审批配置引用，不能%s；请先修改引用后再操作：%s",
+			groupName, len(refs), action, strings.Join(parts, "、")),
+		"",
+	)
 }
 
 // AddUserToGroup 添加用户到组
