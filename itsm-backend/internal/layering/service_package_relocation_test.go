@@ -222,9 +222,11 @@ func TestSPRGatesStayStrongAfterRelocation(t *testing.T) {
 		t.Error("C.6.4 缺少归位目录上界棘轮 measure（旧键归零后新目录将免检）")
 	}
 	pb := sprReadRepo(t, "scripts", "docs-gate", "product-surface-baseline.txt")
-	// 钉值随基线实测走：2026-11-25 权限批次补账后基线为 371（measure=ls internal/services/*.go 同口径），
-	// 旧钉值 332（7063011e5 登记时的实测）已过期；改基线值须同 commit 同步本钉值。
-	for _, needle := range []string{"service_go_files=0", "shared_services_go_files=372"} {
+	// 钉值随基线实测走：2026-11-28 空审批组发布守卫新增 internal/services/bpmn_publish_approval_readiness_test.go
+	// 后基线为 373（measure=ls internal/services/*.go 同口径）；此前 2026-11-25 权限批次补账后为 371、
+	// 2026-11-27 CMDB 审计回归锁并集后为 372。旧钉值 332（7063011e5 登记时的实测）已过期；
+	// 改基线值须同 commit 同步本钉值。
+	for _, needle := range []string{"service_go_files=0", "shared_services_go_files=373"} {
 		if !strings.Contains(pb, needle) {
 			t.Errorf("C.6.4 基线缺少 %q（不得留旧上界或漏登记新目录）", needle)
 		}
