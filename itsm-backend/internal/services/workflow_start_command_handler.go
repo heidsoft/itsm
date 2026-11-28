@@ -3,12 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processdefinition"
@@ -17,6 +19,7 @@ import (
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/internal/commandbus"
 
 	"go.uber.org/zap"
 )
@@ -162,7 +165,21 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 		if processKey == "" && h.resolver != nil {
 			// P1（issue #92）：变更域接入流程路由——payload 显式指定 >
 			// process_bindings 路由（按变更类型/风险等级）> 内置兜底。
-			routed, rerr := h.resolver.ResolveForChange(ctx, ch, "")
+			var departmentID int
+			if snapshot, ok := cmd.Payload[commandbus.ChangeRoutingDepartmentKey].(string); ok {
+				if id, parseErr := strconv.Atoi(snapshot); parseErr == nil && id > 0 {
+					exists, queryErr := h.client.Department.Query().
+						Where(department.IDEQ(id), department.TenantIDEQ(ch.TenantID), department.DeletedAtIsNil()).
+						Exist(ctx)
+					if queryErr != nil {
+						return fmt.Errorf("validate change routing department: %w", queryErr)
+					}
+					if exists {
+						departmentID = id
+					}
+				}
+			}
+			routed, rerr := h.resolver.ResolveForChange(ctx, ch, departmentID)
 			if rerr != nil {
 				return fmt.Errorf("resolve change workflow: %w", rerr)
 			}

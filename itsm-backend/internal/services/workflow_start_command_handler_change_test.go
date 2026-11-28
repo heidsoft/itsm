@@ -3,13 +3,16 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/processdefinition"
 	"itsm-backend/internal/commandbus"
 
 	"github.com/stretchr/testify/assert"
@@ -281,4 +284,74 @@ func TestWorkflowStart_ChangeRouting_TenantIsolation(t *testing.T) {
 	require.NoError(t, handler.Handle(ctx, cmdA))
 	require.Len(t, trigger.reqs, 1)
 	assert.Equal(t, "change_normal_flow", trigger.reqs[0].ProcessDefinitionKey)
+}
+
+func TestWorkflowStart_ChangeRouting_DepartmentSnapshot(t *testing.T) {
+	client, ctx := setupChangeWorkflowTest(t)
+	tenant, err := createRouteTestTenant(ctx, client, "dept-a")
+	require.NoError(t, err)
+	other, err := createRouteTestTenant(ctx, client, "dept-b")
+	require.NoError(t, err)
+	createDeployedDefinition(t, ctx, client, tenant.ID, "change_normal_flow")
+	departments := []struct {
+		code     string
+		tenantID int
+		deleted  bool
+	}{
+		{"ops", tenant.ID, false},
+		{"apps", tenant.ID, false},
+		{"foreign", other.ID, false},
+		{"deleted", tenant.ID, true},
+	}
+	ids := map[string]int{}
+	for _, fixture := range departments {
+		builder := client.Department.Create().SetName(fixture.code).SetCode(fixture.code).SetTenantID(fixture.tenantID)
+		if fixture.deleted {
+			builder.SetDeletedAt(time.Now())
+		}
+		dept, err := builder.Save(ctx)
+		require.NoError(t, err)
+		ids[fixture.code] = dept.ID
+		// Simulate also having stale/invalid rules in the current tenant.
+		createDeployedDefinition(t, ctx, client, tenant.ID, fixture.code)
+		_, err = client.ProcessBinding.Create().SetBusinessType("change").SetBusinessSubType("normal").
+			SetDepartmentID(dept.ID).SetTenantID(tenant.ID).SetProcessDefinitionKey(fixture.code).SetIsActive(true).Save(ctx)
+		require.NoError(t, err)
+	}
+
+	for _, tc := range []struct{ code, want string }{
+		{"ops", "ops"},
+		{"apps", "apps"},
+		{"foreign", "change_normal_flow"},
+		{"deleted", "change_normal_flow"},
+		{"legacy", "change_normal_flow"},
+	} {
+		t.Run(tc.code, func(t *testing.T) {
+			ch, err := createRouteTestChange(ctx, client, tenant.ID, "normal", "high")
+			require.NoError(t, err)
+			payload := map[string]interface{}{}
+			if id, ok := ids[tc.code]; ok {
+				payload[commandbus.ChangeRoutingDepartmentKey] = strconv.Itoa(id)
+			}
+			cmd, err := createRouteTestCommand(ctx, client, tenant.ID, ch.ID, payload)
+			require.NoError(t, err)
+			trigger := &fakeWorkflowTrigger{}
+			handler := NewWorkflowStartCommandHandler(client, trigger, NewProcessResolver(client, nil), zaptest.NewLogger(t).Sugar())
+			require.NoError(t, handler.Handle(ctx, cmd))
+			require.Len(t, trigger.reqs, 1)
+			assert.Equal(t, tc.want, trigger.reqs[0].ProcessDefinitionKey)
+			def, err := client.ProcessDefinition.Query().
+				Where(processdefinition.KeyEQ(tc.want), processdefinition.TenantIDEQ(tenant.ID)).Only(ctx)
+			require.NoError(t, err)
+			businessKey := fmt.Sprintf("change:%d", ch.ID)
+			_, err = client.ProcessInstance.Create().
+				SetProcessInstanceID(businessKey).SetBusinessKey(businessKey).
+				SetProcessDefinitionID(def.ID).SetProcessDefinitionKey(def.Key).
+				SetTenantID(tenant.ID).SetStatus("running").Save(ctx)
+			require.NoError(t, err)
+
+			require.NoError(t, handler.Handle(ctx, cmd))
+			require.Len(t, trigger.reqs, 1, "重试不得创建第二个流程")
+		})
+	}
 }

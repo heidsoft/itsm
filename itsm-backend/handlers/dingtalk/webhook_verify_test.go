@@ -5,6 +5,9 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -12,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/connector"
 	_ "itsm-backend/connector/builtin/dingtalk"
 
@@ -79,4 +83,37 @@ func TestWebhook_SignedEventAccepted(t *testing.T) {
 	req.Header.Set("Signature", signBody("secret-1", ts, []byte(body)))
 	router.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestWebhook_RejectsOversizedAndUnreadableBody(t *testing.T) {
+	router := newDingTalkRouter(t, "secret-1", "dt-inst-1")
+	for _, tc := range []struct {
+		name string
+		body io.Reader
+		want int
+	}{
+		{"oversized", strings.NewReader(strings.Repeat("x", 1<<20+1)), http.StatusRequestEntityTooLarge},
+		{"unreadable", unreadableCallbackBody{}, http.StatusBadRequest},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/api/v1/dingtalk/webhook/dt-inst-1", tc.body)
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+			require.Equal(t, tc.want, rec.Code)
+			var response struct {
+				Code    int    `json:"code"`
+				Message string `json:"message"`
+			}
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
+			require.Equal(t, common.ParamErrorCode, response.Code)
+			require.NotEmpty(t, response.Message)
+			require.NotContains(t, rec.Body.String(), "private callback read error")
+		})
+	}
+}
+
+type unreadableCallbackBody struct{}
+
+func (unreadableCallbackBody) Read([]byte) (int, error) {
+	return 0, errors.New("private callback read error")
 }

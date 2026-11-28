@@ -68,23 +68,17 @@ func (r *ProcessResolver) ResolveWithPriority(ctx context.Context, ticket *ent.T
 }
 
 // ResolveForChange 解析变更应使用的 BPMN 流程 Key（issue #92：变更域接入流程路由）。
-// 优先级：1. 请求/命令显式指定 2. process_bindings 路由
-// （business_sub_type = 变更类型 normal|standard|emergency，conditions 可按 risk_level/priority 匹配）
-// 3. 内置兜底（emergency → change_emergency_flow，其余 → change_normal_flow）。
+// 匹配当前租户内的部门、变更类型及条件规则，无匹配时使用对应内置流程。
 // 注意：路由命中返回的 key 不校验流程定义是否存在——由调用方（WorkflowStartCommandHandler）
 // 对非内置 key 做存在性校验并告警回退，避免租户误配导致 workflow.start 命令反复重试。
-func (r *ProcessResolver) ResolveForChange(ctx context.Context, ch *ent.Change, reqKey string) (string, error) {
-	// 优先级 1：请求参数显式指定
-	if reqKey != "" {
-		return reqKey, nil
-	}
-
+func (r *ProcessResolver) ResolveForChange(ctx context.Context, ch *ent.Change, departmentID int) (string, error) {
 	// 优先级 2：ProcessBinding 表路由（按变更类型匹配）
 	if r.routing != nil {
 		route, err := r.routing.FindBestRoute(ctx, &RoutingContext{
 			BusinessType:    string(dto.BusinessTypeChange),
 			BusinessSubType: ch.Type,
 			TenantID:        ch.TenantID,
+			DepartmentID:    departmentID,
 			Variables: map[string]interface{}{
 				"change_type": ch.Type,
 				"risk_level":  ch.RiskLevel,

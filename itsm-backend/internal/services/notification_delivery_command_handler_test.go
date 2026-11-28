@@ -18,6 +18,7 @@ import (
 	"itsm-backend/ent/ticket"
 	"itsm-backend/internal/commandbus"
 
+	baseent "entgo.io/ent"
 	"entgo.io/ent/dialect"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
@@ -107,6 +108,55 @@ func TestNotificationDeliveryHandlerCreatesInAppRecordsIdempotently(t *testing.T
 	require.Equal(t, "sent", deliveries[0].Status)
 }
 
+func TestNotificationDeliveryWorkerDoesNotTreatConstraintAsSuccessfulDelivery(t *testing.T) {
+	client, ctx, tenantID, userID, ticketID := notificationDeliveryFixture(t)
+	cmd, err := commandbus.Enqueue(ctx, client, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+		AggregateType: "ticket", AggregateID: ticketID, IdempotencyKey: "in-app-constraint",
+		Payload: map[string]interface{}{"ticketId": ticketID, "recipientId": userID, "type": "created", "channel": "in_app", "content": "待投递通知"},
+	})
+	require.NoError(t, err)
+	rejectDelivery := true
+	client.NotificationDelivery.Use(func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, mutation ent.Mutation) (ent.Value, error) {
+			if rejectDelivery && mutation.Op().Is(ent.OpCreate) {
+				return nil, &ent.ConstraintError{}
+			}
+			return next.Mutate(ctx, mutation)
+		})
+	})
+	registry := commandbus.NewRegistry()
+	handler := NewNotificationDeliveryCommandHandler(client, nil, zap.NewNop().Sugar())
+	require.NoError(t, registry.Register(commandbus.CommandDeliverNotification, handler.Handle))
+	worker := commandbus.NewWorker(client, registry, zap.NewNop().Sugar(), "notification-worker")
+
+	processed, err := worker.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, processed)
+	stored, err := client.OperationalCommand.Get(ctx, cmd.ID)
+	require.NoError(t, err)
+	require.Equal(t, commandbus.StatusPending, stored.Status)
+	require.NotEmpty(t, stored.LastError)
+	require.Zero(t, client.TicketNotification.Query().CountX(ctx))
+	require.Zero(t, client.Notification.Query().CountX(ctx))
+	require.Zero(t, client.NotificationDelivery.Query().CountX(ctx))
+	rejectDelivery = false
+	_, err = client.OperationalCommand.UpdateOneID(cmd.ID).SetAvailableAt(time.Now().Add(-time.Second)).Save(ctx)
+	require.NoError(t, err)
+	processed, err = worker.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, processed)
+	stored, err = client.OperationalCommand.Get(ctx, cmd.ID)
+	require.NoError(t, err)
+	require.Equal(t, commandbus.StatusSucceeded, stored.Status)
+	require.Equal(t, 2, stored.Attempt)
+	require.Equal(t, 1, client.TicketNotification.Query().CountX(ctx))
+	require.Equal(t, 1, client.Notification.Query().CountX(ctx))
+	delivery, err := client.NotificationDelivery.Query().Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, "sent", delivery.Status)
+}
+
 // TestNotificationDeliveryHandlerSkipsWhenPreferenceDisabled 核心契约：偏好表对
 // 某事件类型的 in_app 渠道显式关闭后，投递命令应成功返回且不落任何投递/通知记录
 // （语义=按用户选择跳过，而非失败；避免 worker 无效重试到 dead_letter）。
@@ -130,6 +180,58 @@ func TestNotificationDeliveryHandlerSkipsWhenPreferenceDisabled(t *testing.T) {
 	require.Zero(t, client.TicketNotification.Query().CountX(ctx), "不应创建 ticket_notification 记录")
 	require.Zero(t, client.Notification.Query().CountX(ctx), "不应创建通用 notification 记录")
 	require.Zero(t, client.NotificationDelivery.Query().CountX(ctx), "不应创建投递审计记录")
+}
+
+func TestNotificationDeliveryWorkerRetriesPreferenceLookupBeforeSending(t *testing.T) {
+	client, ctx, tenantID, userID, ticketID := notificationDeliveryFixture(t)
+	_, err := client.NotificationPreference.Create().
+		SetUserID(userID).SetTenantID(tenantID).SetEventType("ticket_created").
+		SetInAppEnabled(false).Save(ctx)
+	require.NoError(t, err)
+
+	preferencesUnavailable := true
+	client.NotificationPreference.Intercept(baseent.InterceptFunc(func(next baseent.Querier) baseent.Querier {
+		return baseent.QuerierFunc(func(ctx context.Context, query baseent.Query) (baseent.Value, error) {
+			if preferencesUnavailable {
+				return nil, errors.New("private preference backend error")
+			}
+			return next.Query(ctx, query)
+		})
+	}))
+	cmd, err := commandbus.Enqueue(ctx, client, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+		AggregateType: "ticket", AggregateID: ticketID, IdempotencyKey: "pref-unavailable",
+		Payload: map[string]interface{}{"ticketId": ticketID, "recipientId": userID, "type": "created", "channel": "in_app", "content": "受用户偏好约束"},
+	})
+	require.NoError(t, err)
+	registry := commandbus.NewRegistry()
+	handler := NewNotificationDeliveryCommandHandler(client, nil, zap.NewNop().Sugar())
+	require.NoError(t, registry.Register(commandbus.CommandDeliverNotification, handler.Handle))
+	worker := commandbus.NewWorker(client, registry, zap.NewNop().Sugar(), "notification-worker")
+
+	processed, err := worker.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, processed)
+	stored, err := client.OperationalCommand.Get(ctx, cmd.ID)
+	require.NoError(t, err)
+	require.Equal(t, commandbus.StatusPending, stored.Status)
+	require.NotEmpty(t, stored.LastError)
+	require.NotContains(t, stored.LastError, "private preference backend error")
+	require.Zero(t, client.Notification.Query().CountX(ctx))
+	require.Zero(t, client.NotificationDelivery.Query().CountX(ctx))
+
+	preferencesUnavailable = false
+	_, err = client.OperationalCommand.UpdateOneID(cmd.ID).SetAvailableAt(time.Now().Add(-time.Second)).Save(ctx)
+	require.NoError(t, err)
+	processed, err = worker.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, processed)
+	stored, err = client.OperationalCommand.Get(ctx, cmd.ID)
+	require.NoError(t, err)
+	require.Equal(t, commandbus.StatusSucceeded, stored.Status)
+	require.Equal(t, 2, stored.Attempt)
+	require.Zero(t, client.Notification.Query().CountX(ctx))
+	require.Zero(t, client.NotificationDelivery.Query().CountX(ctx))
 }
 
 // TestNotificationDeliveryHandlerAllowsWhenNoPreference 无偏好记录 = 默认放行，

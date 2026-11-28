@@ -14,6 +14,7 @@ import (
 	domainrole "itsm-backend/domain/role"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/department"
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/datascope"
@@ -266,11 +267,22 @@ func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, c *Change
 	if err != nil {
 		return rollback(err)
 	}
+	payload := map[string]interface{}{"businessType": "change", "businessId": ec.ID}
+	departmentID, err := tx.Department.Query().
+		Where(department.TenantIDEQ(c.TenantID), department.DeletedAtIsNil(),
+			department.HasUsersWith(entuser.IDEQ(c.CreatedBy), entuser.TenantIDEQ(c.TenantID))).
+		OnlyID(ctx)
+	if err != nil && !ent.IsNotFound(err) {
+		return rollback(err)
+	}
+	if departmentID > 0 {
+		payload[commandbus.ChangeRoutingDepartmentKey] = strconv.Itoa(departmentID)
+	}
 	_, err = commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
 		TenantID: c.TenantID, CommandType: commandbus.CommandStartBPMN,
 		AggregateType: "change", AggregateID: ec.ID,
 		IdempotencyKey: fmt.Sprintf("change:%d:workflow:start", ec.ID),
-		Payload:        map[string]interface{}{"businessType": "change", "businessId": ec.ID},
+		Payload:        payload,
 	})
 	if err != nil {
 		return rollback(err)

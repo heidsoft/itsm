@@ -234,7 +234,10 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 		return
 	}
 
-	rawData, _ := ctx.GetRawData()
+	rawData, ok := connectorDomain.ReadInboundCallbackBody(ctx)
+	if !ok {
+		return
+	}
 
 	// 将 http.Header 转换为 map[string]string
 	headers := make(map[string]string)

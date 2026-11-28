@@ -116,18 +116,11 @@ func (h *NotificationDeliveryCommandHandler) Handle(ctx context.Context, cmd *en
 		return fmt.Errorf("load notification recipient: %w", err)
 	}
 
-	// 消费 per-event 通知偏好（notification_preferences 表）。语义与同步路径
-	// （TicketNotificationService.channelAllowedForEvent）一致：无偏好记录默认放行，
-	// 查询失败留痕放行（best-effort，不阻塞投递主链路）。
-	// 入箱载荷的 type 是短词表（created/assigned/sla_alert/…），偏好表是长词表
-	// （ticket_created/sla_violated/…），必须先归一化再查询，否则永远匹配不上。
+	// 无偏好记录默认放行。查询失败交给 Worker 重试，避免覆盖用户的退订设置。
 	eventType := normalizeNotificationEventType(notificationType)
-	allowed, prefErr := h.channelAllowedForEvent(ctx, recipientID, cmd.TenantID, eventType, channel)
-	if prefErr != nil {
-		h.logger.Warnw("failed to load notification preference for delivery, allowing send",
-			"recipient_id", recipientID, "tenant_id", cmd.TenantID,
-			"event_type", eventType, "channel", channel, "error", prefErr)
-		allowed = true
+	allowed, err := h.channelAllowedForEvent(ctx, recipientID, cmd.TenantID, eventType, channel)
+	if err != nil {
+		return fmt.Errorf("notification preference unavailable")
 	}
 	if !allowed {
 		// 用户偏好显式关闭该渠道：语义是「按用户选择跳过」而非失败，
@@ -188,7 +181,7 @@ func (h *NotificationDeliveryCommandHandler) channelAllowedForEvent(ctx context.
 		if ent.IsNotFound(err) {
 			return true, nil
 		}
-		return false, fmt.Errorf("query notification preference: %w", err)
+		return false, err
 	}
 	switch channel {
 	case "email":
@@ -234,12 +227,8 @@ func (h *NotificationDeliveryCommandHandler) deliverInApp(ctx context.Context, c
 	}
 	_, err = deliveryCreate.Save(ctx)
 	if err != nil {
-		if ent.IsConstraintError(err) {
-			// 幂等命中：通知此前已投递，不能再推一次造成前端重复条目。
-			_ = tx.Rollback()
-			return nil
-		}
-		return rollback(err)
+		// 重试时由 Handle 检查已发送记录。约束错误本身无法证明投递成功。
+		return rollback(fmt.Errorf("in-app notification delivery could not be recorded"))
 	}
 	if err := tx.Commit(); err != nil {
 		return err
