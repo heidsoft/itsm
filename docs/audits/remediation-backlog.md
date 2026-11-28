@@ -49,6 +49,7 @@
 | AUDIT-046~049 | token、z-index、表格/弹窗 overflow、i18n | `confirmed`/`suspected` | PR-05 分批 |
 | AUDIT-055 | 博客数字标题待核实 | `suspected` | 核实来源后改写 |
 | F-01(rbac) | `PermissionDefinition` 死模型 | `confirmed` | 标记退役或版本化删表，不接入 RBAC |
+| AUDIT-071 | Security Scan 基线红项回归观察（Trivy Gate / Go Vulnerability Check） | `suspected` | 历史 run `cm-auto-20261126-loop-01` 记录为基线红；2026-11-27 复核 PR #131/#132 已 0 failing，保留为回归观察；工具链/依赖升级需审批 |
 
 ## 已解决/不要重复
 

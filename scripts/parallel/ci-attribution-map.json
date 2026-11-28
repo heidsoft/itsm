@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "description": "Explicit CI-to-backlog rules. Only verified mappings are allowed; unknown failures stay unattributed and never create backlog rows.",
+  "rules": [
+    {
+      "workflow": "Security Scan",
+      "name_contains": "Trivy Gate",
+      "backlog_id": "AUDIT-071",
+      "status": "suspected",
+      "note": "Trivy Gate 历史红项回归观察；工具链/依赖升级按既有审批边界处理"
+    },
+    {
+      "workflow": "Security Scan",
+      "name_contains": "Go Vulnerability Check",
+      "backlog_id": "AUDIT-071",
+      "status": "suspected",
+      "note": "Go Vulnerability Check 历史红项回归观察；工具链/依赖升级按既有审批边界处理"
+    }
+  ]
+}
