@@ -43,6 +43,12 @@ const scenarioLabel = (kind: string): string => SCENARIO_LABELS[kind] ?? kind;
 
 const pct = (v: number): string => `${Math.round(v * 100)}%`;
 
+function decisionTag(accepted: boolean | null) {
+  if (accepted === true) return <Tag color="success">已采纳</Tag>;
+  if (accepted === false) return <Tag>已拒绝</Tag>;
+  return <Tag>未决</Tag>;
+}
+
 const healthColor = (score: number): string => {
   if (score >= 80) return '#52c41a';
   if (score >= 60) return '#faad14';
@@ -149,8 +155,7 @@ const AIAuditConsole: React.FC = () => {
       dataIndex: 'accepted',
       key: 'accepted',
       width: 80,
-      render: (v: boolean) =>
-        v ? <Tag color="success">已采纳</Tag> : <Tag color="default">未采纳</Tag>,
+      render: decisionTag,
     },
     {
       title: '操作',
@@ -195,12 +200,16 @@ const AIAuditConsole: React.FC = () => {
           {report?.hasData ? (
             <Space size={32} wrap>
               <div style={{ textAlign: 'center' }}>
-                <Progress
-                  type="dashboard"
-                  percent={Math.round(report.healthScore)}
-                  strokeColor={healthColor(report.healthScore)}
-                  format={(p) => `${p}`}
-                />
+                {report.healthScore != null ? (
+                  <Progress
+                    type="dashboard"
+                    percent={Math.round(report.healthScore)}
+                    strokeColor={healthColor(report.healthScore)}
+                    format={(p) => `${p}`}
+                  />
+                ) : (
+                  <Text type="secondary">数据不足，至少需要 {report.minHealthDecisions} 条已决样本</Text>
+                )}
                 <div>
                   <Text strong>健康分</Text>
                 </div>
@@ -214,7 +223,10 @@ const AIAuditConsole: React.FC = () => {
                     <Text strong>{pct(report.usefulRate)}</Text>
                   </Descriptions.Item>
                   <Descriptions.Item label="建议采纳率">
-                    <Text strong>{pct(report.acceptedRate)}</Text>
+                    <Text strong>{report.acceptedRate == null ? '暂无决策' : pct(report.acceptedRate)}</Text>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="人工决策">
+                    采纳 {report.acceptedCount} · 拒绝 {report.rejectedCount} · 未决 {report.pendingCount}
                   </Descriptions.Item>
                   <Descriptions.Item label="平均置信度">
                     <Text strong>{pct(report.avgConfidence)}</Text>
@@ -260,7 +272,7 @@ const AIAuditConsole: React.FC = () => {
                     title: '采纳率',
                     dataIndex: 'acceptedRate',
                     width: 100,
-                    render: (v: number) => (v > 0 ? pct(v) : '-'),
+                    render: (v: number | null) => (v == null ? '暂无决策' : pct(v)),
                   },
                   {
                     title: '平均置信度',
@@ -364,14 +376,14 @@ const AIAuditConsole: React.FC = () => {
             <Descriptions.Item label="策略版本">{detail.promptVersion || '-'}</Descriptions.Item>
             <Descriptions.Item label="可信度">{pct(detail.confidence)}</Descriptions.Item>
             <Descriptions.Item label="采纳结果">
-              {detail.accepted ? <Tag color="success">已采纳</Tag> : <Tag>未采纳</Tag>}
+              {decisionTag(detail.accepted)}
             </Descriptions.Item>
             <Descriptions.Item label="操作">
               <Space>
                 <Button
                   size="small"
                   type={detail.accepted ? 'default' : 'primary'}
-                  disabled={detail.accepted || flipPending}
+                  disabled={detail.accepted === true || flipPending}
                   onClick={async () => {
                     if (!detail) return;
                     setFlipPending(true);
@@ -381,6 +393,7 @@ const AIAuditConsole: React.FC = () => {
                         e.id === detail.id ? { ...e, accepted: true } : e
                       )));
                       setDetail({ ...detail, accepted: true });
+                      void fetchEvaluation();
                       message.success(`AI 审计 ${detail.id} 已标记采纳`);
                     } catch (err) {
                       message.error((err as Error).message ?? '采纳失败');
@@ -394,7 +407,7 @@ const AIAuditConsole: React.FC = () => {
                 <Button
                   size="small"
                   danger
-                  disabled={!detail.accepted || flipPending}
+                  disabled={detail.accepted === false || flipPending}
                   onClick={async () => {
                     if (!detail) return;
                     setFlipPending(true);
@@ -404,6 +417,7 @@ const AIAuditConsole: React.FC = () => {
                         e.id === detail.id ? { ...e, accepted: false } : e
                       )));
                       setDetail({ ...detail, accepted: false });
+                      void fetchEvaluation();
                       message.success(`AI 审计 ${detail.id} 已标记拒绝`);
                     } catch (err) {
                       message.error((err as Error).message ?? '拒绝失败');

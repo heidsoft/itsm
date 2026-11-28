@@ -7,6 +7,10 @@
 
 ---
 
+## AI 评估与审计响应兼容性
+
+AI 评估 API 的 `acceptedRate` 和 `healthScore` 现在可能为 `null`，分别表示暂无人工决策和样本不足。审计列表的 `accepted` 为 `null` 时表示未决。客户端应将空值与 0% 采纳、零分及明确拒绝分别处理。现有 PostgreSQL 字段支持这些状态，无需迁移。
+
 ## 0. 升级前检查清单
 
 - [ ] **完整备份数据库**（PostgreSQL `pg_dump`）与 `uploads/`、`.env.prod`。

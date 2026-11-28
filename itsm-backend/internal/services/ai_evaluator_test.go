@@ -36,7 +36,8 @@ func newTelemetryTestDB(t *testing.T) (*sql.DB, *AITelemetryService) {
 			item_id INT,
 			useful BOOLEAN NOT NULL,
 			score INT,
-			notes TEXT
+			notes TEXT,
+ accepted BOOLEAN
 		);
 		CREATE TABLE IF NOT EXISTS ai_llm_calls (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,6 +101,8 @@ func seedStandardEvaluationFixture(t *testing.T, db *sql.DB) {
 	seedFeedback(t, db, feedbackSeed{tenantID: 1, userID: 1, kind: "analyze", query: "ticket_1", itemType: "ai_audit", useful: true, score: 90, notes: notes})
 	seedFeedback(t, db, feedbackSeed{tenantID: 1, userID: 1, kind: "analyze", query: "ticket_2", itemType: "ai_audit", useful: false, score: 95, notes: notes})
 	seedFeedback(t, db, feedbackSeed{tenantID: 2, userID: 2, kind: "triage", query: "隔离验证", itemType: "", useful: true, score: 100})
+	_, err := db.Exec("UPDATE ai_feedbacks SET accepted = (query = 'ticket_2') WHERE item_type = 'ai_audit'")
+	require.NoError(t, err)
 	seedLLMCall(t, db, 2000, true)
 	seedLLMCall(t, db, 1000, true)
 	seedLLMCall(t, db, 3000, false)
@@ -117,11 +120,12 @@ func TestEvaluate_OverallMetrics(t *testing.T) {
 	// useful: triage+analyze 两条 → 0.5
 	assert.Equal(t, 0.5, report.UsefulRate)
 	// ai_audit 2 条，accepted 1 条 → 0.5
-	assert.Equal(t, 0.5, report.AcceptedRate)
+	require.NotNil(t, report.AcceptedRate)
+	assert.Equal(t, 0.5, *report.AcceptedRate)
 	// (80+40+90+95)/4/100 = 0.7625
 	assert.Equal(t, 0.7625, report.AvgConfidence)
-	// 健康分 = 0.5*40 + 0.5*30 + 0.75*30 = 57.5
-	assert.Equal(t, 57.5, report.HealthScore)
+	// 两条决策低于评分阈值。
+	assert.Nil(t, report.HealthScore)
 	// 平台统计：4 次调用，3 成功，平均延迟 (2000+1000+3000+500)/4 = 1625ms
 	assert.Equal(t, 4, report.Platform.LLMCallCount)
 	assert.Equal(t, 0.75, report.Platform.SuccessRate)
@@ -146,7 +150,8 @@ func TestEvaluate_ScenarioBreakdown(t *testing.T) {
 	assert.Equal(t, 0.0, byKind["summarize"].UsefulRate)
 	assert.Equal(t, 2, byKind["analyze"].Count)
 	assert.Equal(t, 0.5, byKind["analyze"].UsefulRate)
-	assert.Equal(t, 0.5, byKind["analyze"].AcceptedRate)
+	require.NotNil(t, byKind["analyze"].AcceptedRate)
+	assert.Equal(t, 0.5, *byKind["analyze"].AcceptedRate)
 	assert.Equal(t, 0.925, byKind["analyze"].AvgConfidence)
 }
 
@@ -192,7 +197,7 @@ func TestEvaluate_EmptyState(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, report.HasData)
 	assert.Equal(t, 0, report.TotalFeedback)
-	assert.Equal(t, 0.0, report.HealthScore)
+	assert.Nil(t, report.HealthScore)
 	assert.Empty(t, report.ByScenario)
 	// bySkill 字段在空库时仍以空数组返回（与 ByScenario 对齐）。
 	assert.NotNil(t, report.BySkill)
@@ -258,7 +263,7 @@ func TestEvaluate_BySkillDimension_WithoutRegistry(t *testing.T) {
 	require.True(t, ok, "ai.triage should be present")
 	assert.Equal(t, 1, triage.Count)
 	assert.Equal(t, 1.0, triage.UsefulRate)
-	assert.Equal(t, 0.0, triage.AcceptedRate)
+	assert.Nil(t, triage.AcceptedRate)
 	assert.Equal(t, 0.8, triage.AvgConfidence)
 	assert.Equal(t, false, triage.IsPilot) // 未注入 registry → IsPilot=false
 	// ai.analyze：2 条，usefulRate=0.5
@@ -266,10 +271,11 @@ func TestEvaluate_BySkillDimension_WithoutRegistry(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, 2, analyze.Count)
 	assert.Equal(t, 0.5, analyze.UsefulRate)
-	assert.Equal(t, 0.5, analyze.AcceptedRate)
+	require.NotNil(t, analyze.AcceptedRate)
+	assert.Equal(t, 0.5, *analyze.AcceptedRate)
 	assert.Equal(t, 0.925, analyze.AvgConfidence)
-	// HealthScore = 0.5*40 + 0.5*30 + (1-|0.5-0.925|)*30 = 20+15+(0.575*30) = 52.25
-	assert.Equal(t, 52.25, analyze.HealthScore)
+	// 技能也按独立决策样本量判断。
+	assert.Nil(t, analyze.HealthScore)
 }
 
 func TestEvaluate_BySkillDimension_WithRegistry(t *testing.T) {
@@ -330,7 +336,8 @@ func TestListAIAuditLogs_PaginationAndNotes(t *testing.T) {
 	require.Len(t, entries, 2)
 	// 最新在前：ticket_2 的 analyze 记录
 	assert.Equal(t, "analyze", entries[0].Scenario)
-	assert.False(t, entries[0].Accepted)
+	require.NotNil(t, entries[0].Accepted)
+	assert.True(t, *entries[0].Accepted)
 	assert.Equal(t, 0.95, entries[0].Confidence)
 	assert.Equal(t, "v1", entries[0].PromptVersion)
 	assert.Equal(t, "doubao-pro", entries[0].Model)
@@ -388,4 +395,32 @@ func TestListAIAuditLogs_TimeWindow(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 2, total) // 200 天前的记录被时间窗口排除
 	assert.Len(t, entries, 2)
+}
+
+func TestEvaluate_DecisionsAndHealthThreshold(t *testing.T) {
+	db, svc := newTelemetryTestDB(t)
+	for i := 0; i < minHealthDecisions; i++ {
+		seedFeedback(t, db, feedbackSeed{tenantID: 1, kind: "triage", itemType: "ai_audit", useful: true})
+	}
+	seedFeedback(t, db, feedbackSeed{tenantID: 1, kind: "triage", useful: true})
+	seedFeedback(t, db, feedbackSeed{tenantID: 2, kind: "triage", itemType: "ai_audit", useful: true})
+	report, err := svc.Evaluate(context.Background(), 1, 30)
+	require.NoError(t, err)
+	require.Equal(t, minHealthDecisions, report.PendingCount)
+	require.Nil(t, report.AcceptedRate)
+	require.Nil(t, report.HealthScore)
+	_, err = db.Exec("UPDATE ai_feedbacks SET accepted = false WHERE item_type = 'ai_audit'")
+	require.NoError(t, err)
+	report, err = svc.Evaluate(context.Background(), 1, 30)
+	require.NoError(t, err)
+	require.NotNil(t, report.AcceptedRate)
+	assert.Zero(t, *report.AcceptedRate)
+	assert.Equal(t, minHealthDecisions, report.RejectedCount)
+	assert.Zero(t, report.PendingCount)
+	require.Len(t, report.ByScenario, 1)
+	require.Len(t, report.BySkill, 1)
+	assert.Equal(t, report.AIDecisionMetrics, report.ByScenario[0].AIDecisionMetrics)
+	assert.Equal(t, report.AIDecisionMetrics, report.BySkill[0].AIDecisionMetrics)
+	assert.NotNil(t, report.HealthScore)
+	assert.NotNil(t, report.BySkill[0].HealthScore)
 }

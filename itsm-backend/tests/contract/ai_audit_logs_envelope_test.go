@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -39,7 +40,8 @@ const aiAuditCreateSQL = `
 		item_id INT,
 		useful BOOLEAN NOT NULL,
 		score INT,
-		notes TEXT
+		notes TEXT,
+ accepted BOOLEAN
 	);`
 
 func newAuditLogsTestDB(t *testing.T) *sql.DB {
@@ -77,6 +79,7 @@ func newAuditLogsRouter(t *testing.T, db *sql.DB, tenantID int, withTenant bool)
 		c.Next()
 	})
 	r.GET("/api/v1/ai/audit-logs", h.GetAuditLogs)
+	r.PATCH("/api/v1/ai/audit-logs/:id", h.UpdateAuditAccepted)
 	return r
 }
 
@@ -215,4 +218,46 @@ func TestAIAuditLogs_EmptyResultSetSerializesAsArray(t *testing.T) {
 	raw, err := json.Marshal(data["items"])
 	require.NoError(t, err)
 	assert.Equal(t, "[]", string(raw))
+}
+
+func TestAIAuditDecisionPatchAndList(t *testing.T) {
+	db := newAuditLogsTestDB(t)
+	seedAuditFeedbacks(t, db, 1, "own", 1)
+	seedAuditFeedbacks(t, db, 2, "other", 1)
+	r := newAuditLogsRouter(t, db, 1, true)
+
+	readDecision := func() interface{} {
+		data := decodeAuditEnvelope(t, doAuditLogs(t, r, ""))
+		items := data["items"].([]interface{})
+		require.Len(t, items, 1)
+		item := items[0].(map[string]interface{})
+		require.Contains(t, item, "accepted")
+		require.NotContains(t, item, "useful")
+		return item["accepted"]
+	}
+	require.Nil(t, readDecision())
+	for _, tc := range []struct {
+		path   string
+		body   string
+		status int
+		code   float64
+	}{
+		{"1", `{}`, http.StatusBadRequest, 1001},
+		{"1", `{"accepted":null}`, http.StatusBadRequest, 1001},
+		{"2", `{"accepted":false}`, http.StatusNotFound, 4004},
+		{"1", `{"accepted":false}`, http.StatusOK, 0},
+	} {
+		req := httptest.NewRequest(http.MethodPatch, "/api/v1/ai/audit-logs/"+tc.path, strings.NewReader(tc.body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		require.Equal(t, tc.status, w.Code, w.Body.String())
+		var envelope map[string]interface{}
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+		require.Equal(t, tc.code, envelope["code"])
+	}
+	require.Equal(t, false, readDecision())
+	var outside sql.NullBool
+	require.NoError(t, db.QueryRow("SELECT accepted FROM ai_feedbacks WHERE tenant_id = 2").Scan(&outside))
+	require.False(t, outside.Valid)
 }

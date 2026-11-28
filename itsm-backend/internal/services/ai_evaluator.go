@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -107,6 +108,8 @@ func scenarioToSkillCode(kind string) string {
 	return "ai." + kind
 }
 
+const minHealthDecisions = 10
+
 // Evaluate 输出租户在 lookbackDays 窗口内的 AI 评估报告。
 func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbackDays int) (*AIEvaluationReport, error) {
 	if lookbackDays <= 0 {
@@ -116,6 +119,7 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 	report := &AIEvaluationReport{
 		GeneratedAt:           time.Now().Format(time.RFC3339),
 		LookbackDays:          lookbackDays,
+		MinHealthDecisions:    minHealthDecisions,
 		ConfidenceCalibration: make([]AICalibrationBucket, 0, auditBucketCount),
 		ByScenario:            make([]AIScenarioEval, 0),
 		BySkill:               make([]AISkillEval, 0),
@@ -123,7 +127,7 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 
 	// 1) 窗口内所有反馈样本（含审计记录），一次取回后在内存聚合，保证跨库兼容。
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT COALESCE(useful, false), COALESCE(score, 0), COALESCE(kind, ''), COALESCE(item_type, '')
+		SELECT COALESCE(useful, false), COALESCE(score, 0), COALESCE(kind, ''), COALESCE(item_type, ''), accepted
 		FROM ai_feedbacks
 		WHERE tenant_id = $1 AND created_at >= $2
 	`, tenantID, since)
@@ -137,11 +141,12 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 		score    int
 		kind     string
 		itemType string
+		accepted sql.NullBool
 	}
 	var samples []sample
 	for rows.Next() {
 		var s sample
-		if err := rows.Scan(&s.useful, &s.score, &s.kind, &s.itemType); err != nil {
+		if err := rows.Scan(&s.useful, &s.score, &s.kind, &s.itemType, &s.accepted); err != nil {
 			return nil, fmt.Errorf("failed to scan feedback sample: %w", err)
 		}
 		samples = append(samples, s)
@@ -151,84 +156,43 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 	}
 
 	if len(samples) == 0 {
-		// 无样本：健康分 0 并标记 hasData=false，前端展示空态而非误导性数值。
+		// 无反馈时保留空采纳率和健康分，前端展示空态。
 		report.Platform = s.loadPlatformStats(ctx, lookbackDays)
 		return report, nil
 	}
 	report.HasData = true
 	report.TotalFeedback = len(samples)
 
-	// 2) 总体指标：有用率（全部样本）、被采纳率（仅 ai_audit）、平均置信度。
-	usefulCount := 0
-	acceptedCount, auditCount := 0, 0
-	scoreSum := 0
+	var overall kindAgg
 	byKind := map[string]*kindAgg{}
-	// bySkillCode 与 byKind 同步聚合（key 是 skill.code，如 ai.triage）。
-	// 即使 SkillRegistry 未注入，scenarioToSkillCode 仍可保证映射稳定。
 	bySkillCode := map[string]*kindAgg{}
 	for _, smp := range samples {
-		if smp.useful {
-			usefulCount++
-			if smp.itemType == "ai_audit" {
-				acceptedCount++
-			}
-		}
-		if smp.itemType == "ai_audit" {
-			auditCount++
-		}
-		scoreSum += smp.score
-		agg := byKind[smp.kind]
-		if agg == nil {
-			agg = &kindAgg{}
-			byKind[smp.kind] = agg
-		}
-		agg.count++
-		agg.usefulCount += boolToInt(smp.useful)
-		if smp.itemType == "ai_audit" {
-			agg.auditCount++
-			agg.acceptedCount += boolToInt(smp.useful)
-		}
-		agg.scoreSum += smp.score
-		// 同步累计到 bySkillCode：kind → skillCode 的映射在聚合阶段完成。
-		skillCode := scenarioToSkillCode(smp.kind)
-		if skillCode != "" {
-			sAgg := bySkillCode[skillCode]
-			if sAgg == nil {
-				sAgg = &kindAgg{}
-				bySkillCode[skillCode] = sAgg
-			}
-			sAgg.count++
-			sAgg.usefulCount += boolToInt(smp.useful)
-			if smp.itemType == "ai_audit" {
-				sAgg.auditCount++
-				sAgg.acceptedCount += boolToInt(smp.useful)
-			}
-			sAgg.scoreSum += smp.score
+		isAudit := smp.itemType == "ai_audit"
+		overall.record(smp.useful, smp.score, isAudit, smp.accepted)
+		recordEvaluationSample(byKind, smp.kind, smp.useful, smp.score, isAudit, smp.accepted)
+		if code := scenarioToSkillCode(smp.kind); code != "" {
+			recordEvaluationSample(bySkillCode, code, smp.useful, smp.score, isAudit, smp.accepted)
 		}
 	}
-	report.UsefulRate = round4(float64(usefulCount) / float64(len(samples)))
-	report.AvgConfidence = round4(float64(scoreSum) / float64(len(samples)) / 100.0)
-	if auditCount > 0 {
-		report.AcceptedRate = round4(float64(acceptedCount) / float64(auditCount))
-	}
+	report.UsefulRate = round4(float64(overall.usefulCount) / float64(overall.count))
+	report.AvgConfidence = round4(float64(overall.scoreSum) / float64(overall.count) / 100)
+	report.AIDecisionMetrics = overall.decisions()
 
 	// 3) 按场景分解。每个 AIScenarioEval 同时填上 SkillCode（来自
 	// scenarioToSkillCode 的稳定映射），与 SkillName（如果 SkillRegistry 已注入）。
 	for kind, agg := range byKind {
 		scenario := AIScenarioEval{
-			Kind:          kind,
-			SkillCode:     scenarioToSkillCode(kind),
-			Count:         agg.count,
-			UsefulRate:    round4(float64(agg.usefulCount) / float64(agg.count)),
-			AvgConfidence: round4(float64(agg.scoreSum) / float64(agg.count) / 100.0),
+			Kind:              kind,
+			AIDecisionMetrics: agg.decisions(),
+			SkillCode:         scenarioToSkillCode(kind),
+			Count:             agg.count,
+			UsefulRate:        round4(float64(agg.usefulCount) / float64(agg.count)),
+			AvgConfidence:     round4(float64(agg.scoreSum) / float64(agg.count) / 100.0),
 		}
 		if scenario.SkillCode != "" && s.skillRegistry != nil {
 			if sk, err := s.skillRegistry.Get(scenario.SkillCode); err == nil {
 				scenario.SkillName = sk.Name()
 			}
-		}
-		if agg.auditCount > 0 {
-			scenario.AcceptedRate = round4(float64(agg.acceptedCount) / float64(agg.auditCount))
 		}
 		report.ByScenario = append(report.ByScenario, scenario)
 	}
@@ -242,22 +206,17 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 	report.BySkill = make([]AISkillEval, 0, len(bySkillCode))
 	for code, agg := range bySkillCode {
 		skill := AISkillEval{
-			SkillCode:     code,
-			Count:         agg.count,
-			UsefulRate:    round4(float64(agg.usefulCount) / float64(agg.count)),
-			AcceptedRate:  0.0,
-			AvgConfidence: round4(float64(agg.scoreSum) / float64(agg.count) / 100.0),
+			SkillCode:         code,
+			Count:             agg.count,
+			UsefulRate:        round4(float64(agg.usefulCount) / float64(agg.count)),
+			AIDecisionMetrics: agg.decisions(),
+			AvgConfidence:     round4(float64(agg.scoreSum) / float64(agg.count) / 100.0),
 		}
-		if agg.auditCount > 0 {
-			skill.AcceptedRate = round4(float64(agg.acceptedCount) / float64(agg.auditCount))
+		if agg.acceptedCount+agg.rejectedCount >= minHealthDecisions {
+			calibrationError := absFloat(skill.UsefulRate - skill.AvgConfidence)
+			score := round4(skill.UsefulRate*40 + *skill.AcceptedRate*30 + (1-calibrationError)*30)
+			skill.HealthScore = &score
 		}
-		// 置信度校准误差：|实际有用率 - 平均置信度|，越小说明置信度越接近实际。
-		calibrationError := absFloat(skill.UsefulRate - skill.AvgConfidence)
-		skill.HealthScore = round4(
-			skill.UsefulRate*40.0 +
-				skill.AcceptedRate*30.0 +
-				(1.0-calibrationError)*30.0,
-		)
 		// 名称 / IsPilot 由 SkillRegistry 注入。
 		if s.skillRegistry != nil {
 			if sk, err := s.skillRegistry.Get(code); err == nil {
@@ -302,9 +261,12 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 		report.ConfidenceCalibration = append(report.ConfidenceCalibration, bucket)
 	}
 
-	// 5) 健康分（0-100）：有用率 40% + 被采纳率 30% + LLM 成功率 30%。
+	// 6) 健康分（0-100）：有用率 40% + 被采纳率 30% + LLM 成功率 30%。
 	report.Platform = s.loadPlatformStats(ctx, lookbackDays)
-	report.HealthScore = round4(report.UsefulRate*40.0 + report.AcceptedRate*30.0 + report.Platform.SuccessRate*30.0)
+	if overall.acceptedCount+overall.rejectedCount >= minHealthDecisions {
+		score := round4(report.UsefulRate*40 + *report.AcceptedRate*30 + report.Platform.SuccessRate*30)
+		report.HealthScore = &score
+	}
 	return report, nil
 }
 
@@ -344,8 +306,8 @@ func (s *AITelemetryService) ListAuditLogs(ctx context.Context, tenantID int, pa
 
 	const countSQL = "SELECT COUNT(*) FROM ai_feedbacks WHERE tenant_id = $1 AND item_type = 'ai_audit' AND created_at >= $2"
 	const countSQLKind = "SELECT COUNT(*) FROM ai_feedbacks WHERE tenant_id = $1 AND item_type = 'ai_audit' AND created_at >= $2 AND kind = $3"
-	const listSQL = "SELECT id, created_at, tenant_id, user_id, request_id, kind, COALESCE(query, ''), useful, COALESCE(score, 0), COALESCE(notes, '') FROM ai_feedbacks WHERE tenant_id = $1 AND item_type = 'ai_audit' AND created_at >= $2 ORDER BY created_at DESC, id DESC LIMIT $3 OFFSET $4"
-	const listSQLKind = "SELECT id, created_at, tenant_id, user_id, request_id, kind, COALESCE(query, ''), useful, COALESCE(score, 0), COALESCE(notes, '') FROM ai_feedbacks WHERE tenant_id = $1 AND item_type = 'ai_audit' AND created_at >= $2 AND kind = $3 ORDER BY created_at DESC, id DESC LIMIT $4 OFFSET $5"
+	const listSQL = "SELECT id, created_at, tenant_id, user_id, request_id, kind, COALESCE(query, ''), accepted, COALESCE(score, 0), COALESCE(notes, '') FROM ai_feedbacks WHERE tenant_id = $1 AND item_type = 'ai_audit' AND created_at >= $2 ORDER BY created_at DESC, id DESC LIMIT $3 OFFSET $4"
+	const listSQLKind = "SELECT id, created_at, tenant_id, user_id, request_id, kind, COALESCE(query, ''), accepted, COALESCE(score, 0), COALESCE(notes, '') FROM ai_feedbacks WHERE tenant_id = $1 AND item_type = 'ai_audit' AND created_at >= $2 AND kind = $3 ORDER BY created_at DESC, id DESC LIMIT $4 OFFSET $5"
 
 	var total int
 	var err error
@@ -413,9 +375,43 @@ func (s *AITelemetryService) ListAuditLogs(ctx context.Context, tenantID int, pa
 type kindAgg struct {
 	count         int
 	usefulCount   int
-	auditCount    int
+	rejectedCount int
+	pendingCount  int
 	acceptedCount int
 	scoreSum      int
+}
+
+func (a *kindAgg) decisions() dto.AIDecisionMetrics {
+	metrics := dto.AIDecisionMetrics{AcceptedCount: a.acceptedCount, RejectedCount: a.rejectedCount, PendingCount: a.pendingCount}
+	if decided := a.acceptedCount + a.rejectedCount; decided > 0 {
+		rate := round4(float64(a.acceptedCount) / float64(decided))
+		metrics.AcceptedRate = &rate
+	}
+	return metrics
+}
+
+func (a *kindAgg) record(useful bool, score int, isAudit bool, accepted sql.NullBool) {
+	a.count++
+	a.usefulCount += boolToInt(useful)
+	a.scoreSum += score
+	if !isAudit {
+		return
+	}
+	switch {
+	case !accepted.Valid:
+		a.pendingCount++
+	case accepted.Bool:
+		a.acceptedCount++
+	default:
+		a.rejectedCount++
+	}
+}
+
+func recordEvaluationSample(groups map[string]*kindAgg, key string, useful bool, score int, isAudit bool, accepted sql.NullBool) {
+	if groups[key] == nil {
+		groups[key] = &kindAgg{}
+	}
+	groups[key].record(useful, score, isAudit, accepted)
 }
 
 type calibrationAgg struct {
