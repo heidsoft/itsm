@@ -166,6 +166,34 @@ func (s *GroupService) assertNotReferenced(ctx context.Context, tenantID int, gr
 	)
 }
 
+// GetGroupReferences 查询某个组在本租户内的审批引用关系（只读诊断）。
+//
+// 与 assertNotReferenced 共用同一个 findGroupReferences 扫描器，保证
+// 「管理员在页面上看到的引用面」与「改名/删除时真正拦截的引用面」同源，
+// 不会出现视图说没引用、变更却被 409 拒绝的漂移。
+//
+// 两条安全约束：
+//  1. 先按 id + tenantID 确认组存在且归属当前租户，避免猜测 id 读取他租户引用面（IDOR）；
+//  2. 扫描失败（如流程 XML 损坏）返回 500 而不是空列表——只读接口也不能把
+//     「未知」伪装成「无引用」，否则管理员会误以为可以安全改名。
+func (s *GroupService) GetGroupReferences(ctx context.Context, id, tenantID int) ([]GroupReference, error) {
+	g, err := s.client.Group.Query().
+		Where(
+			group.IDEQ(id),
+			group.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, common.NewNotFoundError("审批组")
+	}
+
+	refs, err := findGroupReferences(ctx, s.client, tenantID, g.Name)
+	if err != nil {
+		return nil, common.NewInternalError("无法确认审批组引用情况，请检查流程定义后再试", err)
+	}
+	return refs, nil
+}
+
 // AddUserToGroup 添加用户到组
 func (s *GroupService) AddUserToGroup(ctx context.Context, groupID, userID, tenantID int) error {
 	// 验证组是否存在且属于当前租户

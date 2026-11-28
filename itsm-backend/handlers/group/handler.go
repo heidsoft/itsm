@@ -409,3 +409,49 @@ func (h *Handler) GetGroupMembers(c *gin.Context) {
 
 	common.Success(c, response)
 }
+
+// GetGroupReferences 查询组的审批引用关系
+// @Summary 查询组的审批引用关系
+// @Description 只读查询该组名在本租户内被哪些生效流程定义或审批链引用，供改名/删除前评估影响。严格限定当前租户。
+// @Tags 组管理
+// @Accept json
+// @Produce json
+// @Param id path int true "组ID"
+// @Success 200 {object} common.Response{data=dto.GroupReferencesResponse}
+// @Failure 400 {object} common.Response
+// @Failure 401 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/groups/{id}/references [get]
+func (h *Handler) GetGroupReferences(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的组ID")
+		return
+	}
+
+	// 租户只能来自认证上下文，不接受任何查询参数覆盖（防跨租户 IDOR）。
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
+	}
+
+	refs, err := h.svc.GetGroupReferences(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.RespondError(c, err, "查询组引用关系失败")
+		return
+	}
+
+	// Items 初始化为空切片：无引用返回 [] 而不是 null。
+	items := make([]*dto.GroupReferenceDTO, 0, len(refs))
+	for _, r := range refs {
+		items = append(items, &dto.GroupReferenceDTO{
+			Kind:   r.Kind,
+			RefID:  r.RefID,
+			RefKey: r.RefKey,
+			NodeID: r.NodeID,
+		})
+	}
+	common.Success(c, &dto.GroupReferencesResponse{Items: items, Total: int64(len(refs))})
+}

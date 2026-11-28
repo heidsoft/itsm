@@ -2579,6 +2579,7 @@ DELETE /api/v1/groups/{id}                        # 删除组，权限 group:wri
 GET    /api/v1/groups/{id}/members?page&pageSize  # 组成员分页，权限 group:read
 POST   /api/v1/groups/{id}/members                # 添加成员，权限 group:write，body {userId}
 DELETE /api/v1/groups/{id}/members                # 移除成员，权限 group:write，body {userId}
+GET    /api/v1/groups/{id}/references             # 引用关系只读查询，权限 group:read
 ```
 
 `GET /groups` 与 `GET /groups/{id}/members` 的 `data` 均为 `{items,total,page,pageSize,totalPages}`：列表元素分别是 `GroupResponse`（`id`/`name`/`description`/`tenantId`/`memberCount`/`createdAt`/`updatedAt`）与 `UserDTO`。`memberCount` 是该组成员的真实总数；列表接口不返回 `members[]`（只有 `GET /groups/{id}` 详情带成员数组），前端成员数徽标应读 `memberCount`。不存在 `groups`、`members`、`pagination` 键——旧形状已在 [UPGRADE §1.84](../UPGRADE.md) 中退役。
@@ -2593,6 +2594,31 @@ DELETE /api/v1/groups/{id}/members                # 移除成员，权限 group:
 | 无法确认引用面（流程定义 XML 解析失败） | 409 | `4090` | 失败关闭：拒绝变更，避免坏 XML 绕过引用检查 |
 
 引用扫描范围限于**当前租户**，且只覆盖两条运行时真实消费组名的路径：生效中（`is_active=true`）流程定义 XML 的 `candidateGroups`，以及审批链 `chain[].role` 的 `group:` 前缀。`candidateGroups` 按逗号切分后**整 token 相等**匹配（`approvers-l` 不会命中 `approvers-l1`）。
+
+#### 引用关系只读查询
+
+`GET /api/v1/groups/{id}/references` 让管理员在改名/删除前先看清楚「谁在用这个组」。它与上面拦截写的守卫复用**同一个** `findGroupReferences` 扫描器，因此视图所见即守卫所拦，不会出现「视图说没引用、保存却被 409 拒绝」。权限 `group:read`，租户只从认证上下文取，不接受查询参数覆盖。
+
+`data` 是 `{items,total}`：
+
+| 字段 | 含义 |
+|:---|:---|
+| `items[].kind` | `process_definition`（BPMN userTask）或 `approval_chain`（审批链 step） |
+| `items[].refId` / `refKey` | 引用来源实体 ID / 可读标识（流程 key 或审批链名） |
+| `items[].nodeId` | 引用位置（BPMN userTask id / 审批链 `level-N`） |
+| `total` | 引用条数 |
+
+`items` 恒为数组，无引用时返回 `[]` 而非 `null`。
+
+| 场景 | 状态码 | 应用码 |
+|:---|:---|:---|
+| 正常（含零引用） | 200 | `0` |
+| 组 ID 非数字 | 400 | `1001` |
+| 组不存在或属于他租户 | 404 | `4004` |
+| 缺少租户上下文 | 401 | `2002` |
+| 流程 XML 损坏、无法确认引用面 | 500 | `5001` |
+
+只读接口同样失败关闭：扫描不确定时返回 500 而不是空列表，避免把「未知」误读为「可以安全改名」。
 
 注意：本组接口的 `PUT`/`DELETE` 错误响应使用 `common.RespondError`，会把上述领域文案原样透出到 `message` 字段；客户端应直接展示 `message`，不要折叠成通用「操作失败」。
 

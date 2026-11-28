@@ -289,6 +289,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/groups":                                       {Resource: "group", Action: "read"},
 			"/api/v1/groups/*":                                     {Resource: "group", Action: "read"},
 			"/api/v1/groups/*/members":                             {Resource: "group", Action: "read"},
+			"/api/v1/groups/*/references":                          {Resource: "group", Action: "read"},
 			"/api/v1/incidents":                                    {Resource: "incident", Action: "read"},
 			"/api/v1/incidents/*":                                  {Resource: "incident", Action: "read"},
 			"/api/v1/incidents/*/alerts":                           {Resource: "incident", Action: "read"},
