@@ -259,6 +259,25 @@ func TestQueryPhaseFilterBeforePaging(t *testing.T) {
 	assert.Equal(t, 1, list.TotalPages)
 }
 
+func TestQueryPhaseFilterSkipsDomainsWithoutMatchingStatuses(t *testing.T) {
+	f := setupWorkbenchTest(t)
+	status, env := doWorkbench(t, f.handler, f.tenantA, "?recordType=ticket&phase=draft&page=2&pageSize=1")
+	require.Equal(t, http.StatusOK, status)
+	require.Zero(t, env.Code)
+	assert.JSONEq(t, `{"items":[],"total":0,"page":2,"pageSize":1,"totalPages":0}`, string(env.Data))
+
+	status, env = doWorkbench(t, f.handler, f.tenantA, "?phase=draft&pageSize=1")
+	require.Equal(t, http.StatusOK, status)
+	require.Zero(t, env.Code)
+	page := decodeList(t, env)
+	require.Len(t, page.Items, 1)
+	assert.Equal(t, 1, page.Total)
+	assert.Equal(t, 1, page.TotalPages)
+	assert.Equal(t, f.tenantA, page.Items[0].TenantID)
+	assert.Equal(t, "change", page.Items[0].RecordType)
+	assert.Equal(t, "draft", page.Items[0].Phase)
+}
+
 // TestQueryListContract 锁定响应契约：{items,total,page,pageSize,totalPages} + camelCase item，
 // 且空结果必须是 []。
 func TestQueryListContract(t *testing.T) {
@@ -393,4 +412,51 @@ func TestQueryExcludePhaseRemovesTerminalButKeepsUnknown(t *testing.T) {
 	require.Equal(t, http.StatusOK, status)
 	white := decodeList(t, env)
 	assert.Less(t, white.Total, filtered.Total, "旧白名单会漏掉 unknown，故 total 更小")
+}
+
+func TestQueryTicketLifecycleIncludesPersistedStatuses(t *testing.T) {
+	for _, tt := range []struct {
+		status string
+		phase  string
+	}{
+		{"new", "submitted"},
+		{"pending", "active"},
+		{"approved", "active"},
+		{"rejected", "closed"},
+		{"weird_status", "unknown"},
+	} {
+		t.Run(tt.status, func(t *testing.T) {
+			f := setupWorkbenchTest(t)
+			for _, tenant := range []int{f.tenantA, f.tenantB} {
+				_, err := f.db.Exec("UPDATE tickets SET status = ? WHERE tenant_id = ? AND deleted_at IS NULL", tt.status, tenant)
+				require.NoError(t, err)
+			}
+			query := "?recordType=ticket&pageSize=1"
+			status, env := doWorkbench(t, f.handler, f.tenantA, query)
+			require.Equal(t, http.StatusOK, status)
+			require.Zero(t, env.Code)
+			list := decodeList(t, env)
+			require.Len(t, list.Items, 1)
+			assert.Equal(t, 1, list.Total)
+			assert.Equal(t, "A-工单-待处理", list.Items[0].Title)
+			assert.Equal(t, tt.status, list.Items[0].Status)
+			assert.Equal(t, tt.phase, list.Items[0].Phase)
+
+			if tt.phase != "unknown" {
+				status, env = doWorkbench(t, f.handler, f.tenantA, query+"&phase="+tt.phase)
+				require.Equal(t, http.StatusOK, status)
+				require.Zero(t, env.Code)
+				assert.Equal(t, 1, decodeList(t, env).Total)
+			}
+
+			status, env = doWorkbench(t, f.handler, f.tenantA, query+"&excludePhase=closed,resolved")
+			require.Equal(t, http.StatusOK, status)
+			require.Zero(t, env.Code)
+			if tt.phase == "closed" {
+				assert.Zero(t, decodeList(t, env).Total)
+			} else {
+				assert.Equal(t, 1, decodeList(t, env).Total)
+			}
+		})
+	}
 }

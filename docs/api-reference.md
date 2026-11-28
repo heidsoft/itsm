@@ -4241,12 +4241,13 @@ GET /api/v1/workbench?phase=active,submitted&priority=critical&recordType=incide
 Authorization: Bearer <accessToken>
 ```
 
-- `phase` 取值 `draft|submitted|active|resolved|closed`，逗号分隔。阶段到各域 `status` 的映射由 `service/lifecycle` 单点提供并展开成 SQL 谓词，因此 `total`、分页与过滤同口径（不是在分页之后于内存里过滤）。
+- `phase` 取值 `draft|submitted|active|resolved|closed`，逗号分隔。阶段到各域 `status` 的映射由 `service/lifecycle` 单点提供并展开成 SQL 谓词，因此 `total`、分页与过滤同口径（不是在分页之后于内存里过滤）。显式指定阶段时，没有匹配状态的业务域不参与聚合。例如 `recordType=ticket&phase=draft` 返回 `items: []`、`total: 0`、`totalPages: 0`。
 - `excludePhase` 取值同 `phase`，逗号分隔，是「未关闭」语义的反向过滤：按域把被排除的阶段映射回 `status` 集合后用 `NOT IN` 排除，其余阶段一律保留。与 `phase`（白名单）互斥使用——前端未显式勾选阶段时默认传 `excludePhase=closed,resolved`，而不是枚举 `draft,submitted,active` 白名单：白名单会漏掉状态无法映射到已知阶段的 `unknown` 单据以及未来新增的阶段；`unknown` 不在任何排除集内，因此天然保留。
+- 工单返回原始 `status`。`new` 映射到 `submitted`，`pending` 和 `approved` 映射到 `active`，`rejected` 映射到 `closed`。新阶段映射同时用于筛选和总数，已驳回工单从默认「未关闭」视图排除。
 - `recordType` 取值 `incident|change|problem|ticket`；`priority`、`assigneeId` 为可选过滤，`assigneeId` 非法值当前被忽略。
 - `keyword` 可选，标题模糊搜索：`LOWER(title) LIKE` 大小写不敏感，用户输入中的 `%`/`_`/`\` 按 LIKE 元字符转义后**字面匹配**（`ESCAPE '\'`），与其他过滤条件为 AND 组合。
 - `page` 缺省 1，`pageSize` 缺省 20 且只采纳 `1..100`，越界回落默认值而不是报错。
-- 租户上下文取自认证会话，缺失返回 2001 / HTTP 401；该路由实测没有 `RequirePermission` 声明。
+- 租户上下文取自认证会话，缺失返回 2001 / HTTP 401；该路由要求 `dashboard:read`，服务层另按各业务域的读取权限和数据范围限制结果。
 - 响应 `data` 为平台列表信封 `{items,total,page,pageSize,totalPages}`，空结果序列化为 `[]`。
 
 ## 租户管理接口

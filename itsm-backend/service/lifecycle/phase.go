@@ -49,12 +49,16 @@ const (
 // This is the single source of truth for status→phase translation.
 var statusPhaseMap = map[Domain]map[string]Phase{
 	DomainTicket: {
+		"new":         PhaseSubmitted,
 		"open":        PhaseSubmitted,
 		"assigned":    PhaseActive,
 		"in_progress": PhaseActive,
+		"pending":     PhaseActive,
+		"approved":    PhaseActive,
 		"resolved":    PhaseResolved,
 		"closed":      PhaseClosed,
 		"cancelled":   PhaseClosed,
+		"rejected":    PhaseClosed,
 	},
 	DomainIncident: {
 		"new":         PhaseSubmitted,

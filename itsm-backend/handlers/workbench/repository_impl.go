@@ -61,7 +61,8 @@ func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*Work
 
 	for _, d := range workbenchDomains {
 		statuses, ok := lifecycle.StatusesForPhases(lifecycle.Domain(d.name), query.Phase)
-		if !ok {
+		// With an explicit phase filter, a domain with no matching statuses contributes no rows.
+		if !ok || (len(query.Phase) > 0 && len(statuses) == 0) {
 			continue
 		}
 
