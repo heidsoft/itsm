@@ -2583,6 +2583,19 @@ DELETE /api/v1/groups/{id}/members                # 移除成员，权限 group:
 
 `GET /groups` 与 `GET /groups/{id}/members` 的 `data` 均为 `{items,total,page,pageSize,totalPages}`：列表元素分别是 `GroupResponse`（`id`/`name`/`description`/`tenantId`/`memberCount`/`createdAt`/`updatedAt`）与 `UserDTO`。`memberCount` 是该组成员的真实总数；列表接口不返回 `members[]`（只有 `GET /groups/{id}` 详情带成员数组），前端成员数徽标应读 `memberCount`。不存在 `groups`、`members`、`pagination` 键——旧形状已在 [UPGRADE §1.84](../UPGRADE.md) 中退役。
 
+### 组名引用完整性
+
+组名不是展示名，而是**审批人解析键**：BPMN `userTask` 的 `candidateGroups` 与审批链 `chain[].role` 的 `group:<name>` 形式都以精确组名匹配审批组成员。改名或删除被引用的组会让候选审批人静默变空——流程仍可发布、任务仍可创建，只是永远无人可审批。因此：
+
+| 场景 | 状态码 | 应用码 | 说明 |
+|:---|:---|:---|:---|
+| 改名/删除的组被本租户生效中的流程定义或审批链引用 | 409 | `4090` | `message` 列出引用来源（`process_definition:<流程key>(节点 <userTask id>)` / `approval_chain:<审批链名>(节点 level-N)`） |
+| 无法确认引用面（流程定义 XML 解析失败） | 409 | `4090` | 失败关闭：拒绝变更，避免坏 XML 绕过引用检查 |
+
+引用扫描范围限于**当前租户**，且只覆盖两条运行时真实消费组名的路径：生效中（`is_active=true`）流程定义 XML 的 `candidateGroups`，以及审批链 `chain[].role` 的 `group:` 前缀。`candidateGroups` 按逗号切分后**整 token 相等**匹配（`approvers-l` 不会命中 `approvers-l1`）。
+
+注意：本组接口的 `PUT`/`DELETE` 错误响应使用 `common.RespondError`，会把上述领域文案原样透出到 `message` 字段；客户端应直接展示 `message`，不要折叠成通用「操作失败」。
+
 ## 角色接口
 
 ### 获取角色列表

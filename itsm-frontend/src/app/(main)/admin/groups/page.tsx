@@ -26,6 +26,7 @@ import {
 import type { TablePaginationConfig } from 'antd';
 import { Edit, Plus, Search, Trash2, UserPlus, Users, User as UserIcon, X, Check } from 'lucide-react';
 import { GroupAPI, type Group } from '@/lib/api/group-api';
+import { serverErrorMessage } from '@/lib/api/http-client';
 import { UserApi, type User, PRIMARY_ROLE_OPTIONS, PRIMARY_ROLE_LABEL } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
@@ -137,7 +138,9 @@ const GroupManagement: React.FC = () => {
       await loadGroups();
     } catch (error) {
       console.error('Failed to save group:', error);
-      message.error(t('groups.messages.saveFailed'));
+      // 透传后端诊断：改名被引用组时后端会说明「被哪些流程引用、不能改名」，
+      // 折叠成通用「保存失败」会让使用者无从下手。
+      message.error(serverErrorMessage(error, t('groups.messages.saveFailed')));
     } finally {
       setActionLoading(false);
     }
@@ -157,7 +160,8 @@ const GroupManagement: React.FC = () => {
           await loadGroups();
         } catch (error) {
           console.error('Failed to delete group:', error);
-          message.error(t('groups.messages.deleteFailed'));
+          // 同 handleSave：删除被引用组时透传后端的引用诊断。
+          message.error(serverErrorMessage(error, t('groups.messages.deleteFailed')));
         }
       },
     });

@@ -195,6 +195,7 @@ func (h *Handler) GetGroup(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.GroupResponse}
 // @Failure 400 {object} common.Response
 // @Failure 404 {object} common.Response
+// @Failure 409 {object} common.Response
 // @Router /api/v1/groups/{id} [put]
 func (h *Handler) UpdateGroup(c *gin.Context) {
 	idStr := c.Param("id")
@@ -219,7 +220,10 @@ func (h *Handler) UpdateGroup(c *gin.Context) {
 	group, err := h.svc.UpdateGroup(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
 		h.logger.Errorf("更新组失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		// 用 RespondError 而不是 FailWithErr：后者会把 AppError 的领域文案替换成
+		// 兜底串，而「该组已被哪些流程引用、不能改名」的诊断正是使用者
+		// 需要看到的那句话——否则守卫在用户侧只表现为「操作失败」。
+		common.RespondError(c, err, "更新组失败")
 		return
 	}
 
@@ -236,6 +240,7 @@ func (h *Handler) UpdateGroup(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Failure 400 {object} common.Response
 // @Failure 404 {object} common.Response
+// @Failure 409 {object} common.Response
 // @Router /api/v1/groups/{id} [delete]
 func (h *Handler) DeleteGroup(c *gin.Context) {
 	idStr := c.Param("id")
@@ -253,7 +258,8 @@ func (h *Handler) DeleteGroup(c *gin.Context) {
 	err = h.svc.DeleteGroup(c.Request.Context(), id, tenantID)
 	if err != nil {
 		h.logger.Errorf("删除组失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		// 同 UpdateGroup：必须透出引用诊断，不能退化成通用兜底文案。
+		common.RespondError(c, err, "删除组失败")
 		return
 	}
 
