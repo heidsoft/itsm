@@ -2,7 +2,11 @@ package group
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -15,16 +19,12 @@ import (
 	"itsm-backend/middleware"
 	"itsm-backend/service/bpmn"
 
-	"database/sql"
-	"encoding/json"
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
-	"net/http"
-	"net/http/httptest"
 )
 
 // openGuardDB 打开内存 SQLite 连接（每个测试独立 DSN 隔离）。

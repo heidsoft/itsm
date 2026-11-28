@@ -8318,6 +8318,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
                     }
                 }
             },
@@ -8357,6 +8363,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }

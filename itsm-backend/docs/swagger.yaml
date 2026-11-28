@@ -13090,6 +13090,10 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/common.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/common.Response'
       summary: 删除组
       tags:
       - 组管理
@@ -13160,6 +13164,10 @@ paths:
             $ref: '#/definitions/common.Response'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/common.Response'
       summary: 更新组
