@@ -87,3 +87,25 @@ type GroupDetailResponse struct {
 	CreatedAt   time.Time  `json:"createdAt"`
 	UpdatedAt   time.Time  `json:"updatedAt"`
 }
+
+// GroupReferenceDTO 一处审批引用来源。
+//
+// 与 handlers/group.GroupReference 一一对应，是 API 层的稳定契约：
+//   - Kind: process_definition（BPMN userTask）/ approval_chain（审批链 step）；
+//   - RefID/RefKey: 引用来源实体 ID 与可读标识；
+//   - NodeID: 引用位置（BPMN 节点 id / 审批链 level-N）。
+//
+// 只读诊断用途，前端据此在改名/删除前提示管理员「谁在用这个组」。
+type GroupReferenceDTO struct {
+	Kind   string `json:"kind"`
+	RefID  int    `json:"refId"`
+	RefKey string `json:"refKey"`
+	NodeID string `json:"nodeId"`
+}
+
+// GroupReferencesResponse 组审批引用查询响应（列表信封）。
+// Items 永远是非 nil 切片，空引用返回 [] 而非 null，避免前端误判为加载失败。
+type GroupReferencesResponse struct {
+	Items []*GroupReferenceDTO `json:"items"`
+	Total int64                `json:"total"`
+}

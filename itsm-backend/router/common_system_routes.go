@@ -72,6 +72,9 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 				groups.POST("/:id/members", middleware.RequirePermission("group", "write"), config.GroupHandler.AddUserToGroup)
 				groups.DELETE("/:id/members", middleware.RequirePermission("group", "write"), config.GroupHandler.RemoveUserFromGroup)
 				groups.GET("/:id/members", middleware.RequirePermission("group", "read"), config.GroupHandler.GetGroupMembers)
+				// 只读引用诊断：复用 group:read 权限码，不新增权限码；
+				// 供管理员在改名/删除前查看「谁在用这个组」。
+				groups.GET("/:id/references", middleware.RequirePermission("group", "read"), config.GroupHandler.GetGroupReferences)
 			}
 		}
 

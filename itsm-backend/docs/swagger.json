@@ -8535,6 +8535,74 @@
                 }
             }
         },
+        "/api/v1/groups/{id}/references": {
+            "get": {
+                "description": "只读查询该组名在本租户内被哪些生效流程定义或审批链引用，供改名/删除前评估影响。严格限定当前租户。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "组管理"
+                ],
+                "summary": "查询组的审批引用关系",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GroupReferencesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/incidents": {
             "get": {
                 "security": [
@@ -27991,6 +28059,37 @@
                     "type": "integer"
                 },
                 "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.GroupReferenceDTO": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "type": "string"
+                },
+                "nodeId": {
+                    "type": "string"
+                },
+                "refId": {
+                    "type": "integer"
+                },
+                "refKey": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GroupReferencesResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.GroupReferenceDTO"
+                    }
+                },
+                "total": {
                     "type": "integer"
                 }
             }

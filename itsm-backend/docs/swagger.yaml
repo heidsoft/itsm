@@ -3671,6 +3671,26 @@ definitions:
       totalPages:
         type: integer
     type: object
+  dto.GroupReferenceDTO:
+    properties:
+      kind:
+        type: string
+      nodeId:
+        type: string
+      refId:
+        type: integer
+      refKey:
+        type: string
+    type: object
+  dto.GroupReferencesResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.GroupReferenceDTO'
+        type: array
+      total:
+        type: integer
+    type: object
   dto.GroupResponse:
     properties:
       createdAt:
@@ -13279,6 +13299,48 @@ paths:
           schema:
             $ref: '#/definitions/common.Response'
       summary: 添加用户到组
+      tags:
+      - 组管理
+  /api/v1/groups/{id}/references:
+    get:
+      consumes:
+      - application/json
+      description: 只读查询该组名在本租户内被哪些生效流程定义或审批链引用，供改名/删除前评估影响。严格限定当前租户。
+      parameters:
+      - description: 组ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GroupReferencesResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 查询组的审批引用关系
       tags:
       - 组管理
   /api/v1/incidents:
