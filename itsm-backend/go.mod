@@ -12,8 +12,8 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/ThreeDotsLabs/watermill v1.5.3
 	github.com/ThreeDotsLabs/watermill-redisstream v1.4.5
-	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.2
-	github.com/alibabacloud-go/ecs-20140526/v7 v7.9.2
+	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
+	github.com/alibabacloud-go/ecs-20140526/v7 v7.11.7
 	github.com/alibabacloud-go/tea v1.5.3
 	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible
 	github.com/emersion/go-imap v1.2.1
